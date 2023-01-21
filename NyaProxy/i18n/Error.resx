@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="CommandLeastRequired" xml:space="preserve">
-    <value>{CommandName} least {MinimumArgs} argument is required</value>
+    <value>§c{CommandName}: least {MinimumArgs} argument is required</value>
   </data>
   <data name="CommandNotFound" xml:space="preserve">
     <value>§c{CommandName}: command not found</value>

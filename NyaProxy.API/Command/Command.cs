@@ -12,7 +12,7 @@ namespace NyaProxy.API
         public abstract string Name { get; }
         public abstract string Usage { get; }
         public abstract string Description { get; }
-        public abstract void Execute(ReadOnlySpan<string> args);
+        public abstract Task ExecuteAsync(string[] args, ICommandHelper helper);
         public abstract IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args);
         public virtual int MinimumArgs => 0;
         public virtual string Helper => Usage;
