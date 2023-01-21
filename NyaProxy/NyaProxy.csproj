@@ -1,0 +1,86 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AppDesignerFolder>i18n</AppDesignerFolder>
+  </PropertyGroup>
+	
+  <PropertyGroup>
+
+		<!--版本配置-->
+		<AssemblyVersion>1.0</AssemblyVersion>
+		<FileVersion>1.0</FileVersion>
+		<Version>1.0-alpha</Version>
+
+		<!--版权配置-->
+		<Authors>Chawol</Authors>
+		<Copyright>Copyright (c) 2023 Chawol</Copyright>
+	  
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\NyaProxy.API\NyaProxy.API.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="i18n\Config.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Config.resx</DependentUpon>
+    </Compile>
+    <Compile Update="i18n\Disconnect.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Disconnect.resx</DependentUpon>
+    </Compile>
+    <Compile Update="i18n\Message.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Message.resx</DependentUpon>
+    </Compile>
+    <Compile Update="i18n\Plugin.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Plugin.resx</DependentUpon>
+    </Compile>
+    <Compile Update="i18n\Error.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Error.resx</DependentUpon>
+    </Compile>
+    <Compile Update="i18n\Warning.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Warning.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="i18n\Config.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Config.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="i18n\Disconnect.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Disconnect.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="i18n\Message.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Message.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="i18n\Plugin.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Plugin.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="i18n\Error.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Error.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="i18n\Warning.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Warning.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+
+</Project>
