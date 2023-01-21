@@ -1,9 +1,11 @@
 ﻿using MinecraftProtocol.Client;
+using MinecraftProtocol.Crypto;
 using MinecraftProtocol.DataType.Chat;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Utils;
 using Newtonsoft.Json;
 using NyaProxy.API;
+using NyaProxy.Extension;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +16,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,10 +24,12 @@ namespace NyaProxy
 {
     public class PluginManager : IEnumerable<PluginController>
     {
+        private SHA512 SHA512 = SHA512.Create();
         private static MethodInfo SetupPlugin = typeof(NyaPlugin).GetMethod("Setup", BindingFlags.Instance | BindingFlags.NonPublic);
         internal Dictionary<string, PluginController> Plugins = new Dictionary<string, PluginController>();
         internal ILogger Logger;
 
+        public bool Contains(string id) => Plugins.ContainsKey(id);
         public PluginController this[string id] => Plugins.ContainsKey(id) ? Plugins[id] : null;
         public int Count => Plugins.Count;
 
@@ -42,31 +47,46 @@ namespace NyaProxy
             try
             {
                 Manifest manifest = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(Path.Combine(directory, "Manifest.json")));
+                //检查必选项
                 if (string.IsNullOrWhiteSpace(manifest.UniqueId))
-                    throw new PluginLoadException("UniqueId is empty");
+                    throw new PluginLoadException(i18n.Plugin.UniqueId_Empty);
                 if (string.IsNullOrWhiteSpace(manifest.Name))
-                    throw new PluginLoadException("Name is empty");
+                    throw new PluginLoadException(i18n.Plugin.Name_Empty);
                 if (string.IsNullOrWhiteSpace(manifest.EntryDll))
-                    throw new PluginLoadException("EntryDll is empty");
+                    throw new PluginLoadException(i18n.Plugin.EntryDll_Empty);
                 if (manifest.Version == null)
-                    throw new PluginLoadException("Version is empty");
+                    throw new PluginLoadException(i18n.Plugin.Version_Empty);
+
+                //检查要求的版本号是否高于当前程序的版本号
                 if (manifest.MinimumApiVersion != null && NyaPlugin.ApiVersion < manifest.MinimumApiVersion)
                 {
-                    NyaProxy.Logger.Warn($"当前运行中的{nameof(NyaProxy)}Api版本是{NyaPlugin.ApiVersion}，但插件{manifest.Name}需要{manifest.MinimumApiVersion}以上的Api版本，该插件不会被加载。");
+                    NyaProxy.Logger.Warn(i18n.Plugin.MinimumApiVersion_NotMatch.Replace("{CurrentApiVersion}", NyaPlugin.ApiVersion, "{UniqueId}", manifest.UniqueId, "{PluginName}", manifest.Name, "{MinimumApiVersion}", manifest.MinimumApiVersion));
                     return false;
                 }
+
+                //检查插件Id是否已存在
                 if (Plugins.ContainsKey(manifest.UniqueId))
                 {
-                    NyaProxy.Logger.Warn($"插件{manifest.UniqueId}已被加载");
+                    NyaProxy.Logger.Warn(i18n.Plugin.UniqueId_Duplicate.Replace("{UniqueId}", manifest.UniqueId));
                     return false;
                 }
 
+                //检查文件可用性
                 string EntryDllFile = Path.Combine(directory, manifest.EntryDll);
                 if (!File.Exists(EntryDllFile))
-                    throw new PluginLoadException($"Cannot find {EntryDllFile}");
+                {
+                    throw new PluginLoadException(i18n.Plugin.EntryDll_CannotFound.Replace("{FileName}", manifest.EntryDll));
+                }
+                else if (!string.IsNullOrWhiteSpace(manifest.Checksum))
+                {
+                    using FileStream cfs = new FileStream(EntryDllFile, FileMode.Open);
+                    if (manifest.Checksum.ToUpper() != CryptoUtils.GetHexString(SHA512.ComputeHash(cfs)).ToUpper())
+                        throw new PluginLoadException(i18n.Plugin.Checksum_Failed);
+                }
 
-                AssemblyLoadContext context = new AssemblyLoadContext(manifest.EntryDll, true);
+                //开始加载插件
                 using FileStream fs = new FileStream(EntryDllFile, FileMode.Open);
+                AssemblyLoadContext context = new AssemblyLoadContext(manifest.EntryDll, true);
                 foreach (Type type in context.LoadFromStream(fs).GetExportedTypes())
                 {
                     if (type.BaseType != null && type.BaseType.Equals(typeof(NyaPlugin)))

@@ -117,16 +117,40 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Checksum.Failed" xml:space="preserve">
+    <value>Checksum failed</value>
+  </data>
+  <data name="EntryDll.CannotFound" xml:space="preserve">
+    <value>{FileName} cannot be found</value>
+  </data>
+  <data name="EntryDll.Empty" xml:space="preserve">
+    <value>EntryDll is empty</value>
+  </data>
   <data name="Load.Error" xml:space="preserve">
     <value>Can't Load Plugin {File}</value>
   </data>
   <data name="Load.Success" xml:space="preserve">
     <value>Load Plugin {Name} Success</value>
   </data>
+  <data name="MinimumApiVersion.NotMatch" xml:space="preserve">
+    <value>The current api version is {CurrentApiVersion}, but plugin {PluginName} requires a version above {MinimumApiVersion}, the plugin will not be loaded</value>
+  </data>
+  <data name="Name.Empty" xml:space="preserve">
+    <value>Name is empty</value>
+  </data>
+  <data name="UniqueId.Duplicate" xml:space="preserve">
+    <value>Falied to load, plugin {UniqueId} already exists</value>
+  </data>
+  <data name="UniqueId.Empty" xml:space="preserve">
+    <value>UniqueId is empty</value>
+  </data>
   <data name="Unload.Error" xml:space="preserve">
     <value>Unload Plugin {Name} Error</value>
   </data>
   <data name="Unload.Success" xml:space="preserve">
     <value>Unload Plugin {Name} Success</value>
+  </data>
+  <data name="Version.Empty" xml:space="preserve">
+    <value>Version is empty</value>
   </data>
 </root>

@@ -17,7 +17,7 @@ namespace NyaProxy.Extension
 
             for (int i = 0; i < replaces.Length; i++)
             {
-                str.Replace(replaces[i].ToString(), replaces[++i].ToString());
+                str = str.Replace(replaces[i].ToString(), replaces[++i].ToString());
             }
             return str;
         }

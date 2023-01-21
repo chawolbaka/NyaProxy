@@ -37,6 +37,9 @@ namespace NyaProxy
         [JsonConverter(typeof(VersionConverter))]
         public Version MinimumApiVersion { get; set; }
 
+        [JsonProperty("Checksum", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Checksum { get; set; }
+
         public Manifest() { }
 
         private class VersionConverter : JsonConverter
