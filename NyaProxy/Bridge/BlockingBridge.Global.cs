@@ -76,13 +76,13 @@ namespace NyaProxy
 
         private static int LastIndex;
         private static SpinLock IndexLock = new SpinLock();
-        private static int GetQueueIndex()
+        public static int GetQueueIndex()
         {
             int result = 0; bool lockTaken = false;
             try
             {
                 IndexLock.Enter(ref lockTaken);
-                if (LastIndex > ReceiveQueues.Length)
+                if (LastIndex + 1 >= ReceiveQueues.Length)
                     LastIndex = 0;
                 else
                     result = ++LastIndex;
