@@ -23,7 +23,7 @@ namespace NyaProxy
         public static CommandManager CommandManager { get; private set; }
         public static ChannleContainer Channles { get; private set; }
         public static PluginManager Plugin { get; private set; }
-        public static ConcurrentDictionary<string, ConcurrentDictionary<Guid, Bridge>> Bridges { get; private set; }
+        public static ConcurrentDictionary<string, ConcurrentDictionary<long, Bridge>> Bridges { get; private set; }
         public static Config Config { get; private set; }
         public static ILogger Logger { get; private set; }
 
@@ -42,10 +42,11 @@ namespace NyaProxy
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            Bridges = new ConcurrentDictionary<string, ConcurrentDictionary<Guid, Bridge>>();
-            Plugin = new PluginManager(logger);
-            Channles = new ChannleContainer();
-            CommandManager = new CommandManager();
+            Plugin = new(logger);
+            Bridges = new ();
+            Channles = new();
+            CommandManager = new();
+
             
 
             Thread.CurrentThread.Name = $"{nameof(NyaProxy)} thread";

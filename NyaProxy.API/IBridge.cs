@@ -9,7 +9,7 @@ namespace NyaProxy.API
 {
     public interface IBridge
     {
-        Guid SessionId { get; }
+        long SessionId { get; }
 
         Socket Source { get; }
         Socket Destination { get; }

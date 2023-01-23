@@ -81,7 +81,7 @@ namespace NyaProxy
                         hostConfig.Reload();
                         Hosts.Add(host, hostConfig);
                         if (!NyaProxy.Bridges.ContainsKey(hostConfig.Name))
-                            NyaProxy.Bridges.TryAdd(hostConfig.Name, new ConcurrentDictionary<Guid, Bridge>());
+                            NyaProxy.Bridges.TryAdd(hostConfig.Name, new ConcurrentDictionary<long, Bridge>());
                     }
                 }
             }

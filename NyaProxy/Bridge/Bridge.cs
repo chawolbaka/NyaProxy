@@ -11,7 +11,10 @@ namespace NyaProxy
 {
     public abstract class Bridge : IBridge
     {
-        public Guid SessionId { get; }
+        internal static long Sequence => _sequence;
+        private static long _sequence = 1000;
+
+        public long SessionId { get; }
 
         public Socket Source { get; set; }
 
@@ -21,9 +24,11 @@ namespace NyaProxy
 
         private HostConfig _host { get; }
 
+        
+
         public Bridge(HostConfig host, Socket source, Socket destination)
         {
-            SessionId = Guid.NewGuid();
+            SessionId = Interlocked.Increment(ref _sequence);
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
             _host = host ?? throw new ArgumentNullException(nameof(host));
