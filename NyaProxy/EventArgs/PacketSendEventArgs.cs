@@ -50,7 +50,7 @@ namespace NyaProxy
         private int _version;
         
         internal BlockingBridge _bridge;
-        internal PacketListener.PacketReceivedEventArgs _eventArgs;
+        internal PacketReceivedEventArgs _eventArgs;
 
 
         public PacketSendEventArgs()
@@ -58,7 +58,7 @@ namespace NyaProxy
 
         }
 
-        internal PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketListener.PacketReceivedEventArgs e)
+        internal PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
         {
             Direction = direction;
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));

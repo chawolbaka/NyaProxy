@@ -8,7 +8,9 @@ using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
 using NyaProxy.API;
+using NyaProxy.API.Channle;
 using NyaProxy.API.Enum;
+using NyaProxy.EventArgs;
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
@@ -26,6 +28,7 @@ namespace NyaProxy
         private static ObjectPool<SendEventArgs> SendEventArgsPool = new();
         private static ObjectPool<PacketSendEventArgs> PacketEventArgsPool = new ();
         private static ObjectPool<ChatSendEventArgs> ChatEventArgsPool = new();
+        private static ObjectPool<PluginChannleSendEventArgs> PluginChannleEventArgsPool = new();
         private static ObjectPool<AsyncChatEventArgs> AsyncChatEventArgsPool = new();
         private static CancellationTokenSource QueueToken = new CancellationTokenSource();
         private static ManualResetEvent SendSignal = new ManualResetEvent(false); //我那奇怪的CPU占有率不至于是因为这边导致的吧...
@@ -171,12 +174,22 @@ namespace NyaProxy
                             if (handler != null && (DateTime.Now - LastTime).TotalMilliseconds > 50)
                             {
                                 LastTime = DateTime.Now;
-                                if(ServerChatMessagePacket.TryRead(csea.Packet, out ServerChatMessagePacket scmp))
+                                if (ServerChatMessagePacket.TryRead(csea.Packet, out ServerChatMessagePacket scmp))
                                 {
                                     var eventArgs = AsyncChatEventArgsPool.Rent().Setup(csea._bridge.Server, csea.ReceivedTime, scmp.Message);
                                     scmp?.Dispose();
                                     EventUtils.InvokeCancelEventAsync(handler, null, eventArgs).ContinueWith(x => AsyncChatEventArgsPool.Return(eventArgs));
                                 }
+                            }
+                        }
+                        else if (e is PluginChannleSendEventArgs pcsea)
+                        {
+                            //频道消息虽然有专门的处理系统，但如果需要还是能直接通过数据包发送事件来处理的，并且如果阻断了那么也不会触发频道消息的那一套系统
+                            EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer, e._bridge, e);
+                            if (!e.IsBlock && NyaProxy.Channles.ContainsKey(pcsea.ChannleName))
+                            {
+                                Channle channle = NyaProxy.Channles[pcsea.ChannleName] as Channle;
+                                channle?.Trigger(e.Direction == Direction.ToServer ? Side.Client : Side.Server, new ByteReader(pcsea.Data), e._bridge);
                             }
                         }
                         else
@@ -223,6 +236,8 @@ namespace NyaProxy
             {
                 if (e is ChatSendEventArgs)
                     ChatEventArgsPool.Return(e as ChatSendEventArgs);
+                else if (e is PluginChannleSendEventArgs)
+                    PluginChannleEventArgsPool.Return(e as PluginChannleSendEventArgs);
                 else
                     PacketEventArgsPool.Return(e);   
             }

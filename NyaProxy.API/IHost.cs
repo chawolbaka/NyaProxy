@@ -1,10 +1,6 @@
-﻿using NyaProxy.API.Enum;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using NyaProxy.API.Channle;
 
 namespace NyaProxy.API
 {
@@ -12,12 +8,8 @@ namespace NyaProxy.API
     {
         string Name { get; }
 
-        ServerFlags Flags { get; }
-        ServerSelectMode SelectMode { get; }
-        ForwardMode ForwardMode { get; }
-        List<EndPoint> ServerEndPoints { get; }
+        IHostConfig Config { get; }
 
-        int CompressionThreshold { get; }
-        int ProtocolVersion { get; }
+        IReadOnlyDictionary<Guid, IBridge> Bridges { get; }
     }
 }

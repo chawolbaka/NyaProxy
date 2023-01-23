@@ -35,22 +35,27 @@ namespace NyaProxy
             report.AppendLine($"  Managed Thread Id: {Thread.CurrentThread.ManagedThreadId}");
             report.AppendLine($"  Background Thread: {Thread.CurrentThread.IsBackground}");
             report.AppendLine($"  Thread Pool Thread: {Thread.CurrentThread.IsThreadPoolThread}");
-            var bridges = NyaProxy.Bridges?.Values.ToArray();
+            var bridges = NyaProxy.Bridges?.ToArray();
             if (bridges is not null && bridges.Length > 0)
             {
-                report.AppendLine($"  Current Connection Count: {bridges.Length}");
-                report.AppendLine($"  Current Connections");
+
+                int count = 0;
                 StringTable table = new StringTable("Session Id", "Host", "Player", "Source", "Destination");
-                foreach (var bridge in bridges)
+                foreach (var host in bridges)
                 {
-                    IServer server = (bridge as BlockingBridge)?.Server;
-                    IPlayer player = (bridge as BlockingBridge)?.Player;
-                    string playerName = player is not null ? player.Name : "";
-                    string host = server is not null ? server.Host : "";
-                    table.AddRow(bridge.SessionId, host, playerName,
-                         $"{bridge.Source._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Source) ? "Online" : "Offline")})",
-                         $"{bridge.Destination._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Destination) ? "Online" : "Offline")})");
+                    foreach (var bridge in host.Value.Values)
+                    {
+                        IServer server = (bridge as BlockingBridge)?.Server;
+                        IPlayer player = (bridge as BlockingBridge)?.Player;
+                        string playerName = player is not null ? player.Name : "";
+                        table.AddRow(bridge.SessionId.ToString().Replace("-", ""), host.Key, playerName,
+                             $"{bridge.Source._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Source) ? "Online" : "Offline")})",
+                             $"{bridge.Destination._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Destination) ? "Online" : "Offline")})");
+                        count++;
+                    }
                 }
+                report.AppendLine().AppendLine($"  Current Connection Count: {count}");
+                report.AppendLine($"  Current Connections");
                 report.AppendLine(table.ToString());
             }
             if (NyaProxy.Plugin is not null && NyaProxy.Plugin.Count > 0)

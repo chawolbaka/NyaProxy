@@ -19,12 +19,16 @@ namespace NyaProxy
 
         protected CancellationTokenSource ListenToken = new CancellationTokenSource();
 
-        public Bridge(Socket source, Socket destination)
+        private HostConfig _host { get; }
+
+        public Bridge(HostConfig host, Socket source, Socket destination)
         {
             SessionId = Guid.NewGuid();
-            Source = source;
-            Destination = destination;
-            NyaProxy.Bridges.Add(SessionId, this);
+            Source = source ?? throw new ArgumentNullException(nameof(source));
+            Destination = destination ?? throw new ArgumentNullException(nameof(destination));
+            _host = host ?? throw new ArgumentNullException(nameof(host));
+
+            NyaProxy.Bridges[host.Name]?.TryAdd(SessionId, this);
         }
 
         public abstract IBridge Build();
@@ -36,7 +40,7 @@ namespace NyaProxy
             {
                 try
                 {
-                    if (!NyaProxy.Bridges.ContainsKey(SessionId))
+                    if (!NyaProxy.Bridges[_host.Name].ContainsKey(SessionId))
                         return;
                     ListenToken?.Cancel();
                     if (Source is not null && NetworkUtils.CheckConnect(Source))
@@ -56,16 +60,19 @@ namespace NyaProxy
                 catch (ObjectDisposedException) { }
                 finally
                 {
-                    if (NyaProxy.Bridges.ContainsKey(SessionId))
+                    if (NyaProxy.Bridges[_host.Name].ContainsKey(SessionId))
                     {
-                        NyaProxy.Bridges.Remove(SessionId);
+                        NyaProxy.Bridges[_host.Name].TryRemove(SessionId, out _);
+                        //如果该host已被删除，那么就由最后一个移除连接的Bridge来从Bridges中移除该host
+                        if (!NyaProxy.Config.Hosts.ContainsKey(_host.Name) && NyaProxy.Bridges[_host.Name].IsEmpty)
+                            NyaProxy.Bridges.TryRemove(_host.Name, out _);
                     }
                 }
             }
         }
 
 
-        protected virtual void SimpleExceptionHandle(object sender, PacketListener.UnhandledExceptionEventArgs e)
+        protected virtual void SimpleExceptionHandle(object sender, UnhandledIOExceptionEventArgs e)
         {
             if (e.Exception is ObjectDisposedException || e.Exception is SocketException || (e.Exception is OverflowException && (!NetworkUtils.CheckConnect(Source) || ! NetworkUtils.CheckConnect(Destination))))
             {

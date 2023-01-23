@@ -2,6 +2,7 @@
 using NyaProxy.API.Enum;
 using NyaProxy.Extension;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -79,6 +80,8 @@ namespace NyaProxy
                         HostConfig hostConfig = new HostConfig(file);
                         hostConfig.Reload();
                         Hosts.Add(host, hostConfig);
+                        if (!NyaProxy.Bridges.ContainsKey(hostConfig.Name))
+                            NyaProxy.Bridges.TryAdd(hostConfig.Name, new ConcurrentDictionary<Guid, Bridge>());
                     }
                 }
             }

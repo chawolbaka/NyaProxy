@@ -14,15 +14,16 @@ using MinecraftProtocol.IO.Extensions;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
 using NyaProxy.Extension;
+using System.Collections.Concurrent;
 
 namespace NyaProxy
 {
     public static partial class NyaProxy
     {
-
         public static CommandManager CommandManager { get; private set; }
+        public static ChannleContainer Channles { get; private set; }
         public static PluginManager Plugin { get; private set; }
-        public static Dictionary<Guid, Bridge> Bridges { get; private set; }
+        public static ConcurrentDictionary<string, ConcurrentDictionary<Guid, Bridge>> Bridges { get; private set; }
         public static Config Config { get; private set; }
         public static ILogger Logger { get; private set; }
 
@@ -41,9 +42,11 @@ namespace NyaProxy
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            Bridges = new Dictionary<Guid, Bridge>();
+            Bridges = new ConcurrentDictionary<string, ConcurrentDictionary<Guid, Bridge>>();
             Plugin = new PluginManager(logger);
+            Channles = new ChannleContainer();
             CommandManager = new CommandManager();
+            
 
             Thread.CurrentThread.Name = $"{nameof(NyaProxy)} thread";
            
@@ -144,7 +147,7 @@ namespace NyaProxy
                          if (hea.Packet.NextState == HandshakePacket.State.GetStatus)
                          {
                              serverSocket.SendPacket(hp, -1);
-                             new FastBridge(acceptSocket, serverSocket).Build();
+                             new FastBridge(dest,acceptSocket, serverSocket).Build();
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
@@ -183,7 +186,7 @@ namespace NyaProxy
                                  if (dest.Flags.HasFlag(ServerFlags.OnlineMode))
                                      acceptSocket.DisconnectOnLogin("无法支持正版登录").Close();
                                  else
-                                     new BlockingBridge(acceptSocket, serverSocket, host, hea.Packet.ProtocolVersion).Build(hea.Packet, lsea.Packet);
+                                     new BlockingBridge(dest,acceptSocket, serverSocket, host, hea.Packet.ProtocolVersion).Build(hea.Packet, lsea.Packet);
                                  lsp.Dispose();
                              }
                          }
@@ -213,6 +216,7 @@ namespace NyaProxy
                  }
              });
         }
+
         public static HostConfig ChooseServer(string host)
         {
             if (Config.Hosts.ContainsKey(host))

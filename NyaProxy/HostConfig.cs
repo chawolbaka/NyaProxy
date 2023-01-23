@@ -10,7 +10,7 @@ using Tommy;
 
 namespace NyaProxy
 {
-    public class HostConfig : ConfigFile, IHost
+    public class HostConfig : ConfigFile, IHostConfig
     {
         public string Name { get; set; }
         public ServerSelectMode SelectMode { get; set; }

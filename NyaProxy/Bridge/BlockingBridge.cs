@@ -13,15 +13,7 @@ namespace NyaProxy
 {
     public partial class BlockingBridge : Bridge
     {
-        enum States
-        {
-            Login,
-            Play
-        }
-        private States State = States.Login;
 
-        private CancellationTokenSource ListenerToken = new CancellationTokenSource();
-        
         public virtual int ProtocolVersion { get; }
         
         public virtual int CompressionThreshold { get; private set; }
@@ -30,29 +22,34 @@ namespace NyaProxy
 
         public virtual IServer Server { get; set; }
 
-        private IPacketListener ServerSocketListener;
-        private IPacketListener ClientSocketListener;
-        private int QueueIndex;
+        public virtual bool IsForge { get; set; }
 
-        public BlockingBridge(Socket source, Socket destination, string host, int protocolVersion) : base(source, destination)
+        private enum States { Login, Play }
+        private int _queueIndex, _forgeCheckCount;
+        private States _state = States.Login;
+        private IPacketListener _serverSocketListener;
+        private IPacketListener _clientSocketListener;
+        private CancellationTokenSource _listenerToken = new CancellationTokenSource();
+
+        public BlockingBridge(HostConfig host, Socket source, Socket destination, string userHost, int protocolVersion) : base(host, source, destination)
         {
-            Server = new ServerInfo(host);
+            Server = new ServerInfo(userHost);
             CompressionThreshold = -1;
             ProtocolVersion = protocolVersion;
-            ListenerToken.Token.Register(Break);
-            QueueIndex = GetQueueIndex();
+            _listenerToken.Token.Register(Break);
+            _queueIndex = GetQueueIndex();
         }
 
         public override Bridge Build() => Build(null);
         public virtual Bridge Build(params Packet[] packets)
         {
             //监听服务端发送给客户端的数据包
-            ServerSocketListener = new PacketListener(Destination);
-            ServerSocketListener.ProtocolVersion = ProtocolVersion;
-            ServerSocketListener.PacketReceived += BeforeLoginSuccess;
-            ServerSocketListener.StopListen += (sender, e) => Break();
-            ServerSocketListener.UnhandledException += SimpleExceptionHandle;
-            ServerSocketListener.Start(ListenerToken.Token);
+            _serverSocketListener = new PacketListener(Destination);
+            _serverSocketListener.ProtocolVersion = ProtocolVersion;
+            _serverSocketListener.PacketReceived += BeforeLoginSuccess;
+            _serverSocketListener.StopListen += (sender, e) => Break();
+            _serverSocketListener.UnhandledException += SimpleExceptionHandle;
+            _serverSocketListener.Start(_listenerToken.Token);
 
             if (packets != null)
             {
@@ -64,24 +61,24 @@ namespace NyaProxy
             }
 
             //监听客户端发送给服务端的数据包
-            ClientSocketListener = new PacketListener(Source);
-            ClientSocketListener.ProtocolVersion = ProtocolVersion;
-            ClientSocketListener.PacketReceived += ClientPacketReceived;
-            ClientSocketListener.StopListen += (sender, e) => Break();
-            ClientSocketListener.UnhandledException += SimpleExceptionHandle;
-            ClientSocketListener.Start(ListenerToken.Token);
+            _clientSocketListener = new PacketListener(Source);
+            _clientSocketListener.ProtocolVersion = ProtocolVersion;
+            _clientSocketListener.PacketReceived += ClientPacketReceived;
+            _clientSocketListener.StopListen += (sender, e) => Break();
+            _clientSocketListener.UnhandledException += SimpleExceptionHandle;
+            _clientSocketListener.Start(_listenerToken.Token);
 
             return this;
         }
 
-        private void Disconnect(object sender, PacketListener.PacketReceivedEventArgs e)
+        private void Disconnect(object sender, PacketReceivedEventArgs e)
         {
             if (e.Packet == PacketType.Play.Server.Disconnect)
             {
-                ListenerToken.Cancel();
+                _listenerToken.Cancel();
             }
         }
-        private void BeforeLoginSuccess(object sender, PacketListener.PacketReceivedEventArgs e)
+        private void BeforeLoginSuccess(object sender, PacketReceivedEventArgs e)
         {
             try
             {
@@ -92,13 +89,13 @@ namespace NyaProxy
                     {
                         Enqueue(Source, rawData[i], i + 1 < e.RawData.Length ? null : e);
                     }
-                    ListenerToken.Cancel(); return;
+                    _listenerToken.Cancel(); return;
                 }
                 else if (e.Packet == PacketType.Login.Server.SetCompression)
                 {
                     CompressionThreshold = e.Packet.AsSetCompression().Threshold;
-                    ClientSocketListener.CompressionThreshold = CompressionThreshold;
-                    ServerSocketListener.CompressionThreshold = CompressionThreshold;
+                    _clientSocketListener.CompressionThreshold = CompressionThreshold;
+                    _serverSocketListener.CompressionThreshold = CompressionThreshold;
                 }
                 else if (e.Packet == PacketType.Login.Server.LoginSuccess)
                 {
@@ -108,10 +105,11 @@ namespace NyaProxy
                     EventUtils.InvokeCancelEvent(NyaProxy.LoginSuccess, this, eventArgs.Setup(this, Source, Direction.ToClient, e) as LoginSuccessEventArgs);
                     if (!eventArgs.IsBlock)
                     {
-                        ServerSocketListener.PacketReceived -= BeforeLoginSuccess;
-                        ServerSocketListener.PacketReceived += Disconnect;
-                        ServerSocketListener.PacketReceived += ServerPacketReceived;
-                        State = States.Play;
+                        _serverSocketListener.PacketReceived -= BeforeLoginSuccess;
+                        _serverSocketListener.PacketReceived += Disconnect;
+                        _serverSocketListener.PacketReceived += CheckForge;
+                        _serverSocketListener.PacketReceived += ServerPacketReceived;
+                        _state = States.Play;
                     }
                     else
                     {
@@ -124,24 +122,44 @@ namespace NyaProxy
             catch (Exception ex)
             {
                 NyaProxy.Logger.Exception(ex);
-                ListenerToken.Cancel();
+                _listenerToken.Cancel();
             }
         }
 
-        private void ClientPacketReceived(object sender, PacketListener.PacketReceivedEventArgs e)
+        private void CheckForge(object sender, PacketReceivedEventArgs e)
         {
-            if (State == States.Play && e.Packet == PacketType.Play.Client.ChatMessage)
-                ReceiveQueues[QueueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
-            else
-                ReceiveQueues[QueueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
+            //仅检查前64个包内是否包含forge的频道
+            if(++_forgeCheckCount > 64)
+                _serverSocketListener.PacketReceived -= CheckForge;
+
+            if (ServerPluginChannelPacket.TryRead(e.Packet, true, out ServerPluginChannelPacket spcp))
+            {
+                if(spcp.Channel is "REGISTER" or "FML|HS")
+                {
+                    _serverSocketListener.PacketReceived -= CheckForge;
+                    IsForge = true;
+                }    
+            }
         }
 
-        private void ServerPacketReceived(object sender, PacketListener.PacketReceivedEventArgs e)
+        private void ClientPacketReceived(object sender, PacketReceivedEventArgs e)
         {
-            if (State == States.Play && e.Packet == PacketType.Play.Server.ChatMessage)
-                ReceiveQueues[QueueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
+            if (_state == States.Play && e.Packet == PacketType.Play.Client.ChatMessage)
+                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
+            else if (NyaProxy.Channles.Count > 0 && _state == States.Play && e.Packet == PacketType.Play.Client.PluginChannel)
+                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
             else
-                ReceiveQueues[QueueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
+                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
+        }
+
+        private void ServerPacketReceived(object sender, PacketReceivedEventArgs e)
+        {
+            if (_state == States.Play && e.Packet == PacketType.Play.Server.ChatMessage)
+                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
+            else if (NyaProxy.Channles.Count > 0 && _state == States.Play && e.Packet == PacketType.Play.Server.PluginChannel)
+                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
+            else
+                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
         }
     }
 }
