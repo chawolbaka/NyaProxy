@@ -126,6 +126,7 @@ namespace NyaProxy
                              return;
 
                          Logger.Debug($"Host = {hea.Packet.ServerAddress}");
+                         string rawHandshakeAddress = hea.Packet.ServerAddress;
                          string host = hea.Packet.ServerAddress;
                          if (host.Contains('\0'))
                              host = host.Substring(0, host.IndexOf('\0'));
@@ -187,7 +188,7 @@ namespace NyaProxy
                                  if (dest.Flags.HasFlag(ServerFlags.OnlineMode))
                                      acceptSocket.DisconnectOnLogin("无法支持正版登录").Close();
                                  else
-                                     new BlockingBridge(dest,acceptSocket, serverSocket, host, hea.Packet.ProtocolVersion).Build(hea.Packet, lsea.Packet);
+                                     new BlockingBridge(dest, acceptSocket, serverSocket, rawHandshakeAddress, hea.Packet.ProtocolVersion).Build(hea.Packet, lsea.Packet);
                                  lsp.Dispose();
                              }
                          }

@@ -9,15 +9,16 @@ namespace NyaProxy
     public class BlockingBridgePlayer : IPlayer
     {
         public BlockingBridge Own { get; set; }
-
-        public string Name { get; set; }
         public UUID Id { get; set; }
+        public string Name { get; set; }
+        public string HandshakeAddress { get; set; }
 
-        public BlockingBridgePlayer(BlockingBridge own, UUID id, string name)
+        public BlockingBridgePlayer(BlockingBridge own, UUID id, string name, string handshakeAddress)
         {
             Own = own;
             Id = id; 
             Name = name;
+            HandshakeAddress = handshakeAddress;
         }
 
         public void Kick(ChatMessage reason)

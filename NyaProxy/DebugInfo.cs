@@ -22,7 +22,6 @@ namespace NyaProxy
             {
                 foreach (var bridge in host.Value.Values)
                 {
-                    //IServer server = (bridge as BlockingBridge)?.Server;
                     IPlayer player = (bridge as BlockingBridge)?.Player;
                     string playerInfo = player is not null ? $"{player.Name}({player.Id})" : "";
                     table.AddRow(bridge.SessionId.ToString($"D{Bridge.Sequence.ToString().Length}"), host.Key, playerInfo,

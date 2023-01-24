@@ -20,8 +20,6 @@ namespace NyaProxy
 
         public virtual IPlayer Player { get; set; }
 
-        public virtual IServer Server { get; set; }
-
         public virtual bool IsForge { get; set; }
 
         private enum States { Login, Play }
@@ -30,14 +28,15 @@ namespace NyaProxy
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
         private CancellationTokenSource _listenerToken = new CancellationTokenSource();
+        private string _handshakeAddress;
 
-        public BlockingBridge(HostConfig host, Socket source, Socket destination, string userHost, int protocolVersion) : base(host, source, destination)
+        public BlockingBridge(HostConfig host, Socket source, Socket destination, string handshakeAddress, int protocolVersion) : base(host, source, destination)
         {
-            Server = new ServerInfo(userHost);
             CompressionThreshold = -1;
             ProtocolVersion = protocolVersion;
             _listenerToken.Token.Register(Break);
             _queueIndex = GetQueueIndex();
+            _handshakeAddress = handshakeAddress;
         }
 
         public override Bridge Build() => Build(null);
@@ -100,7 +99,7 @@ namespace NyaProxy
                 else if (e.Packet == PacketType.Login.Server.LoginSuccess)
                 {
                     LoginSuccessPacket lsp = e.Packet.AsLoginSuccess();
-                    Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
+                    Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName, _handshakeAddress);
                     LoginSuccessEventArgs eventArgs = new LoginSuccessEventArgs();
                     EventUtils.InvokeCancelEvent(NyaProxy.LoginSuccess, this, eventArgs.Setup(this, Source, Direction.ToClient, e) as LoginSuccessEventArgs);
                     if (!eventArgs.IsBlock)

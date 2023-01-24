@@ -6,13 +6,14 @@ using System.Net.Sockets;
 using System.Threading;
 using NyaProxy.API;
 using NyaProxy.EventArgs;
+using NyaProxy.Extension;
 
 namespace NyaProxy
 {
     public abstract class Bridge : IBridge
     {
         internal static long Sequence => Interlocked.Read(ref _sequence);
-        private static long _sequence = 1000;
+        private static long _sequence = 1000; //从0开始的话StringTable那边看着有点太短，这边设置成1000仅仅是为了看着舒服点。
 
         public long SessionId { get; }
 
@@ -24,8 +25,6 @@ namespace NyaProxy
 
         private HostConfig _host { get; }
 
-        
-
         public Bridge(HostConfig host, Socket source, Socket destination)
         {
             SessionId = Interlocked.Increment(ref _sequence);
@@ -36,9 +35,7 @@ namespace NyaProxy
             NyaProxy.Bridges[host.Name]?.TryAdd(SessionId, this);
         }
 
-        public abstract IBridge Build();
-        
-        private static Func<Socket, EndPoint?> GetField_Socket_remoteEndPoint = ExpressionTreeUtils.CreateGetFieldMethodFormInstance<Socket, EndPoint?>("_remoteEndPoint");
+        public abstract IBridge Build(); 
         public virtual void Break()
         {
             lock (this)
@@ -59,7 +56,7 @@ namespace NyaProxy
                         Destination.Close();
                     }
                     EventUtils.InvokeCancelEvent(NyaProxy.Disconnected, this, new DisconnectEventArgs());
-                    NyaProxy.Logger.Info($"{GetType().Name} breaked ({GetField_Socket_remoteEndPoint(Source)}<->{GetField_Socket_remoteEndPoint(Destination)})");
+                    NyaProxy.Logger.Info($"{GetType().Name} breaked ({Source._remoteEndPoint()}<->{Destination._remoteEndPoint()})");
                 }
                 catch (SocketException) { }
                 catch (ObjectDisposedException) { }
