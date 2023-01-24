@@ -10,12 +10,9 @@ namespace NyaProxy.API
     public interface IBridge
     {
         long SessionId { get; }
-
+        string HandshakeAddress { get; }
         Socket Source { get; }
         Socket Destination { get; }
-        
-        //IPlayer Player { get; }
-        //IServer Server { get; }
 
         IBridge Build();
         void Break();

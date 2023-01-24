@@ -17,6 +17,8 @@ namespace NyaProxy
 
         public long SessionId { get; }
 
+        public string HandshakeAddress { get; }
+
         public Socket Source { get; set; }
 
         public Socket Destination { get; set; }
@@ -25,9 +27,11 @@ namespace NyaProxy
 
         private HostConfig _host { get; }
 
-        public Bridge(HostConfig host, Socket source, Socket destination)
+
+        public Bridge(HostConfig host, string handshakeAddress, Socket source, Socket destination)
         {
             SessionId = Interlocked.Increment(ref _sequence);
+            HandshakeAddress = handshakeAddress;
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
             _host = host ?? throw new ArgumentNullException(nameof(host));

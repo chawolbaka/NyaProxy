@@ -47,8 +47,6 @@ namespace NyaProxy
             Channles = new();
             CommandManager = new();
 
-            
-
             Thread.CurrentThread.Name = $"{nameof(NyaProxy)} thread";
            
             TaskScheduler.UnobservedTaskException += (sender, e) => Crash.Report(e.Exception);
@@ -149,7 +147,7 @@ namespace NyaProxy
                          if (hea.Packet.NextState == HandshakePacket.State.GetStatus)
                          {
                              serverSocket.SendPacket(hp, -1);
-                             new FastBridge(dest,acceptSocket, serverSocket).Build();
+                             new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket).Build();
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
@@ -188,7 +186,7 @@ namespace NyaProxy
                                  if (dest.Flags.HasFlag(ServerFlags.OnlineMode))
                                      acceptSocket.DisconnectOnLogin("无法支持正版登录").Close();
                                  else
-                                     new BlockingBridge(dest, acceptSocket, serverSocket, rawHandshakeAddress, hea.Packet.ProtocolVersion).Build(hea.Packet, lsea.Packet);
+                                     new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, hea.Packet.ProtocolVersion).Build(hea.Packet, lsea.Packet);
                                  lsp.Dispose();
                              }
                          }

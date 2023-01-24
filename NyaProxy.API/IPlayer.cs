@@ -20,11 +20,6 @@ namespace NyaProxy.API
         /// </summary>
         string Name { get; }
 
-        /// <summary>
-        /// 客户端在发送握手包时填写的地址
-        /// </summary>
-        string HandshakeAddress { get; }
-
 
         void SendMessage(ChatMessage message, ChatPosition position = ChatPosition.ChatMessage);
         void Kick(ChatMessage reason);

@@ -6,7 +6,7 @@ namespace NyaProxy
 {
     public class FastBridge : Bridge
     {
-        public FastBridge(HostConfig host, Socket source, Socket destination) : base(host, source, destination)
+        public FastBridge(HostConfig host, string handshakeAddress, Socket source, Socket destination) : base(host, handshakeAddress, source, destination)
         {
         }
 
