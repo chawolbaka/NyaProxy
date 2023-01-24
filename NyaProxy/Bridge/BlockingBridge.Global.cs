@@ -1,18 +1,10 @@
-﻿using MinecraftProtocol.Compression;
-using MinecraftProtocol.DataType.Chat;
-using MinecraftProtocol.IO;
-using MinecraftProtocol.IO.Extensions;
+﻿using MinecraftProtocol.IO;
 using MinecraftProtocol.IO.Pools;
-using MinecraftProtocol.Packets;
-using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
-using NyaProxy.API;
-using NyaProxy.API.Channle;
 using NyaProxy.API.Enum;
 using NyaProxy.EventArgs;
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Threading;
@@ -30,7 +22,7 @@ namespace NyaProxy
         private static ObjectPool<ChatSendEventArgs> ChatEventArgsPool = new();
         private static ObjectPool<PluginChannleSendEventArgs> PluginChannleEventArgsPool = new();
         private static ObjectPool<AsyncChatEventArgs> AsyncChatEventArgsPool = new();
-        private static CancellationTokenSource QueueToken = new CancellationTokenSource();
+        private static CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
         private static ManualResetEvent SendSignal = new ManualResetEvent(false); //我那奇怪的CPU占有率不至于是因为这边导致的吧...
 
 
@@ -39,7 +31,7 @@ namespace NyaProxy
 
         internal static void Setup(int networkThread) 
         {
-            QueueToken.Token.Register(() => SendSignal.Set());
+            GlobalQueueToken.Token.Register(() => SendSignal.Set());
             if (ReceiveQueues != null)
             {
                 foreach (var queue in ReceiveQueues)
@@ -102,11 +94,11 @@ namespace NyaProxy
         private static void SendQueueHandler(SocketAsyncEventArgs e)
         {
             SendEventArgs sea = default; //必须在这边，否则每次循环都会创建一个空的
-            while (!QueueToken.IsCancellationRequested)
+            while (!GlobalQueueToken.IsCancellationRequested)
             {
                 try
                 {
-                    sea = SendQueue.Take(QueueToken.Token);
+                    sea = SendQueue.Take(GlobalQueueToken.Token);
                     int send = 0, dataLength = sea.Data.Length;
                     
                     do
@@ -120,7 +112,7 @@ namespace NyaProxy
                         {
                             SendSignal.WaitOne();
                             SendSignal.Reset();
-                            if (QueueToken.IsCancellationRequested)
+                            if (GlobalQueueToken.IsCancellationRequested)
                             {
                                 SendSignal?.Dispose();
                                 return;
@@ -176,7 +168,7 @@ namespace NyaProxy
                                 LastTime = DateTime.Now;
                                 if (ServerChatMessagePacket.TryRead(csea.Packet, out ServerChatMessagePacket scmp))
                                 {
-                                    var eventArgs = AsyncChatEventArgsPool.Rent().Setup(csea._bridge.Server, csea.ReceivedTime, scmp.Message);
+                                    var eventArgs = AsyncChatEventArgsPool.Rent().Setup(csea.ReceivedTime, scmp.Message);
                                     scmp?.Dispose();
                                     EventUtils.InvokeCancelEventAsync(handler, null, eventArgs).ContinueWith(x => AsyncChatEventArgsPool.Return(eventArgs));
                                 }
@@ -247,16 +239,16 @@ namespace NyaProxy
         {
             try
             {
-                while (!QueueToken.IsCancellationRequested)
+                while (!GlobalQueueToken.IsCancellationRequested)
                 {
-                    action(queue.Take(QueueToken.Token));
+                    action(queue.Take(GlobalQueueToken.Token));
                 }
             }
             catch (OperationCanceledException) { }
             catch (ObjectDisposedException) { }
             catch (Exception e)
             {
-                QueueToken.Cancel();
+                GlobalQueueToken.Cancel();
                 NyaProxy.Logger.Exception(e);
             }
         }

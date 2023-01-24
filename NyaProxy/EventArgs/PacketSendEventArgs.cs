@@ -24,8 +24,6 @@ namespace NyaProxy
 
         public virtual int ProtocolVersion => _bridge.ProtocolVersion;
 
-        public IServer Server => _bridge.Server;
-
         public IPlayer Player => _bridge.Player;
 
         public virtual CompatiblePacket Packet 

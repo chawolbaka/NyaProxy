@@ -35,8 +35,6 @@ namespace NyaProxy.API
 
         int ProtocolVersion { get; }
 
-        IServer Server { get; }
-
         IPlayer Player { get; }
         
 

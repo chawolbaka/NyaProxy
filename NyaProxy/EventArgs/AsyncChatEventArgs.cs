@@ -17,9 +17,8 @@ namespace NyaProxy
 
         }
 
-        public AsyncChatEventArgs Setup(IServer server, DateTime receivedTime , ChatMessage message)
+        public AsyncChatEventArgs Setup(DateTime receivedTime , ChatMessage message)
         {
-            _server = server;
             _message = message;
             _receivedTime = receivedTime;
             return this;
@@ -28,9 +27,6 @@ namespace NyaProxy
 
         public DateTime ReceivedTime => _receivedTime;
         private DateTime _receivedTime;
-
-        public IServer Server => _server;
-        private IServer _server;
 
         public ChatMessage Message => _message;
         private ChatMessage _message;

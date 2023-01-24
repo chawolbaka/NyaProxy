@@ -10,11 +10,6 @@ namespace NyaProxy.API
     {
 
         /// <summary>
-        /// 聊天信息的来源
-        /// </summary>
-        IServer Server { get; }
-
-        /// <summary>
         /// 收到聊天信息的时间
         /// </summary>
         DateTime ReceivedTime { get; }
