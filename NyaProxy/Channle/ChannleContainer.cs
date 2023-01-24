@@ -10,48 +10,48 @@ namespace NyaProxy
 {
     public class ChannleContainer : IChannleContainer
     {
-        public Dictionary<string, IChannle> Channles { get; set; }
+        public Dictionary<string, IChannle> RegisteredChannles { get; set; }
 
-        public int Count => Channles.Count;
+        public int Count => RegisteredChannles.Count;
 
-        public IChannle this[string channleName] => Channles[channleName];
+        public IChannle this[string channleName] => RegisteredChannles[channleName];
 
 
         public ChannleContainer()
         {
-            Channles = new Dictionary<string, IChannle>();
+            RegisteredChannles = new Dictionary<string, IChannle>();
         }
 
         public bool ContainsKey(string channleName)
         {
-            return Channles.ContainsKey(channleName);
+            return RegisteredChannles.ContainsKey(channleName);
         }
 
         public void Add(IChannle channle)
         {
-            Channles.Add(channle.Name, channle);
+            RegisteredChannles.Add(channle.Name, channle);
         }
 
         public void Remove(IChannle channle)
         {
-            if (Channles.ContainsKey(channle.Name))
-                Channles.Remove(channle.Name);
+            if (RegisteredChannles.ContainsKey(channle.Name))
+                RegisteredChannles.Remove(channle.Name);
         }
 
         public void Remove(string channleName)
         {
-            if (Channles.ContainsKey(channleName))
-                Channles.Remove(channleName);
+            if (RegisteredChannles.ContainsKey(channleName))
+                RegisteredChannles.Remove(channleName);
         }
 
         public IEnumerator<IChannle> GetEnumerator()
         {
-            return Channles.Values.GetEnumerator();
+            return RegisteredChannles.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return Channles.Values.GetEnumerator();
+            return RegisteredChannles.Values.GetEnumerator();
         }
     }
 }

@@ -11,7 +11,7 @@ namespace NyaProxy
 {
     public abstract class Bridge : IBridge
     {
-        internal static long Sequence => _sequence;
+        internal static long Sequence => Interlocked.Read(ref _sequence);
         private static long _sequence = 1000;
 
         public long SessionId { get; }

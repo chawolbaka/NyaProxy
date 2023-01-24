@@ -17,7 +17,7 @@ namespace NyaProxy
         public string Name { get; }
 
         //这边读取的时候判断接口类型，如果是forge的就先读取第一个byte
-        private Dictionary<Guid, (IChannleMessage Handler, sbyte Discriminator)> MessageHandler;
+        internal Dictionary<Guid, (IChannleMessage Handler, sbyte Discriminator)> MessageHandler;
 
         public Channle(string name)
         {

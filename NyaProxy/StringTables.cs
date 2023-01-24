@@ -131,7 +131,7 @@ namespace StringTables
             if (Options.EnableCount)
             {
                 builder.AppendLine("");
-                //builder.AppendFormat(" Count: {0}", Rows.Count)
+                builder.AppendFormat(" Count: {0}", Rows.Count);
             }
 
             return builder.ToString();
@@ -276,7 +276,7 @@ namespace StringTables
     public class StringTablesOptions
     {
         public IEnumerable<string> Columns { get; set; } = new List<string>();
-        public bool EnableCount { get; set; } = true;
+        public bool EnableCount { get; set; }
 
         /// <summary>
         /// Enable only from a list of objects
