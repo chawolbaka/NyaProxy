@@ -148,10 +148,11 @@ namespace NyaProxy
                          {
                              serverSocket.SendPacket(hp, -1);
                              new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket).Build();
+                             hp?.Dispose();
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
-                             using Packet lsPacket = ProtocolUtils.ReceivePacket(acceptSocket);
+                             Packet lsPacket = ProtocolUtils.ReceivePacket(acceptSocket);
                              if (LoginStartPacket.TryRead(lsPacket, -1, out LoginStartPacket lsp))
                              {
                                  LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
@@ -183,18 +184,23 @@ namespace NyaProxy
                                          break;
                                  }
 
-                                 if (dest.Flags.HasFlag(ServerFlags.OnlineMode))
-                                     acceptSocket.DisconnectOnLogin("无法支持正版登录").Close();
+                                 if (!dest.Flags.HasFlag(ServerFlags.OnlineMode))
+                                 {
+                                     BlockingBridge bb = new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, hea.Packet.ProtocolVersion);
+                                     bb.Build(hea.Packet, lsea.Packet);
+                                 }
                                  else
-                                     new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, hea.Packet.ProtocolVersion).Build(hea.Packet, lsea.Packet);
-                                 lsp.Dispose();
+                                 {
+                                     acceptSocket.DisconnectOnLogin("无法支持正版登录").Close();
+                                     hp?.Dispose();
+                                     lsea?.Packet?.Dispose();
+                                 }
                              }
                          }
                          else
                          {
                              acceptSocket.DisconnectOnLogin(i18n.Disconnect.HandshakeFailed).Close();
                          }
-                         hp.Dispose();
                      }
                      else
                      {

@@ -21,13 +21,13 @@ namespace NyaProxy
 
         public void Kick(ChatMessage reason)
         {
-            BlockingBridge.Enqueue(Own.Source, new DisconnectPacket(reason, Own.ProtocolVersion).Pack(Own.CompressionThreshold));
+            BlockingBridge.Enqueue(Own.Source, new DisconnectPacket(reason, Own.ProtocolVersion).Pack(Own.ClientCompressionThreshold));
             Own.Break();
         }
 
         public void SendMessage(ChatMessage message, ChatPosition position = ChatPosition.ChatMessage)
         {
-            BlockingBridge.Enqueue(Own.Source, new ServerChatMessagePacket(message.Serialize(), (byte)position, UUID.Empty, Own.ProtocolVersion).Pack(Own.CompressionThreshold));
+            BlockingBridge.Enqueue(Own.Source, new ServerChatMessagePacket(message.Serialize(), (byte)position, UUID.Empty, Own.ProtocolVersion).Pack(Own.ClientCompressionThreshold));
         }
     }
 }

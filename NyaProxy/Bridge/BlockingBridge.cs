@@ -16,7 +16,10 @@ namespace NyaProxy
 
         public virtual int ProtocolVersion { get; }
         
-        public virtual int CompressionThreshold { get; private set; }
+        public virtual bool OverCompression { get; private set; }
+
+        public virtual int ClientCompressionThreshold { get; set; }
+        public virtual int ServerCompressionThreshold { get; set; }
 
         public virtual IPlayer Player { get; set; }
 
@@ -28,35 +31,17 @@ namespace NyaProxy
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
         private CancellationTokenSource _listenerToken = new CancellationTokenSource();
-        private string _handshakeAddress;
 
         public BlockingBridge(HostConfig host, string handshakeAddress, Socket source, Socket destination, int protocolVersion) : base(host, handshakeAddress, source, destination)
         {
-            CompressionThreshold = -1;
+            OverCompression = ClientCompressionThreshold != -1;
+            ClientCompressionThreshold = host.CompressionThreshold;
+            ServerCompressionThreshold = -1;
+
             ProtocolVersion = protocolVersion;
             _listenerToken.Token.Register(Break);
             _queueIndex = GetQueueIndex();
-        }
 
-        public override Bridge Build() => Build(null);
-        public virtual Bridge Build(params Packet[] packets)
-        {
-            //监听服务端发送给客户端的数据包
-            _serverSocketListener = new PacketListener(Destination);
-            _serverSocketListener.ProtocolVersion = ProtocolVersion;
-            _serverSocketListener.PacketReceived += BeforeLoginSuccess;
-            _serverSocketListener.StopListen += (sender, e) => Break();
-            _serverSocketListener.UnhandledException += SimpleExceptionHandle;
-            _serverSocketListener.Start(_listenerToken.Token);
-
-            if (packets != null)
-            {
-                foreach (var packet in packets)
-                {
-                    //这个方法不安全，有可能send的不全
-                    Destination.SendPacket(packet, -1);
-                }
-            }
 
             //监听客户端发送给服务端的数据包
             _clientSocketListener = new PacketListener(Source);
@@ -64,7 +49,39 @@ namespace NyaProxy
             _clientSocketListener.PacketReceived += ClientPacketReceived;
             _clientSocketListener.StopListen += (sender, e) => Break();
             _clientSocketListener.UnhandledException += SimpleExceptionHandle;
+
+            //监听服务端发送给客户端的数据包
+            _serverSocketListener = new PacketListener(Destination);
+            _serverSocketListener.ProtocolVersion = ProtocolVersion;
+            _serverSocketListener.PacketReceived += BeforeLoginSuccess;
+            _serverSocketListener.StopListen += (sender, e) => Break();
+            _serverSocketListener.UnhandledException += SimpleExceptionHandle;
+        }
+
+        public override Bridge Build() => Build(null);
+        public virtual Bridge Build(params Packet[] packets)
+        {   
+            if (packets != null)
+            {
+                foreach (var packet in packets)
+                {
+                    //这个方法不安全，有可能send的不全
+                    Enqueue(Destination, packet.Pack(-1), packet);
+                }
+            }
+
+
+
+            if (OverCompression)
+            {
+                _clientSocketListener.CompressionThreshold = ClientCompressionThreshold;
+                //这边必须直接发送不能走下面的ServerPacketReceived，否则会因为上面设置了CompressionThreshold导致SetCompressionPacket在Pack的时候多一个字节。
+                using Packet packet = new SetCompressionPacket(ClientCompressionThreshold, ProtocolVersion);
+                Enqueue(Source, packet.Pack(-1));
+            }
+            _serverSocketListener.Start(_listenerToken.Token);
             _clientSocketListener.Start(_listenerToken.Token);
+
 
             return this;
         }
@@ -75,7 +92,8 @@ namespace NyaProxy
             {
                 _listenerToken.Cancel();
             }
-        }
+        } 
+
         private void BeforeLoginSuccess(object sender, PacketReceivedEventArgs e)
         {
             try
@@ -91,9 +109,13 @@ namespace NyaProxy
                 }
                 else if (e.Packet == PacketType.Login.Server.SetCompression)
                 {
-                    CompressionThreshold = e.Packet.AsSetCompression().Threshold;
-                    _clientSocketListener.CompressionThreshold = CompressionThreshold;
-                    _serverSocketListener.CompressionThreshold = CompressionThreshold;
+                    var scp = e.Packet.AsSetCompression();
+                    ServerCompressionThreshold = scp.Threshold;
+                    _serverSocketListener.CompressionThreshold = ServerCompressionThreshold;
+                    if (!OverCompression)
+                        _clientSocketListener.CompressionThreshold = ServerCompressionThreshold;
+                    else //如果是接管了数据包压缩那么就把服务端发给客户端的SetCompression拦下来。
+                        return;
                 }
                 else if (e.Packet == PacketType.Login.Server.LoginSuccess)
                 {
@@ -142,6 +164,9 @@ namespace NyaProxy
 
         private void ClientPacketReceived(object sender, PacketReceivedEventArgs e)
         {
+            if (OverCompression)
+                e.Packet.CompressionThreshold = ServerCompressionThreshold;
+
             if (_state == States.Play && e.Packet == PacketType.Play.Client.ChatMessage)
                 ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
             else if (NyaProxy.Channles.Count > 0 && _state == States.Play && e.Packet == PacketType.Play.Client.PluginChannel)
@@ -152,6 +177,9 @@ namespace NyaProxy
 
         private void ServerPacketReceived(object sender, PacketReceivedEventArgs e)
         {
+            if (OverCompression)
+                e.Packet.CompressionThreshold = ClientCompressionThreshold;
+
             if (_state == States.Play && e.Packet == PacketType.Play.Server.ChatMessage)
                 ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
             else if (NyaProxy.Channles.Count > 0 && _state == States.Play && e.Packet == PacketType.Play.Server.PluginChannel)

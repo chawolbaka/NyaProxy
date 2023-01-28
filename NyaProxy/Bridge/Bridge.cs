@@ -25,7 +25,7 @@ namespace NyaProxy
 
         protected CancellationTokenSource ListenToken = new CancellationTokenSource();
 
-        private HostConfig _host { get; }
+        protected HostConfig _host { get; }
 
 
         public Bridge(HostConfig host, string handshakeAddress, Socket source, Socket destination)

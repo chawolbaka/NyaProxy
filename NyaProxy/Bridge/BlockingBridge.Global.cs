@@ -1,11 +1,14 @@
-﻿using MinecraftProtocol.IO;
+﻿using MinecraftProtocol.Compression;
+using MinecraftProtocol.IO;
 using MinecraftProtocol.IO.Pools;
+using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
 using NyaProxy.API.Enum;
 using NyaProxy.EventArgs;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -199,7 +202,7 @@ namespace NyaProxy
 
                 if (!e.IsBlock)
                 {
-                    if (!e.PacketCheaged)
+                    if (!e._bridge.OverCompression && !e.PacketCheaged)
                     {
                         var rawData = e._eventArgs.RawData.Span;
                         for (int i = 0; i < rawData.Length; i++)

@@ -29,43 +29,59 @@ namespace NyaProxy
         public override void Reload()
         {
             base.Reload();
-            Name = base["host"];
-            ProtocolVersion = base["server-version"];
-            Flags = Enum.Parse<ServerFlags>(base["server-flags"]);
-            SelectMode = Enum.Parse<ServerSelectMode>(base["server-select-mode"]);
-            ForwardMode = Enum.Parse<ForwardMode>(base["player-info-forwarding-mode"]);
-            CompressionThreshold = base["compression-threshold"];
-            KickExistsPlayer = base["kick-exists-player"];
-           
-            foreach (TomlNode node in base["servers"])
+            try
             {
-                string server = node.AsString;
-                if (IPEndPoint.TryParse(server, out IPEndPoint ipEndPoint))
-                {
-                    ServerEndPoints.Add(ipEndPoint);
-                }
-                else
-                {
-                    string[] s = server.Split(':');
-                    if (s.Length == 2 && ushort.TryParse(s[1], out ushort port))
-                    {
-                        ServerEndPoints.Add(new DnsEndPoint(s[0], port));
-                    }
-                }
+                Name = base["host"];
+                ProtocolVersion = base["server-version"];
+                Flags = Enum.Parse<ServerFlags>(base["server-flags"]);
+                SelectMode = Enum.Parse<ServerSelectMode>(base["server-select-mode"]);
+                ForwardMode = Enum.Parse<ForwardMode>(base["player-info-forwarding-mode"]);
+                CompressionThreshold = base.HasKey("compression-threshold") ? base["compression-threshold"] : -1;
+                KickExistsPlayer = base["kick-exists-player"];
 
+                foreach (TomlNode node in base["servers"])
+                {
+                    string server = node.AsString;
+                    if (IPEndPoint.TryParse(server, out IPEndPoint ipEndPoint))
+                    {
+                        ServerEndPoints.Add(ipEndPoint);
+                    }
+                    else
+                    {
+                        string[] s = server.Split(':');
+                        if (s.Length == 2 && ushort.TryParse(s[1], out ushort port))
+                        {
+                            ServerEndPoints.Add(new DnsEndPoint(s[0], port));
+                        }
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                NyaProxy.Logger.Error(i18n.Error.LoadConfigFail.Replace("{File}", File.Name));
+                NyaProxy.Logger.Exception(e);
             }
         }
 
         public override void Save()
         {
-            base["host"] = new TomlString(Name, i18n.Config.Host);
-            base["servers"] = GetServers();
-            base["server-select-mode"] = new TomlString(SelectMode, i18n.Config.SelectMode);
-            base["server-version"] = new TomlInteger(ProtocolVersion, i18n.Config.ProtocolVersion);
-            base["server-flags"] = new TomlString(Flags, i18n.Config.ServerFlags);
-            base["compression-threshold"] = new TomlInteger(CompressionThreshold, i18n.Config.CompressionThreshold);
-            base["player-info-forwarding-mode"] = new TomlString(ForwardMode, i18n.Config.ForwardMode);
-            base["kick-exists-player"] = new TomlBoolean(KickExistsPlayer, i18n.Config.KickExistsPlayer);
+            try
+            {
+                base["host"] = new TomlString(Name, i18n.Config.Host);
+                base["servers"] = GetServers();
+                base["server-select-mode"] = new TomlString(SelectMode, i18n.Config.SelectMode);
+                base["server-version"] = new TomlInteger(ProtocolVersion, i18n.Config.ProtocolVersion);
+                base["server-flags"] = new TomlString(Flags, i18n.Config.ServerFlags);
+                base["compression-threshold"] = new TomlInteger(CompressionThreshold, i18n.Config.CompressionThreshold);
+                base["player-info-forwarding-mode"] = new TomlString(ForwardMode, i18n.Config.ForwardMode);
+                base["kick-exists-player"] = new TomlBoolean(KickExistsPlayer, i18n.Config.KickExistsPlayer);
+            }
+            catch (Exception e)
+            {
+                NyaProxy.Logger.Error(i18n.Error.SaveConfigFail.Replace("{File}", File.Name));
+                NyaProxy.Logger.Exception(e);
+            }
         }
 
         private TomlNode[] GetServers()

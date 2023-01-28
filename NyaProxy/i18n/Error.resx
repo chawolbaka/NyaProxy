@@ -126,10 +126,13 @@
   <data name="CommandRegistered" xml:space="preserve">
     <value>{CommandName} is Registered</value>
   </data>
+  <data name="LoadConfigFail" xml:space="preserve">
+    <value>Config file {File} failed to load</value>
+  </data>
   <data name="NoSocketAvailable" xml:space="preserve">
     <value>No socket available</value>
   </data>
   <data name="SaveConfigFail" xml:space="preserve">
-    <value>Save config fail.</value>
+    <value>Config file {File} failed to save</value>
   </data>
 </root>

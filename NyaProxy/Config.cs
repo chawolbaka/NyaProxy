@@ -121,18 +121,19 @@ namespace NyaProxy
             NetworkThread = Environment.ProcessorCount;
             if (Hosts.Count == 0)
             {
-                HostConfig serverConfig =  new HostConfig(new FileInfo(Path.Combine(ServersPath,"example.toml")))
+                HostConfig serverConfig = new HostConfig(new FileInfo(Path.Combine(ServersPath, "example.toml")))
                 {
                     Name = "example",
                     ForwardMode = ForwardMode.Direct,
                     SelectMode = ServerSelectMode.Failover,
                     Flags = ServerFlags.None,
-                    ServerEndPoints = new List<EndPoint>() 
+                    ServerEndPoints = new List<EndPoint>()
                     {
                         new DnsEndPoint("example.net", 25565),
-                        new IPEndPoint(new IPAddress(new byte[] { 127,0,0,1 }), 233)
+                        new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), 233)
                     },
-                    ProtocolVersion = -1
+                    ProtocolVersion = -1,
+                    CompressionThreshold = -1
                 };
                 serverConfig.Save();
             }
