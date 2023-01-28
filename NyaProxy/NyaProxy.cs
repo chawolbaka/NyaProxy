@@ -146,9 +146,9 @@ namespace NyaProxy
 
                          if (hea.Packet.NextState == HandshakePacket.State.GetStatus)
                          {
-                             serverSocket.SendPacket(hp, -1);
-                             new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket).Build();
+                             await NetworkUtils.SendDataAsync(serverSocket, hp.Pack(-1));
                              hp?.Dispose();
+                             new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket).Build();
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
@@ -191,7 +191,7 @@ namespace NyaProxy
                                  }
                                  else
                                  {
-                                     acceptSocket.DisconnectOnLogin("无法支持正版登录").Close();
+                                     acceptSocket.DisconnectOnLogin("无法支持正版登录");
                                      hp?.Dispose();
                                      lsea?.Packet?.Dispose();
                                  }
@@ -199,7 +199,7 @@ namespace NyaProxy
                          }
                          else
                          {
-                             acceptSocket.DisconnectOnLogin(i18n.Disconnect.HandshakeFailed).Close();
+                             acceptSocket.DisconnectOnLogin(i18n.Disconnect.HandshakeFailed);
                          }
                      }
                      else
