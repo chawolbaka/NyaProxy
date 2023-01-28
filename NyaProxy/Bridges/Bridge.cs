@@ -7,8 +7,9 @@ using System.Threading;
 using NyaProxy.API;
 using NyaProxy.EventArgs;
 using NyaProxy.Extension;
+using NyaProxy.Configs;
 
-namespace NyaProxy
+namespace NyaProxy.Bridges
 {
     public abstract class Bridge : IBridge
     {

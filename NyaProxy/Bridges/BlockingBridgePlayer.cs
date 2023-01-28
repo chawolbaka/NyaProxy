@@ -4,18 +4,18 @@ using NyaProxy.API;
 using MinecraftProtocol.DataType.Chat;
 using MinecraftProtocol.Packets.Server;
 
-namespace NyaProxy
+namespace NyaProxy.Bridges
 {
     public class BlockingBridgePlayer : IPlayer
     {
         public BlockingBridge Own { get; set; }
         public UUID Id { get; set; }
         public string Name { get; set; }
-        
+
         public BlockingBridgePlayer(BlockingBridge own, UUID id, string name)
         {
             Own = own;
-            Id = id; 
+            Id = id;
             Name = name;
         }
 

@@ -1,24 +1,15 @@
-﻿using MinecraftProtocol.Utils;
-using NyaProxy.API;
-using NyaProxy.Extension;
-using StringTables;
+﻿using StringTables;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
-
-namespace NyaProxy
+namespace NyaProxy.Debug
 {
     public static class Crash
     {
 
-        public static void Report(Exception exception, bool writeConsole = true, bool writeFile = true ,bool exit = true)
+        public static void Report(Exception exception, bool writeConsole = true, bool writeFile = true, bool exit = true)
         {
             if (exception is null)
                 return;
@@ -27,7 +18,7 @@ namespace NyaProxy
             report.AppendLine($"---- {nameof(NyaProxy)} Crash Report ----").AppendLine();
             report.AppendLine($"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ffff K}");
             report.AppendLine($"Source: {exception.Source}").AppendLine();
-            
+
             report.AppendLine(exception.ToString()).AppendLine().AppendLine();
             report.AppendLine("A detailed walkthrough of the error");
             report.AppendLine("---------------------------------------------------------------------------------------").AppendLine().AppendLine();
@@ -65,7 +56,7 @@ namespace NyaProxy
                 Console.WriteLine(report);
                 Console.ForegroundColor = color;
             }
-                
+
 
             if (writeFile)
             {

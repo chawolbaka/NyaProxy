@@ -1,6 +1,7 @@
 ﻿using NyaProxy.API;
 using NyaProxy.API.Enum;
 using NyaProxy.Extension;
+using NyaProxy.Bridges;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,11 +11,11 @@ using System.Net;
 using System.Text;
 using Tommy;
 
-namespace NyaProxy
+namespace NyaProxy.Configs
 {
     public class Config
     {
-        private static readonly string ServersPath =  "Servers";
+        private static readonly string ServersPath = "Servers";
         private readonly ConfigFile MainConfig = new ConfigFile(new FileInfo("config.toml"), true);
 
         public IPEndPoint Bind { get; set; }
@@ -28,7 +29,7 @@ namespace NyaProxy
 
         public Config()
         {
-            Hosts = new ();
+            Hosts = new();
         }
 
         public void Load()
@@ -141,8 +142,8 @@ namespace NyaProxy
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(MainConfig.ToString()+Environment.NewLine + Environment.NewLine);
-            
+            sb.AppendLine(MainConfig.ToString() + Environment.NewLine + Environment.NewLine);
+
             foreach (var server in Hosts)
             {
                 sb.AppendLine($"{server.Key}:");

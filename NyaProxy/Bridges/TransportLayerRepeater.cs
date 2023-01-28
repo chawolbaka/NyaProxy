@@ -5,7 +5,7 @@ using System.Threading;
 using System.Buffers;
 using MinecraftProtocol.IO.Pools;
 
-namespace NyaProxy
+namespace NyaProxy.Bridges
 {
     public static class TransportLayerRepeater
     {

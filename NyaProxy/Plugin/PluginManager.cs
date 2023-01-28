@@ -1,35 +1,32 @@
-﻿using MinecraftProtocol.Client;
-using MinecraftProtocol.Crypto;
-using MinecraftProtocol.DataType.Chat;
-using MinecraftProtocol.Packets;
-using MinecraftProtocol.Utils;
-using Newtonsoft.Json;
-using NyaProxy.API;
-using NyaProxy.API.Channle;
-using NyaProxy.API.Enum;
-using NyaProxy.Extension;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
+using NyaProxy.API;
+using NyaProxy.API.Channle;
+using NyaProxy.Configs;
+using NyaProxy.Extension;
+using NyaProxy.Bridges;
+using MinecraftProtocol.Crypto;
+using MinecraftProtocol.Packets;
+using MinecraftProtocol.Utils;
+using Newtonsoft.Json;
 
-namespace NyaProxy
+
+namespace NyaProxy.Plugin
 {
     public class PluginManager : IEnumerable<PluginController>
     {
         private static SHA512 SHA512 = SHA512.Create();
         private static MethodInfo SetupPlugin = typeof(NyaPlugin).GetMethod("Setup", BindingFlags.Instance | BindingFlags.NonPublic);
-       
+
         internal Dictionary<string, PluginController> Plugins = new Dictionary<string, PluginController>();
         internal ILogger Logger;
 
@@ -169,10 +166,10 @@ namespace NyaProxy
                     {
 
                         if (config.File.Exists)
-                        //用于全局重载和保存
-                        ConfigList.Add(config);
+                            //用于全局重载和保存
+                            ConfigList.Add(config);
                     }
-                    
+
                 }
             }
 
@@ -233,7 +230,7 @@ namespace NyaProxy
 
             private class HostCovariance : IReadOnlyDictionary<string, IHost>
             {
-                public IHost this[string key] => new Host(key,_hosts[key]);
+                public IHost this[string key] => new Host(key, _hosts[key]);
 
                 public IEnumerable<string> Keys => _hosts.Keys;
 
@@ -269,7 +266,7 @@ namespace NyaProxy
 
                 IEnumerator IEnumerable.GetEnumerator()
                 {
-                    return this.GetEnumerator();
+                    return GetEnumerator();
                 }
             }
 

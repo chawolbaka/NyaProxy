@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace NyaProxy
+namespace NyaProxy.Plugin
 {
     [Serializable]
     internal class PluginLoadException : Exception

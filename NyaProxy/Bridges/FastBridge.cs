@@ -1,8 +1,9 @@
 ﻿using NyaProxy.API;
+using NyaProxy.Configs;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace NyaProxy
+namespace NyaProxy.Bridges
 {
     public class FastBridge : Bridge
     {

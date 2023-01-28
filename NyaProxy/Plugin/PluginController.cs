@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NyaProxy
+namespace NyaProxy.Plugin
 {
     public class PluginController
     {
@@ -47,7 +47,7 @@ namespace NyaProxy
             }
             finally
             {
-                if(lockTaken)
+                if (lockTaken)
                     UnloadLock.Exit();
             }
 

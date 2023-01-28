@@ -8,8 +8,9 @@ using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
 using System.Net.Sockets;
 using NyaProxy.API;
+using NyaProxy.Configs;
 
-namespace NyaProxy
+namespace NyaProxy.Bridges
 {
     public partial class BlockingBridge : Bridge
     {
@@ -107,9 +108,8 @@ namespace NyaProxy
                     }
                     _listenerToken.Cancel(); return;
                 }
-                else if (e.Packet == PacketType.Login.Server.SetCompression)
+                else if (SetCompressionPacket.TryRead(e.Packet, out SetCompressionPacket scp))
                 {
-                    var scp = e.Packet.AsSetCompression();
                     ServerCompressionThreshold = scp.Threshold;
                     _serverSocketListener.CompressionThreshold = ServerCompressionThreshold;
                     if (!OverCompression)
@@ -117,9 +117,8 @@ namespace NyaProxy
                     else //如果是接管了数据包压缩那么就把服务端发给客户端的SetCompression拦下来。
                         return;
                 }
-                else if (e.Packet == PacketType.Login.Server.LoginSuccess)
+                else if (LoginSuccessPacket.TryRead(e.Packet, out LoginSuccessPacket lsp))
                 {
-                    LoginSuccessPacket lsp = e.Packet.AsLoginSuccess();
                     Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
                     LoginSuccessEventArgs eventArgs = new LoginSuccessEventArgs();
                     EventUtils.InvokeCancelEvent(NyaProxy.LoginSuccess, this, eventArgs.Setup(this, Source, Direction.ToClient, e) as LoginSuccessEventArgs);

@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using NyaProxy.API;
 using NyaProxy.API.Config;
 
-namespace NyaProxy
+namespace NyaProxy.Configs
 {
 
     public class Manifest : IManifest

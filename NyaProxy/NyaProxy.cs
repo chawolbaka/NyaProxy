@@ -10,11 +10,14 @@ using MinecraftProtocol.Utils;
 using MinecraftProtocol.DataType;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
-using MinecraftProtocol.IO.Extensions;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
 using NyaProxy.Extension;
 using System.Collections.Concurrent;
+using NyaProxy.Debug;
+using NyaProxy.Configs;
+using NyaProxy.Plugin;
+using NyaProxy.Bridges;
 
 namespace NyaProxy
 {

@@ -5,6 +5,7 @@ using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
 using NyaProxy.API.Enum;
+using NyaProxy.Debug;
 using NyaProxy.EventArgs;
 using System;
 using System.Collections.Concurrent;
@@ -12,7 +13,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace NyaProxy
+namespace NyaProxy.Bridges
 {
     public partial class BlockingBridge : Bridge
     {
@@ -141,7 +142,7 @@ namespace NyaProxy
                 }
                 finally
                 {
-                    sea.Dispose();
+                    sea?.Dispose();
                     SendEventArgsPool.Return(sea);
                 }
             }
@@ -224,7 +225,7 @@ namespace NyaProxy
             }
             catch (Exception ex)
             {
-                Crash.Report(ex, true, false, false);
+                NyaProxy.Logger.Exception(ex);
                 e._bridge.Break();
             }
             finally

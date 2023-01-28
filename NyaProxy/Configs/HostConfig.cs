@@ -8,7 +8,7 @@ using NyaProxy.API;
 using NyaProxy.API.Enum;
 using Tommy;
 
-namespace NyaProxy
+namespace NyaProxy.Configs
 {
     public class HostConfig : ConfigFile, IHostConfig
     {
@@ -142,7 +142,7 @@ namespace NyaProxy
         {
             return Name.GetHashCode();
         }
-        
+
 
     }
 }

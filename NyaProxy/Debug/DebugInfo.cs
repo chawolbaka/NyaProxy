@@ -1,6 +1,7 @@
 ﻿using MinecraftProtocol.Utils;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
+using NyaProxy.Configs;
 using NyaProxy.Extension;
 using StringTables;
 using System;
@@ -9,8 +10,9 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using NyaProxy.Bridges;
 
-namespace NyaProxy
+namespace NyaProxy.Debug
 {
     public static class DebugHelper
     {
@@ -27,7 +29,7 @@ namespace NyaProxy
                     table.AddRow(bridge.SessionId.ToString($"D{Bridge.Sequence.ToString().Length}"), host.Key, playerInfo,
                          $"{bridge.Source._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Source) ? "Online" : "Offline")})",
                          $"{bridge.Destination._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Destination) ? "Online" : "Offline")})");
-                    
+
                 }
             }
             return table;
@@ -65,7 +67,7 @@ namespace NyaProxy
             return table;
         }
 
-        
+
 
     }
 }

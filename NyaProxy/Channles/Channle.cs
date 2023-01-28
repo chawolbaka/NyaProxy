@@ -2,15 +2,12 @@
 using NyaProxy.API;
 using NyaProxy.API.Channle;
 using NyaProxy.API.Enum;
-using NyaProxy.i18n;
+using NyaProxy.Bridges;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace NyaProxy
+namespace NyaProxy.Channles
 {
     internal class Channle : IChannle
     {
@@ -25,7 +22,7 @@ namespace NyaProxy
                 throw new ArgumentNullException(nameof(name));
 
             Name = name;
-            MessageHandler = new ();
+            MessageHandler = new();
         }
 
         internal void Trigger(Side side, ByteReader reader, IBridge bridge)
@@ -36,9 +33,9 @@ namespace NyaProxy
                 {
                     try
                     {
-                        if((side & message.Handler.Side) == message.Handler.Side)
+                        if ((side & message.Handler.Side) == message.Handler.Side)
                         {
-                            if(message.Handler is not IForgeChannleMessage)
+                            if (message.Handler is not IForgeChannleMessage)
                                 message.Handler.ReadMessage(reader);
                             else if (message.Discriminator == reader.ReadByte())
                                 message.Handler.ReadMessage(reader);
