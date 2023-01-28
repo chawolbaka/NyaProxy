@@ -110,7 +110,6 @@ namespace NyaProxy
 
         private static Task SessionHanderAsync(Socket acceptSocket)
         {
-            
             return Task.Run(async () =>
              {
                  try
@@ -123,14 +122,17 @@ namespace NyaProxy
                          if (hea.IsBlock)
                              return;
 
-                         Logger.Debug($"Host = {hea.Packet.ServerAddress}");
+                         Logger.Debug($"{acceptSocket._remoteEndPoint} Try to handshake (Host = {hea.Packet.ServerAddress}, Port = {hea.Packet.ServerPort})");
+
                          string rawHandshakeAddress = hea.Packet.ServerAddress;
                          string host = hea.Packet.ServerAddress;
                          if (host.Contains('\0'))
                              host = host.Substring(0, host.IndexOf('\0'));
+
                          HostConfig dest = ChooseServer(host);
                          Socket serverSocket = await dest?.OpenConnectAsync();
-
+                         
+                         
                          if (dest == null)
                          {
                              acceptSocket.DisconnectOnLogin(i18n.Disconnect.NoServerAvailable);
@@ -148,7 +150,8 @@ namespace NyaProxy
                          {
                              await NetworkUtils.SendDataAsync(serverSocket, hp.Pack(-1));
                              hp?.Dispose();
-                             new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket).Build();
+                             FastBridge bridge = new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket);
+                             bridge.Build();
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
@@ -210,15 +213,10 @@ namespace NyaProxy
                  }
                  catch (Exception e)
                  {
-
-                     if (e is SocketException)
-#if DEBUG
-                         Logger.Error(e.Message);
-#else
-                         Logger.Debug(e.Message);
-#endif
+                     if (e.CheckSocketException(out string message))
+                         Logger.Error(message);
                      else
-                         Crash.Report(e, true, true, false);
+                         Logger.Exception(e);
                  }
              });
         }
