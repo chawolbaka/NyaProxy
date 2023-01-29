@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NyaProxy.API;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using NyaProxy.API.Config;
 
 namespace NyaProxy.Configs
@@ -14,59 +8,48 @@ namespace NyaProxy.Configs
 
     public class Manifest : IManifest
     {
-        [JsonProperty("UniqueId", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("UniqueId"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string UniqueId { get; set; }
 
-        [JsonProperty("Name", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("Name"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string Name { get; set; }
 
-        [JsonProperty("Author", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("Author"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string Author { get; set; }
 
-        [JsonProperty("Description", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("Description"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string Description { get; set; }
 
-        [JsonProperty("EntryDll", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("EntryDll"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string EntryDll { get; set; }
 
-        [JsonProperty("Version", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("Version"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         [JsonConverter(typeof(VersionConverter))]
         public Version Version { get; set; }
 
-        [JsonProperty("MinimumApiVersion", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("MinimumApiVersion"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         [JsonConverter(typeof(VersionConverter))]
         public Version MinimumApiVersion { get; set; }
 
-        [JsonProperty("Checksum", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonPropertyName("Checksum"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string Checksum { get; set; }
 
         public Manifest() { }
 
-        private class VersionConverter : JsonConverter
+        private class VersionConverter : JsonConverter<Version>
         {
-            public override bool CanConvert(Type objectType)
+            public override Version Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
-                return objectType == typeof(Version);
+                if (Version.TryParse(reader.GetString(), out Version result))
+                {
+                    return result;
+                }
+                return null;
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            public override void Write(Utf8JsonWriter writer, Version value, JsonSerializerOptions options)
             {
-                if (reader.ValueType == typeof(string))
-                {
-                    if (Version.TryParse(reader.Value.ToString(), out Version result))
-                    {
-                        return result;
-                    }
-                }
-                return reader.Value;
-            }
-
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-            {
-                if (value.GetType() == typeof(Version))
-                {
-                    writer.WriteValue(value.ToString());
-                }
+                writer.WriteStringValue(value.ToString());
             }
         }
     }

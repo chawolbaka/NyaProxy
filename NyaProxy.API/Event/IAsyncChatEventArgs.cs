@@ -1,4 +1,4 @@
-﻿using MinecraftProtocol.DataType.Chat;
+﻿using MinecraftProtocol.Chat;
 using MinecraftProtocol.Utils;
 using NyaProxy.API.Enum;
 using System;
@@ -13,10 +13,10 @@ namespace NyaProxy.API
         /// 收到聊天信息的时间
         /// </summary>
         DateTime ReceivedTime { get; }
-        
+
         /// <summary>
         /// 聊天信息
         /// </summary>
-        ChatMessage Message { get; }
+        ChatComponent Message { get; }
     }
 }

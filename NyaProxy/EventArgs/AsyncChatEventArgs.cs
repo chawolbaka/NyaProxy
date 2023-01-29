@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using MinecraftProtocol.DataType.Chat;
+using MinecraftProtocol.Chat;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
 
@@ -17,7 +17,7 @@ namespace NyaProxy
 
         }
 
-        public AsyncChatEventArgs Setup(DateTime receivedTime , ChatMessage message)
+        public AsyncChatEventArgs Setup(DateTime receivedTime , ChatComponent message)
         {
             _message = message;
             _receivedTime = receivedTime;
@@ -28,8 +28,8 @@ namespace NyaProxy
         public DateTime ReceivedTime => _receivedTime;
         private DateTime _receivedTime;
 
-        public ChatMessage Message => _message;
-        private ChatMessage _message;
+        public ChatComponent Message => _message;
+        private ChatComponent _message;
 
     }
 }

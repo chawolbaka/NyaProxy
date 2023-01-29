@@ -2,7 +2,7 @@
 using NyaProxy.API;
 using NyaProxy.API.Enum;
 using MinecraftProtocol.IO.Extensions;
-using MinecraftProtocol.DataType.Chat;
+using MinecraftProtocol.Chat;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Packets.Server;
@@ -13,7 +13,7 @@ namespace NyaProxy
     public class ChatSendEventArgs : PacketSendEventArgs, IChatSendEventArgs, IDisposable
     {
         public override CompatiblePacket Packet { get => base.Packet; set { base.Packet = value; _message = null; } }
-        public virtual ChatMessage Message
+        public virtual ChatComponent Message
         {
             get 
             { 
@@ -26,7 +26,7 @@ namespace NyaProxy
                             _message = (_definedPacket as ServerChatMessagePacket).Message; break;
                         case Direction.ToServer:
                             _definedPacket = Packet.AsClientChatMessage();
-                            _message = ChatMessage.Parse((_definedPacket as ClientChatMessagePacket).Message); break;
+                            _message = ChatComponent.Parse((_definedPacket as ClientChatMessagePacket).Message); break;
                     }
                 } 
                 return _message;
@@ -56,7 +56,7 @@ namespace NyaProxy
                 _message = value;
             }
         }
-        private ChatMessage _message;
+        private ChatComponent _message;
         private DefinedPacket _definedPacket;
 
         public void Dispose()

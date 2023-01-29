@@ -1,5 +1,5 @@
-﻿using MinecraftProtocol.DataType;
-using MinecraftProtocol.DataType.Chat;
+﻿using MinecraftProtocol.Chat;
+using MinecraftProtocol.DataType;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace NyaProxy.API
         string Name { get; }
 
 
-        void SendMessage(ChatMessage message, ChatPosition position = ChatPosition.ChatMessage);
-        void Kick(ChatMessage reason);
+        void SendMessage(ChatComponent message, ChatPosition position = ChatPosition.ChatMessage);
+        void Kick(ChatComponent reason);
     }
 }

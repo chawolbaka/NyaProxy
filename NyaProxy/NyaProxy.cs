@@ -18,6 +18,7 @@ using NyaProxy.Debug;
 using NyaProxy.Configs;
 using NyaProxy.Plugin;
 using NyaProxy.Bridges;
+using NyaProxy.Channles;
 
 namespace NyaProxy
 {

@@ -17,8 +17,7 @@ using NyaProxy.Bridges;
 using MinecraftProtocol.Crypto;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Utils;
-using Newtonsoft.Json;
-
+using System.Text.Json;
 
 namespace NyaProxy.Plugin
 {
@@ -51,7 +50,8 @@ namespace NyaProxy.Plugin
 
             try
             {
-                Manifest manifest = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(Path.Combine(directory, "Manifest.json")));
+                Manifest manifest = JsonSerializer.Deserialize<Manifest>(File.ReadAllText(Path.Combine(directory, "Manifest.json")));
+
                 //检查必选项
                 if (string.IsNullOrWhiteSpace(manifest.UniqueId))
                     throw new PluginLoadException(i18n.Plugin.UniqueId_Empty);

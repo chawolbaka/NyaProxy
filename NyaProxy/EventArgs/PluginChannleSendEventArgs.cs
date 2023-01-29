@@ -1,16 +1,6 @@
-﻿using MinecraftProtocol.Client;
-using MinecraftProtocol.DataType.Chat;
-using MinecraftProtocol.Packets;
-using MinecraftProtocol.Packets.Client;
-using MinecraftProtocol.Packets.Server;
+﻿using MinecraftProtocol.Packets;
 using MinecraftProtocol.IO.Extensions;
 using NyaProxy.API.Enum;
-using NyaProxy.i18n;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NyaProxy.EventArgs
 {

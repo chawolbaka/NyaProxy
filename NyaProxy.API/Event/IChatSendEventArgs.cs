@@ -1,4 +1,4 @@
-﻿using MinecraftProtocol.DataType.Chat;
+﻿using MinecraftProtocol.Chat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +9,6 @@ namespace NyaProxy.API
 {
     public interface IChatSendEventArgs : IPacketSendEventArgs
     {
-        ChatMessage Message { get; set; }
+        ChatComponent Message { get; set; }
     }
 }

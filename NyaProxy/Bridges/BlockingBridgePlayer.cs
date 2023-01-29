@@ -1,8 +1,9 @@
 ﻿using MinecraftProtocol.DataType;
 using System;
 using NyaProxy.API;
-using MinecraftProtocol.DataType.Chat;
+using MinecraftProtocol.Chat;
 using MinecraftProtocol.Packets.Server;
+using MinecraftProtocol.Chat;
 
 namespace NyaProxy.Bridges
 {
@@ -19,13 +20,13 @@ namespace NyaProxy.Bridges
             Name = name;
         }
 
-        public void Kick(ChatMessage reason)
+        public void Kick(ChatComponent reason)
         {
             BlockingBridge.Enqueue(Own.Source, new DisconnectPacket(reason, Own.ProtocolVersion).Pack(Own.ClientCompressionThreshold));
             Own.Break();
         }
 
-        public void SendMessage(ChatMessage message, ChatPosition position = ChatPosition.ChatMessage)
+        public void SendMessage(ChatComponent message, ChatPosition position = ChatPosition.ChatMessage)
         {
             BlockingBridge.Enqueue(Own.Source, new ServerChatMessagePacket(message.Serialize(), (byte)position, UUID.Empty, Own.ProtocolVersion).Pack(Own.ClientCompressionThreshold));
         }
