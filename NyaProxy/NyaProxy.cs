@@ -19,6 +19,7 @@ using NyaProxy.Configs;
 using NyaProxy.Plugin;
 using NyaProxy.Bridges;
 using NyaProxy.Channles;
+using System.Linq;
 
 namespace NyaProxy
 {
@@ -28,7 +29,9 @@ namespace NyaProxy
         public static ChannleContainer Channles { get; private set; }
         public static PluginManager Plugin { get; private set; }
         public static ConcurrentDictionary<string, ConcurrentDictionary<long, Bridge>> Bridges { get; private set; }
-        public static Config Config { get; private set; }
+        public static IReadOnlyList<Socket> ServerSockets { get; set; }
+
+        public static MainConfig Config { get; private set; }
         public static ILogger Logger { get; private set; }
 
         public static EventHandler<IConnectEventArgs> Connecting;
@@ -42,7 +45,7 @@ namespace NyaProxy
         public static AsyncCommonEventHandler<object, IAsyncChatEventArgs> ChatMessageSened;
         public static EventHandler<IDisconnectEventArgs> Disconnected;
 
-        public static async Task Setup(Config config, ILogger logger)
+        public static async Task Setup(MainConfig config, ILogger logger)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -79,37 +82,94 @@ namespace NyaProxy
             BlockingBridge.Setup(config.NetworkThread);
         }
 
-        public static void Start()
+        public static void RebindSockets()
         {
-            Socket ServerSocket = new Socket(Config.Bind.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            ServerSocket.Bind(Config.Bind);
-            ServerSocket.Listen();
-            SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
-            eventArgs.UserToken = ServerSocket;
-            eventArgs.Completed += (sender, e) => AcceptCompleted(e);
-            Logger.Info(i18n.Message.ListenON.Replace("{Bind}", Config.Bind));
-            if (!ServerSocket.AcceptAsync(eventArgs))
-                AcceptCompleted(eventArgs);
-            
+            if (ServerSockets != null && ServerSockets.Count > 0)
+            {
+                //如果一个ServerSocket已从Bind中消失，那么就关闭该Socket。
+                foreach (var socket in ServerSockets.Where(s => !Config.Bind.Any(b => s.LocalEndPoint is IPEndPoint local && local.Equals(b))))
+                {
+                    try
+                    {
+                        socket?.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.CheckException<SocketException>(out string message))
+                            Logger.Error(message);
+                        else
+                            throw;
+                    }
+                }
+            }
+            BindSockets();
+        }
+
+        public static void BindSockets()
+        {
+            List<Socket> serverSockets = new List<Socket>();
+            foreach (var bind in Config.Bind)
+            {
+                //如果该地址已被绑定就跳过
+                if (ServerSockets != null && ServerSockets.Any(s => s.LocalEndPoint is IPEndPoint local && local.Equals(bind)))
+                    break;
+
+                Socket socket = BindSocket(bind);
+                if (socket != null)
+                    serverSockets.Add(socket);
+            }
+
+            ServerSockets = serverSockets.AsReadOnly();
+        }
+        
+
+        private static Socket BindSocket(IPEndPoint bind)
+        {
+            try
+            {
+                Socket ServerSocket = new Socket(bind.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                ServerSocket.Bind(bind);
+                ServerSocket.Listen();
+                SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
+                eventArgs.UserToken = ServerSocket;
+                eventArgs.Completed += (sender, e) => AcceptCompleted(e);
+                Logger.Info(i18n.Message.ListenON.Replace("{Bind}", bind));
+                if (!ServerSocket.AcceptAsync(eventArgs))
+                    AcceptCompleted(eventArgs);
+                return ServerSocket;
+            }
+            catch (Exception e)
+            {
+                if (e.CheckException<SocketException>(out string message))
+                    Logger.Error(message);
+                else
+                    throw;
+                return null;
+            }
         }
 
         private static void AcceptCompleted(SocketAsyncEventArgs e)
         {
-            ConnectEventArgs eventArgs = new ConnectEventArgs(e.AcceptSocket, e.SocketError);
-            EventUtils.InvokeCancelEvent(Connecting, e.AcceptSocket, eventArgs);
-            if(!eventArgs.IsBlock)
+            try
             {
-                Socket AcceptSocket = eventArgs.AcceptSocket;
-                switch (e.SocketError)
+                ConnectEventArgs eventArgs = new ConnectEventArgs(e.AcceptSocket, e.SocketError);
+                EventUtils.InvokeCancelEvent(Connecting, e.AcceptSocket, eventArgs);
+                if (!eventArgs.IsBlock)
                 {
-                    case SocketError.Success: SessionHanderAsync(AcceptSocket); break;
-                    default: AcceptSocket.Close(); break;
+                    Socket AcceptSocket = eventArgs.AcceptSocket;
+                    switch (e.SocketError)
+                    {
+                        case SocketError.Success: SessionHanderAsync(AcceptSocket); break;
+                        default: AcceptSocket.Close(); break;
+                    }
                 }
-            }
 
-            e.AcceptSocket = null;
-            if (!(e.UserToken as Socket).AcceptAsync(e))
-                AcceptCompleted(e);
+                e.AcceptSocket = null;
+
+                if (!(e.UserToken as Socket).AcceptAsync(e))
+                    AcceptCompleted(e);
+            }
+            catch (ObjectDisposedException) { }
         }
 
         private static Task SessionHanderAsync(Socket acceptSocket)
@@ -159,8 +219,8 @@ namespace NyaProxy
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
-                             Packet lsPacket = ProtocolUtils.ReceivePacket(acceptSocket);
-                             if (LoginStartPacket.TryRead(lsPacket, -1, out LoginStartPacket lsp))
+                             using Packet SecondPacket = ProtocolUtils.ReceivePacket(acceptSocket);
+                             if (LoginStartPacket.TryRead(SecondPacket, -1, out LoginStartPacket lsp))
                              {
                                  LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
                                  EventUtils.InvokeCancelEvent(LoginStart, acceptSocket, lsea);
@@ -217,7 +277,7 @@ namespace NyaProxy
                  }
                  catch (Exception e)
                  {
-                     if (e.CheckSocketException(out string message))
+                     if (e.CheckException<SocketException>(out string message))
                          Logger.Error(message);
                      else
                          Logger.Exception(e);

@@ -9,20 +9,20 @@ namespace NyaProxy.Extension
 {
     public static class ExceptionExtension
     {
-        public static bool CheckSocketException(this Exception e, out string message)
+        public static bool CheckException<T>(this Exception e, out string message)
         {
             message = null;
             if (e is AggregateException ae)
             {
                 foreach (var ex in ae.Flatten().InnerExceptions)
                 {
-                    if (e is SocketException)
+                    if (e is T)
                         message = ex.Message;
                 }
             }
-            else if (e is SocketException)
+            else if (e is T)
                 message = e.Message;
-            else if (e.InnerException != null && e.InnerException is SocketException)
+            else if (e.InnerException != null && e.InnerException is T)
                 message = e.InnerException.Message;
 
             return !string.IsNullOrEmpty(message);

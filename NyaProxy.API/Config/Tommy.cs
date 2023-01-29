@@ -377,6 +377,15 @@ namespace Tommy
     {
         private List<TomlNode> values;
 
+        public TomlArray()
+        {
+
+        }
+        public TomlArray(IEnumerable<TomlNode> nodes)
+        {
+            RawArray.AddRange(nodes);
+        }
+
         public override bool HasValue { get; } = true;
         public override bool IsArray { get; } = true;
         public bool IsMultiline { get; set; }

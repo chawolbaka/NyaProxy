@@ -13,12 +13,12 @@ using Tommy;
 
 namespace NyaProxy.Configs
 {
-    public class Config
+    public class MainConfig
     {
         private static readonly string ServersPath = "Servers";
-        private readonly ConfigFile MainConfig = new ConfigFile(new FileInfo("config.toml"), true);
+        private readonly ConfigFile _mainConfig = new ConfigFile(new FileInfo("config.toml"));
 
-        public IPEndPoint Bind { get; set; }
+        public IPEndPoint[] Bind { get; set; }
         public int ConnectionTimeout { get; set; }
         public int ConnectionThrottle { get; set; }
         public bool TcpFastOpen { get; set; }
@@ -27,18 +27,35 @@ namespace NyaProxy.Configs
 
         public bool IsLoad { get; set; }
 
-        public Config()
+        public MainConfig()
         {
             Hosts = new();
         }
 
         public void Load()
         {
-            if (!MainConfig.File.Exists)
+            if (!_mainConfig.File.Exists)
                 Save();
 
-            TomlNode advanced = MainConfig["advanced"];
-            Bind = IPEndPoint.Parse(MainConfig["bind"]);
+            _mainConfig.Reload();
+
+            if (_mainConfig["bind"].IsArray)
+            {
+                List<IPEndPoint> bindList = new List<IPEndPoint>();
+                foreach (TomlNode node in _mainConfig["bind"])
+                {
+                    if (IPEndPoint.TryParse(node, out IPEndPoint bind))
+                        bindList.Add(bind);
+                }
+                Bind = bindList.ToArray();
+            }
+            else
+            {
+                Bind = new IPEndPoint[] { IPEndPoint.Parse(_mainConfig["bind"]) };
+            }
+
+
+            TomlNode advanced = _mainConfig["advanced"];
             ConnectionTimeout = advanced["connection-timeout"];
             ConnectionThrottle = advanced["connection-throttle"];
             TcpFastOpen = advanced["tcp-fast-open"];
@@ -94,19 +111,23 @@ namespace NyaProxy.Configs
         {
             if (!Directory.Exists(ServersPath))
                 Directory.CreateDirectory(ServersPath);
-            if (!MainConfig.File.Exists)
+            if (!_mainConfig.File.Exists)
                 SetupDefaultConfig();
 
 
-            MainConfig["bind"] = new TomlString { Value = Bind.ToString(), Comment = i18n.Config.Bind };
-            MainConfig["advanced"] = new TomlTable()
+            if (Bind.Length > 1)
+                _mainConfig["bind"] = new TomlString { Value = new TomlArray(Bind.Select(b => new TomlString(b.ToString()))), Comment = i18n.Config.Bind };
+            else
+                _mainConfig["bind"] = new TomlString { Value = Bind[0].ToString(), Comment = i18n.Config.Bind };
+
+            _mainConfig["advanced"] = new TomlTable()
             {
                 ["connection-timeout"] = new TomlInteger { Value = ConnectionTimeout, Comment = i18n.Config.ConnectionTimeout },
                 ["connection-throttle"] = new TomlInteger { Value = ConnectionThrottle, Comment = i18n.Config.ConnectionThrottle },
                 ["tcp-fast-open"] = new TomlBoolean { Value = TcpFastOpen, Comment = i18n.Config.TcpFastOpen },
                 ["network-threads"] = new TomlInteger { Value = NetworkThread, Comment = i18n.Config.NetworkThread },
             };
-            MainConfig.Save();
+            _mainConfig.Save();
             foreach (var server in Hosts)
             {
                 server.Value.Save();
@@ -115,7 +136,7 @@ namespace NyaProxy.Configs
 
         private void SetupDefaultConfig()
         {
-            Bind = new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 25565);
+            Bind = new IPEndPoint[] { new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 25565) };
             ConnectionTimeout = 1000 * 8;
             ConnectionThrottle = 1000;
             TcpFastOpen = false;
@@ -142,7 +163,7 @@ namespace NyaProxy.Configs
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(MainConfig.ToString() + Environment.NewLine + Environment.NewLine);
+            sb.AppendLine(_mainConfig.ToString() + Environment.NewLine + Environment.NewLine);
 
             foreach (var server in Hosts)
             {
