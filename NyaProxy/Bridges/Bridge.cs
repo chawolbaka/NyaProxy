@@ -8,6 +8,8 @@ using NyaProxy.API;
 using NyaProxy.EventArgs;
 using NyaProxy.Extension;
 using NyaProxy.Configs;
+using Ionic.Zlib;
+using NyaProxy.Debug;
 
 namespace NyaProxy.Bridges
 {
@@ -81,16 +83,22 @@ namespace NyaProxy.Bridges
 
         protected virtual void SimpleExceptionHandle(object sender, UnhandledIOExceptionEventArgs e)
         {
-            if (e.Exception is ObjectDisposedException || e.Exception is SocketException || (e.Exception is OverflowException && (!NetworkUtils.CheckConnect(Source) || ! NetworkUtils.CheckConnect(Destination))))
+            e.Handled = true;
+            if (e.Exception is ZlibException or OverflowException && NetworkUtils.CheckConnect(Source) && NetworkUtils.CheckConnect(Destination))
             {
-                e.Handled = true;
-                (sender as IDisposable)?.Dispose();
+                NyaProxy.Logger.Error(i18n.Error.PacketDecompressFailed);
+                return;
+            }
+            else if (e.Exception is not ObjectDisposedException or SocketException or ZlibException or OverflowException)
+            {
+                Crash.Report(e.Exception, true, true, false);
+                Break();
             }
             else
             {
-                //写入错误信息流
+                (sender as IDisposable)?.Dispose();
+                Break();
             }
-            //Break();
         }
     }
 }

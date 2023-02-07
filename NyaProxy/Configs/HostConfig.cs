@@ -59,7 +59,7 @@ namespace NyaProxy.Configs
             }
             catch (Exception e)
             {
-                NyaProxy.Logger.Error(i18n.Error.LoadConfigFail.Replace("{File}", File.Name));
+                NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", File.Name));
                 NyaProxy.Logger.Exception(e);
             }
         }
@@ -79,7 +79,7 @@ namespace NyaProxy.Configs
             }
             catch (Exception e)
             {
-                NyaProxy.Logger.Error(i18n.Error.SaveConfigFail.Replace("{File}", File.Name));
+                NyaProxy.Logger.Error(i18n.Error.SaveConfigFailed.Replace("{File}", File.Name));
                 NyaProxy.Logger.Exception(e);
             }
         }

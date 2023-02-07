@@ -61,7 +61,7 @@ namespace NyaProxy.Plugin
                     }
                     catch (IOException e)
                     {
-                        NyaProxy.Logger.Error(i18n.Error.SaveConfigFail);
+                        NyaProxy.Logger.Error(i18n.Error.SaveConfigFailed);
                         NyaProxy.Logger.Exception(e);
                     }
                 }
