@@ -6,10 +6,11 @@ namespace NyaProxy.API
 {
     public interface IHostConfig
     {
+        string Name { get; }
+        List<EndPoint> ServerEndPoints { get; }
         ServerFlags Flags { get; }
         ServerSelectMode SelectMode { get; }
         ForwardMode ForwardMode { get; }
-        List<EndPoint> ServerEndPoints { get; }
         int CompressionThreshold { get; }
         int ProtocolVersion { get; }
     }

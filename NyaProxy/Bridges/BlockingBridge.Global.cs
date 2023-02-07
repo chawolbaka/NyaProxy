@@ -27,8 +27,10 @@ namespace NyaProxy.Bridges
         private static ManualResetEvent SendSignal = new ManualResetEvent(false); //我那奇怪的CPU占有率不至于是因为这边导致的吧...
 
 
-        internal static void Enqueue(Socket socket, Memory<byte> data) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data,null));
-        internal static void Enqueue(Socket socket, Memory<byte> data, IDisposable disposable) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket,  data, disposable));
+        internal static void Enqueue(Socket socket, Memory<byte> data) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, null));
+        internal static void Enqueue(Socket socket, Memory<byte> data, Action callback) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, callback));
+        internal static void Enqueue(Socket socket, Memory<byte> data, IDisposable disposable) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, disposable != null ? disposable.Dispose : null));
+
 
         internal static void Setup(int networkThread) 
         {
@@ -139,7 +141,7 @@ namespace NyaProxy.Bridges
                 }
                 finally
                 {
-                    sea?.Dispose();
+                    sea?.Callback?.Invoke();
                     SendEventArgsPool.Return(sea);
                 }
             }
@@ -200,7 +202,7 @@ namespace NyaProxy.Bridges
 
                 if (!e.IsBlock)
                 {
-                    if (!e._bridge.OverCompression && !e.PacketCheaged)
+                    if (!e._bridge.IsOnlineMode && !e._bridge.OverCompression && !e.PacketCheaged)
                     {
                         var rawData = e._eventArgs.RawData.Span;
                         for (int i = 0; i < rawData.Length; i++)
@@ -211,8 +213,16 @@ namespace NyaProxy.Bridges
                     }
                     else
                     {
-                        Memory<byte> data = e.Packet.Pack();
-                        Enqueue(e.Destination, data, e._eventArgs);
+                        if (e._bridge.CryptoHandler.Enable && e.Direction == Direction.ToClient)
+                        {
+                            byte[] data = e._bridge.CryptoHandler.Encrypt(e.Packet.Pack());
+                            Enqueue(e.Destination, data, e._eventArgs);
+                        }
+                        else
+                        {
+                            Memory<byte> data = e.Packet.Pack();
+                            Enqueue(e.Destination, data, e._eventArgs);
+                        }
                     }
                 }
                 else
@@ -258,20 +268,15 @@ namespace NyaProxy.Bridges
         {
             public Socket Socket;
             public Memory<byte> Data;
-            private IDisposable _disposable;
+            public Action Callback;
 
             public SendEventArgs() { }
-            public SendEventArgs Setup(Socket socket, Memory<byte> data, IDisposable disposable)
+            public SendEventArgs Setup(Socket socket, Memory<byte> data, Action callback)
             {
                 Socket = socket;
                 Data = data;
-                _disposable = disposable;
+                Callback = callback;
                 return this;
-            }
-
-            public void Dispose()
-            {
-                _disposable?.Dispose();
             }
         }
     }

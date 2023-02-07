@@ -186,7 +186,7 @@ namespace NyaProxy
                          if (hea.IsBlock)
                              return;
 
-                         Logger.Debug($"{acceptSocket._remoteEndPoint} Try to handshake (Host = {hea.Packet.ServerAddress}, Port = {hea.Packet.ServerPort})");
+                         Logger.Debug($"{acceptSocket._remoteEndPoint()} Try to handshake (Host = {hea.Packet.ServerAddress}, Port = {hea.Packet.ServerPort})");
 
                          string rawHandshakeAddress = hea.Packet.ServerAddress;
                          string host = hea.Packet.ServerAddress;
@@ -251,17 +251,8 @@ namespace NyaProxy
                                          break;
                                  }
 
-                                 if (!dest.Flags.HasFlag(ServerFlags.OnlineMode))
-                                 {
-                                     BlockingBridge bb = new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, hea.Packet.ProtocolVersion);
-                                     bb.Build(hea.Packet, lsea.Packet);
-                                 }
-                                 else
-                                 {
-                                     acceptSocket.DisconnectOnLogin("无法支持正版登录");
-                                     hp?.Dispose();
-                                     lsea?.Packet?.Dispose();
-                                 }
+                                 BlockingBridge bb = new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, hea.Packet.ProtocolVersion);
+                                 bb.Build(hea.Packet, lsea.Packet);
                              }
                          }
                          else
