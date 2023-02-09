@@ -12,7 +12,7 @@ using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
 using MinecraftProtocol.Crypto;
 using MinecraftProtocol.Auth.Yggdrasil;
-
+using System.Threading;
 
 namespace NyaProxy.Bridges
 {
@@ -64,7 +64,8 @@ namespace NyaProxy.Bridges
             }
 
             OverCompression = host.CompressionThreshold != -1;
-            ClientCompressionThreshold = host.CompressionThreshold;
+           
+             ClientCompressionThreshold = -1;
             ServerCompressionThreshold = -1;
 
             ProtocolVersion = protocolVersion;
@@ -73,13 +74,13 @@ namespace NyaProxy.Bridges
 
 
             //监听客户端发送给服务端的数据包
-            _clientSocketListener = new PacketListener(Source, Source.ReceiveBufferSize, false);
+            _clientSocketListener = new PacketListener(Source);
             _clientSocketListener.ProtocolVersion = ProtocolVersion;
             _clientSocketListener.StopListen += (sender, e) => Break();
             _clientSocketListener.UnhandledException += SimpleExceptionHandle;
 
             //监听服务端发送给客户端的数据包
-            _serverSocketListener = new PacketListener(Destination, Source.ReceiveBufferSize, false);
+            _serverSocketListener = new PacketListener(Destination);
             _serverSocketListener.ProtocolVersion = ProtocolVersion;
             _serverSocketListener.StopListen += (sender, e) => Break();
             _serverSocketListener.PacketReceived += Disconnect;
@@ -165,13 +166,10 @@ namespace NyaProxy.Bridges
 
             if (OverCompression)
             {
+                ClientCompressionThreshold = Host.CompressionThreshold;
                 _clientSocketListener.CompressionThreshold = ClientCompressionThreshold;
-                //这边必须直接发送不能走下面的ServerPacketReceived，否则会因为上面设置了CompressionThreshold导致SetCompressionPacket在Pack的时候多一个字节。
-                using Packet packet = new SetCompressionPacket(ClientCompressionThreshold, ProtocolVersion);
-                if (CryptoHandler.Enable)
-                    Enqueue(Source, CryptoHandler.Encrypt(packet.Pack(-1)));
-                else
-                    Enqueue(Source, packet.Pack(-1));
+                Packet packet = new SetCompressionPacket(ClientCompressionThreshold, ProtocolVersion);
+                Enqueue(Source, CryptoHandler.TryEncrypt(packet.Pack(-1)), packet);
             }
 
             if (_loginToServerPackets != null)
@@ -182,8 +180,6 @@ namespace NyaProxy.Bridges
                 }
                 _loginToServerPackets = null;
             }
-
-
         }
 
         private void BeforeLoginSuccess(object sender, PacketReceivedEventArgs e)
@@ -250,13 +246,13 @@ namespace NyaProxy.Bridges
 
         private void Disconnect(object sender, PacketReceivedEventArgs e)
         {
+            if (OverCompression)
+                e.Packet.CompressionThreshold = ClientCompressionThreshold;
+
             if (_state == States.Login ? e.Packet == PacketType.Login.Server.Disconnect : e.Packet == PacketType.Play.Server.Disconnect)
             {
-                Span<Memory<byte>> rawData = e.RawData.Span;
-                for (int i = 0; i < rawData.Length; i++)
-                {
-                    Enqueue(Source, rawData[i], i + 1 < e.RawData.Length ? null : e);
-                }
+                e.Cancel(); //阻止数据包被继续传递
+                Enqueue(Source, CryptoHandler.TryEncrypt(e.Packet.Pack()), e.Packet);
                 ListenToken.Cancel();
             }
         }
