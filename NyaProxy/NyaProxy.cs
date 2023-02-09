@@ -42,7 +42,6 @@ namespace NyaProxy
         public static EventHandler<IPacketSendEventArgs> PacketSendToServer;
         public static EventHandler<IChatSendEventArgs> ChatMessageSendToClient;
         public static EventHandler<IChatSendEventArgs> ChatMessageSendToServer;
-        public static AsyncCommonEventHandler<object, IAsyncChatEventArgs> ChatMessageSened;
         public static EventHandler<IDisconnectEventArgs> Disconnected;
 
         public static async Task Setup(MainConfig config, ILogger logger)

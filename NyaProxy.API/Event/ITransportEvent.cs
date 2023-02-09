@@ -13,7 +13,6 @@ namespace NyaProxy.API
         event EventHandler<IPacketSendEventArgs> PacketSendToServer;
         event EventHandler<IChatSendEventArgs> ChatMessageSendToClient;
         event EventHandler<IChatSendEventArgs> ChatMessageSendToServer;
-        event AsyncCommonEventHandler<object, IAsyncChatEventArgs> ChatMessageSened;
         event EventHandler<IDisconnectEventArgs> Disconnected;
     }
 }

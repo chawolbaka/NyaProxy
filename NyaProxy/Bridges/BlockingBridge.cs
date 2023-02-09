@@ -13,43 +13,59 @@ using MinecraftProtocol.Utils;
 using MinecraftProtocol.Crypto;
 using MinecraftProtocol.Auth.Yggdrasil;
 using System.Threading;
+using MinecraftProtocol.Compatible;
 
 namespace NyaProxy.Bridges
 {
-    public partial class BlockingBridge : Bridge
+    public partial class BlockingBridge : Bridge, ICompatible
     {
+        /// <summary>
+        /// 客户端在握手时使用的协议版本
+        /// </summary>
         public virtual int ProtocolVersion { get; }
         
-        public virtual bool OverCompression { get; private set; }
+        /// <summary>
+        /// 客户端到代理端之间是否强制使用了于服务端到代理端不一致的压缩阈值
+        /// </summary>
+        public virtual bool OverCompression { get; }
 
         /// <summary>
         /// 客户端到代理端的压缩阈值
         /// </summary>
-        public virtual int ClientCompressionThreshold { get; set; }
+        public virtual int ClientCompressionThreshold { get; private set; }
 
         /// <summary>
         /// 服务端到代理端的压缩阈值
         /// </summary>
-        public virtual int ServerCompressionThreshold { get; set; }
+        public virtual int ServerCompressionThreshold { get; private set; }
 
-        public virtual IPlayer Player { get; set; }
+        /// <summary>
+        /// 玩家信息
+        /// </summary>
+        public virtual IPlayer Player { get; private set; }
 
-        public virtual bool IsForge { get; set; }
+        /// <summary>
+        /// 服务端是否发送了Forge的数据包
+        /// </summary>
+        public virtual bool IsForge { get; private set; }
 
         /// <summary>
         /// 客户端到代理端之间是否启用了正版加密
         /// </summary>
-        public virtual bool IsOnlineMode { get; set; }
+        public virtual bool IsOnlineMode { get; private set; }
+
+
 
         public virtual CryptoHandler CryptoHandler => _clientSocketListener.CryptoHandler;
 
         private readonly RSA _rsaService;
+        private readonly string _serverId = ""; //1.7开始默认是空的
         private readonly byte[] _verifyToken;
 
         private enum States { Login, Play }
+        private States _state = States.Login;
         private int _queueIndex;
         private int _forgeCheckCount;
-        private States _state = States.Login;
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
         private Packet[] _loginToServerPackets; //一般里面是客户端发给服务端的握手包和开始登录包
@@ -65,7 +81,7 @@ namespace NyaProxy.Bridges
 
             OverCompression = host.CompressionThreshold != -1;
            
-             ClientCompressionThreshold = -1;
+            ClientCompressionThreshold = -1;
             ServerCompressionThreshold = -1;
 
             ProtocolVersion = protocolVersion;
@@ -95,7 +111,7 @@ namespace NyaProxy.Bridges
             {
                 _clientSocketListener.PacketReceived += BeforeEncryptionResponse;
                 _clientSocketListener.Start(ListenToken.Token);
-                EncryptionRequestPacket encryptionRequest = new EncryptionRequestPacket("", _rsaService.ExportSubjectPublicKeyInfo(), _verifyToken, ProtocolVersion);
+                EncryptionRequestPacket encryptionRequest = new EncryptionRequestPacket(_serverId, _rsaService.ExportSubjectPublicKeyInfo(), _verifyToken, ProtocolVersion);
                 Enqueue(Source, encryptionRequest.Pack(-1));
             }
             else
@@ -115,46 +131,6 @@ namespace NyaProxy.Bridges
             ListenToken.Cancel();
         }
 
-        private void BeforeEncryptionResponse(object sender, PacketReceivedEventArgs e)
-        {
-            //只检查一个包，收到一个数据包后就立刻从事件中取消掉
-            _clientSocketListener.PacketReceived -= BeforeEncryptionResponse;
-            try
-            {
-                string playerName = (_loginToServerPackets.FirstOrDefault(x => x is LoginStartPacket) as LoginStartPacket).PlayerName;
-                if (EncryptionResponsePacket.TryRead(e.Packet, out EncryptionResponsePacket erp))
-                {
-                    if (!CollectionUtils.Compare(_verifyToken, _rsaService.Decrypt(erp.VerifyToken, RSAEncryptionPadding.Pkcs1)))
-                    {
-                        NyaProxy.Logger.Warn($"[{SessionId}]{playerName}发送至代理端的VerifyToken于代理端发送至{Player.Name}的不匹配");
-                        Break("正版验证异常，请联系管理员");
-                    }
-
-                    byte[] sessionKey = _rsaService.Decrypt(erp.SharedSecret, RSAEncryptionPadding.Pkcs1);
-                    if (YggdrasilService.HasJoinedAsync(playerName, CryptoUtils.GetServerHash("", sessionKey, _rsaService.ExportSubjectPublicKeyInfo())).Result != null)
-                    {
-                        _clientSocketListener.CryptoHandler.Init(sessionKey);
-                        StartExchange();
-                    }
-                    else
-                    {
-                        NyaProxy.Logger.Info($"[{SessionId}]玩家{playerName}没有通过Yggdrasil进行Join行为，该玩家可能未开启正版验证或网络有问题");
-                        Break("正版验证失败，请检查你的网络。");
-                    }
-                }
-                else
-                {
-                    NyaProxy.Logger.Error($"[{SessionId}]玩家{playerName}发送了加密响应以外的数据包");
-                    NyaProxy.Logger.Unpreformat(e.Packet.ToString());
-                    Break($"异常的数据包, 你可能使用了有问题的客户端。");
-                }
-            }
-            catch (Exception ex)
-            {
-                NyaProxy.Logger.Exception(ex);
-                Break();
-            }
-        }
 
         private void StartExchange()
         {
@@ -179,6 +155,47 @@ namespace NyaProxy.Bridges
                     Enqueue(Destination, packet.Pack(-1), packet);
                 }
                 _loginToServerPackets = null;
+            }
+        }
+
+        private void BeforeEncryptionResponse(object sender, PacketReceivedEventArgs e)
+        {
+            //只检查一个包，收到一个数据包后就立刻从事件中取消掉
+            _clientSocketListener.PacketReceived -= BeforeEncryptionResponse;
+            try
+            {
+                string playerName = (_loginToServerPackets.FirstOrDefault(x => x is LoginStartPacket) as LoginStartPacket).PlayerName;
+                if (EncryptionResponsePacket.TryRead(e.Packet, out EncryptionResponsePacket erp))
+                {
+                    if (!CollectionUtils.Compare(_verifyToken, _rsaService.Decrypt(erp.VerifyToken, RSAEncryptionPadding.Pkcs1)))
+                    {
+                        NyaProxy.Logger.Warn($"[{SessionId}]{playerName}发送至代理端的VerifyToken于代理端发送至{Player.Name}的不匹配");
+                        Break("正版验证异常，请联系管理员");
+                    }
+
+                    byte[] sessionKey = _rsaService.Decrypt(erp.SharedSecret, RSAEncryptionPadding.Pkcs1);
+                    if (YggdrasilService.HasJoinedAsync(playerName, CryptoUtils.GetServerHash(_serverId, sessionKey, _rsaService.ExportSubjectPublicKeyInfo())).Result != null)
+                    {
+                        _clientSocketListener.CryptoHandler.Init(sessionKey);
+                        StartExchange();
+                    }
+                    else
+                    {
+                        NyaProxy.Logger.Info($"[{SessionId}]玩家{playerName}没有通过Yggdrasil进行Join行为，该玩家可能未开启正版验证或网络有问题");
+                        Break("正版验证失败，请检查你的网络。");
+                    }
+                }
+                else
+                {
+                    NyaProxy.Logger.Error($"[{SessionId}]玩家{playerName}发送了加密响应以外的数据包");
+                    NyaProxy.Logger.Unpreformat(e.Packet.ToString());
+                    Break($"异常的数据包, 你可能使用了有问题的客户端。");
+                }
+            }
+            catch (Exception ex)
+            {
+                NyaProxy.Logger.Exception(ex);
+                Break();
             }
         }
 
@@ -231,7 +248,7 @@ namespace NyaProxy.Bridges
         private void CheckForge(object sender, PacketReceivedEventArgs e)
         {
             //仅检查前64个包内是否包含forge的频道
-            if(++_forgeCheckCount > 64)
+            if(++_forgeCheckCount > 32)
                 _serverSocketListener.PacketReceived -= CheckForge;
 
             if (ServerPluginChannelPacket.TryRead(e.Packet, true, out ServerPluginChannelPacket spcp))
@@ -275,7 +292,11 @@ namespace NyaProxy.Bridges
             if (OverCompression)
                 e.Packet.CompressionThreshold = ClientCompressionThreshold;
 
-            if (_state == States.Play && e.Packet == PacketType.Play.Server.ChatMessage)
+            if (_state == States.Play
+                && e.Packet == PacketType.Play.Server.ChatMessage
+                || e.Packet == PacketType.Play.Server.SystemChatMessage
+                || e.Packet == PacketType.Play.Server.PlayerChatMessage
+                || e.Packet == PacketType.Play.Server.DisguisedChatMessage)
                 ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
             else if (NyaProxy.Channles.Count > 0 && _state == States.Play && e.Packet == PacketType.Play.Server.PluginChannel)
                 ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));

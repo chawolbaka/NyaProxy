@@ -6,7 +6,7 @@ using MinecraftProtocol.Chat;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Packets.Server;
-
+using MinecraftProtocol.Compatible;
 
 namespace NyaProxy
 {
@@ -22,36 +22,47 @@ namespace NyaProxy
                     switch (Direction)
                     {
                         case Direction.ToClient:
-                            _definedPacket = Packet.AsServerChatMessage();
-                            _message = (_definedPacket as ServerChatMessagePacket).Message; break;
+                            CompatibleReader.TryReadChatMessage(Packet, out _message, out _definedPacket); break;
                         case Direction.ToServer:
-                            _definedPacket = Packet.AsClientChatMessage();
-                            _message = ChatComponent.Parse((_definedPacket as ClientChatMessagePacket).Message); break;
+                            if(ClientChatMessagePacket.TryRead(Packet, out var ccmp))
+                            {
+                                _definedPacket = ccmp;
+                                _message = ChatComponent.Parse(ccmp.Message);
+                            } break;
                     }
                 } 
                 return _message;
             }
             set
             {
-                if(_message is null)
+                if (_message is null)
                     throw new ArgumentNullException(nameof(value));
 
                 switch (Direction)
                 {
                     case Direction.ToClient:
-                        using (ServerChatMessagePacket oldsPacket = _definedPacket as ServerChatMessagePacket)
+                        if (ProtocolVersion > ProtocolVersions.V1_19)
                         {
-                            ServerChatMessagePacket newsPacket = new ServerChatMessagePacket(value.Serialize(), oldsPacket.Position, oldsPacket.Sender, Packet.ProtocolVersion);
-                            Packet = newsPacket.AsCompatible(Packet);
-                            _definedPacket = newsPacket; break;
+                            //不管原来是什么都直接转换成SystemChatMessage，否则还要处理签名和分离出来那堆属性太复杂了
+                            SystemChatMessagePacket scmp = new SystemChatMessagePacket(_message.Serialize(), false, ProtocolVersion);
+                            _definedPacket?.Dispose();
+                            _definedPacket = scmp;
+                            Packet = scmp.AsCompatible(Packet);
                         }
+                        else if (_definedPacket is ServerChatMessagePacket scmp)
+                        {
+                            scmp.Context = value.Serialize();
+                            Packet = _definedPacket.AsCompatible(Packet);
+                        }
+                        else
+                        {
+                            //一般来说不可能有其它选项，但以防未来修改读取的代码这边留个异常体系一下
+                            throw new InvalidCastException($"Unknow chat packet {_definedPacket.Id}");
+                        } break;
                     case Direction.ToServer:
-                        using (ClientChatMessagePacket oldcPacket = _definedPacket as ClientChatMessagePacket)
-                        {
-                            ClientChatMessagePacket newcPacket = new ClientChatMessagePacket(value.ToString(), Packet.ProtocolVersion);
-                            Packet = newcPacket.AsCompatible(Packet);
-                            _definedPacket = newcPacket; break;
-                        }
+                        ClientChatMessagePacket ccmp = _definedPacket as ClientChatMessagePacket;
+                        ccmp.Message = value.ToString();
+                        Packet = ccmp.AsCompatible(Packet); break;
                 }
                 _message = value;
             }

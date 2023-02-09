@@ -11,11 +11,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using NyaProxy.Bridges;
+using MinecraftProtocol.Compatible;
 
 namespace NyaProxy
 {
 
-    public class PacketSendEventArgs : TransportEventArgs, IPacketSendEventArgs
+    public class PacketSendEventArgs : TransportEventArgs, IPacketSendEventArgs, ICompatible
     {
         public Socket Destination { get; set; }
 

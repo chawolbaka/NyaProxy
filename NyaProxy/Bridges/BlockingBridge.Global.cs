@@ -10,7 +10,9 @@ using MinecraftProtocol.IO;
 using MinecraftProtocol.IO.Pools;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
-
+using MinecraftProtocol.Compatible;
+using MinecraftProtocol.Packets.Client;
+using MinecraftProtocol.Chat;
 
 namespace NyaProxy.Bridges
 {
@@ -103,7 +105,7 @@ namespace NyaProxy.Bridges
                 {
                     sea = SendQueue.Take(GlobalQueueToken.Token);
                     int send = 0, dataLength = sea.Data.Length;
-                    
+
                     do
                     {
                         if (send > 0)
@@ -147,7 +149,6 @@ namespace NyaProxy.Bridges
             }
         }
 
-        private static DateTime LastTime = DateTime.Now; //简单处理一下重复的聊天信息，之后考虑更复杂的情况
         private static void ReceiveQueueHandler(PacketSendEventArgs e)
         {
             try
@@ -160,48 +161,31 @@ namespace NyaProxy.Bridges
                 if (NyaProxy.Plugin.Count > 0)
 #endif
                 {
+                    //触发事件
                     try
                     {
                         if (e is ChatSendEventArgs csea)
-                        {
                             EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.ChatMessageSendToClient : NyaProxy.ChatMessageSendToServer, e._bridge, csea);
-                            var handler = NyaProxy.ChatMessageSened;
-                            if (handler != null && (DateTime.Now - LastTime).TotalMilliseconds > 50)
-                            {
-                                LastTime = DateTime.Now;
-                                if (ServerChatMessagePacket.TryRead(csea.Packet, out ServerChatMessagePacket scmp))
-                                {
-                                    var eventArgs = AsyncChatEventArgsPool.Rent().Setup(csea.ReceivedTime, scmp.Message);
-                                    scmp?.Dispose();
-                                    EventUtils.InvokeCancelEventAsync(handler, null, eventArgs).ContinueWith(x => AsyncChatEventArgsPool.Return(eventArgs));
-                                }
-                            }
-                        }
-                        else if (e is PluginChannleSendEventArgs pcsea)
-                        {
-                            //频道消息虽然有专门的处理系统，但如果需要还是能直接通过数据包发送事件来处理的，并且如果阻断了那么也不会触发频道消息的那一套系统
-                            EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer, e._bridge, e);
-                            if (!e.IsBlock && NyaProxy.Channles.ContainsKey(pcsea.ChannleName))
-                            {
-                                Channle channle = NyaProxy.Channles[pcsea.ChannleName] as Channle;
-                                channle?.Trigger(e.Direction == Direction.ToServer ? Side.Client : Side.Server, new ByteReader(pcsea.Data), e._bridge);
-                            }
-                        }
                         else
-                        {
                             EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer, e._bridge, e);
+                        
+                        if (!e.IsBlock && e is PluginChannleSendEventArgs pcsea && NyaProxy.Channles.ContainsKey(pcsea.ChannleName))
+                        {
+                            Channle channle = NyaProxy.Channles[pcsea.ChannleName] as Channle;
+                            channle?.Trigger(e.Direction == Direction.ToServer ? Side.Client : Side.Server, new ByteReader(pcsea.Data), e._bridge);
                         }
                     }
                     catch (Exception ex)
                     {
                         if (ex is SocketException)
-                            throw;
+                            e._bridge?.Break();
                         NyaProxy.Logger.Exception(ex);
                     }
                 }
 
                 if (!e.IsBlock)
                 {
+                    //如果数据没有被修改过那么就直接发送接收到的原始数据，避免Pack造成的内存分配。
                     if (!e._bridge.IsOnlineMode && !e._bridge.OverCompression && !e.PacketCheaged)
                     {
                         var rawData = e._eventArgs.RawData.Span;
@@ -213,16 +197,11 @@ namespace NyaProxy.Bridges
                     }
                     else
                     {
-                        if (e._bridge.CryptoHandler.Enable && e.Direction == Direction.ToClient)
-                        {
-                            byte[] data = e._bridge.CryptoHandler.Encrypt(e.Packet.Pack());
-                            Enqueue(e.Destination, data, e._eventArgs);
-                        }
+                        if (e.Direction == Direction.ToClient)
+                            Enqueue(e.Destination, e._bridge.CryptoHandler.TryEncrypt(e.Packet.Pack()), e._eventArgs);
                         else
-                        {
-                            Memory<byte> data = e.Packet.Pack();
-                            Enqueue(e.Destination, data, e._eventArgs);
-                        }
+                            Enqueue(e.Destination, e.Packet.Pack(), e._eventArgs);
+                        
                     }
                 }
                 else
@@ -232,8 +211,8 @@ namespace NyaProxy.Bridges
             }
             catch (Exception ex)
             {
-                NyaProxy.Logger.Exception(ex);
                 e._bridge.Break();
+                NyaProxy.Logger.Exception(ex);
             }
             finally
             {

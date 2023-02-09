@@ -21,7 +21,7 @@ namespace NyaProxy.API
         string Name { get; }
 
 
-        void SendMessage(ChatComponent message, ChatPosition position = ChatPosition.ChatMessage);
-        void Kick(ChatComponent reason);
+        Task SendMessageAsync(ChatComponent message, ChatPosition position = ChatPosition.ChatMessage);
+        Task KickAsync(ChatComponent reason);
     }
 }

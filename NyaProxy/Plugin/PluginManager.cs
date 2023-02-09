@@ -198,8 +198,6 @@ namespace NyaProxy.Plugin
                 private static ITransportEvent _transport = new TransportEvent();
                 private class TransportEvent : ITransportEvent
                 {
-                    public event AsyncCommonEventHandler<object, IAsyncChatEventArgs> ChatMessageSened { add => NyaProxy.ChatMessageSened += value; remove => NyaProxy.ChatMessageSened -= value; }
-
                     public event EventHandler<IConnectEventArgs> Connecting { add => NyaProxy.Connecting += value; remove => NyaProxy.Connecting -= value; }
                     public event EventHandler<IHandshakeEventArgs> Handshaking { add => NyaProxy.Handshaking += value; remove => NyaProxy.Handshaking -= value; }
                     public event EventHandler<ILoginStartEventArgs> LoginStart { add => NyaProxy.LoginStart += value; remove => NyaProxy.LoginStart -= value; }
