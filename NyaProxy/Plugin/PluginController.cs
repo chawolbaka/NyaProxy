@@ -58,7 +58,7 @@ namespace NyaProxy.Plugin
                 for (int i = 0; i < helper.ConfigFiles.Count; i++)
                 {
                     if (helper.ConfigFiles[i].AutoSave)
-                        helper.Save(i);
+                        await helper.SaveAsync(i);
                 }
                 Context.Unload();
                 GC.Collect();

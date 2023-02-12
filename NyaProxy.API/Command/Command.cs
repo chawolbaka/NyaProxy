@@ -50,13 +50,10 @@ namespace NyaProxy.API
         {
             if (Children.Count == 0)
                 return Enumerable.Empty<string>();
-
-            List<string> tabList = new List<string>();
-            foreach (var command in Children.Values)
-            {
-                tabList.AddRange(command.GetTabCompletions(args));
-            }
-            return tabList;
+            else if (Children.Count == 1)
+                return Children.Keys;
+            else
+                return Children[args[2]].GetTabCompletions(args.Slice(1));
         }
 
     }
