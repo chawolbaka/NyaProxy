@@ -54,7 +54,7 @@ namespace NyaProxy.Plugin
             try
             {
                 await plugin.OnDisable();
-                var helper = (plugin.Helper as PluginHelper)?._configContainer;
+                var helper = (plugin.Helper as PluginHelper)?.Config as PluginHelper.ConfigContainer;
                 for (int i = 0; i < helper.ConfigFiles.Count; i++)
                 {
                     if (helper.ConfigFiles[i].AutoSave)
