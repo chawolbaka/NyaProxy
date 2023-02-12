@@ -18,6 +18,11 @@ using MinecraftProtocol.Crypto;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Utils;
 using System.Text.Json;
+using Tomlet;
+using Tomlet.Models;
+using System.Xml.Linq;
+using System.Reflection.PortableExecutable;
+using System.Text;
 
 namespace NyaProxy.Plugin
 {
@@ -101,7 +106,7 @@ namespace NyaProxy.Plugin
                         Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
                         SetupPlugin.Invoke(plugin, new object[] {
                                 new Action<string,Command>((source,command) => NyaProxy.CommandManager.Register(source,command)),
-                                new PluginHelper(directory), Logger, manifest });
+                                new PluginHelper(directory, manifest), Logger, manifest });
                         await plugin.OnEnable();
                         Plugins.Add(manifest.UniqueId, new PluginController(plugin, context, this, directory));
                         return true;
@@ -114,7 +119,7 @@ namespace NyaProxy.Plugin
             }
             catch (Exception e)
             {
-                Logger.Error(i18n.Plugin.Load_Error.Replace("{File}", new DirectoryInfo(directory).Name));
+                Logger.Error(i18n.Plugin.Load_Error.Replace("{File}", Path.Combine(new DirectoryInfo(directory).Name, "Manifest.json")));
                 Logger.Exception(e);
                 return false;
             }
@@ -128,48 +133,123 @@ namespace NyaProxy.Plugin
             public IConfigHelper Config => _configHelper;
             public INetworkHelper Network => _networkHelper;
             public IChannleContainer Channles => NyaProxy.Channles;
-            public IReadOnlyDictionary<string, IHost> Hosts => new HostCovariance(NyaProxy.Config.Hosts);
+            public IReadOnlyDictionary<string, IHost> Hosts => new HostCovariance(NyaProxy.Hosts);
 
             private static PluginEvents _events = new PluginEvents();
             private static NetworkHelper _networkHelper = new NetworkHelper();
             internal ConfigHelper _configHelper;
-
+          
 
             //帮忙写配置文件
-            public PluginHelper(string workDirectory)
+            public PluginHelper(string workDirectory, IManifest manifest)
             {
                 WorkDirectory = new DirectoryInfo(workDirectory ?? throw new ArgumentNullException(nameof(workDirectory)));
-                _configHelper = new ConfigHelper(workDirectory);
+                _configHelper = new ConfigHelper(workDirectory, manifest);
+            
             }
 
             internal class ConfigHelper : IConfigHelper
             {
                 public string WorkDirectory { get; }
-                public List<ITomlConfig> ConfigList = new List<ITomlConfig>();
-                public ConfigHelper(string workDirectory)
+
+                public List<Config> ConfigFiles = new();
+
+                public Dictionary<string, Config> ConfigNameDictionary = new();
+
+                public Dictionary<string, string> ConfigPathDictionary = new();
+
+                private IManifest _manifest;
+
+                public ConfigHelper(string workDirectory, IManifest manifest)
                 {
                     WorkDirectory = workDirectory;
+                    _manifest = manifest;
                 }
 
-                public void Register(ITomlConfig config, string fileName)
+                public void Save(int index)
                 {
-                    config.File = new FileInfo(Path.Combine(WorkDirectory, fileName));
+                    throw new NotImplementedException();
+                }
+                public void Save(string Name)
+                {
+                    throw new NotImplementedException();
+                }
+                public void SaveAll()
+                {
+                    throw new NotImplementedException();
+                }
+
+                public int Register(Type configType)
+                {
+                    ConfigFileAttribute attribute = configType.GetCustomAttribute<ConfigFileAttribute>();
+                    if (attribute == null)
+                        throw new NotImplementedException($"该类型未拥有{nameof(ConfigFileAttribute)}属性，请手动填写文件名");
+
+                    return Register(configType, attribute.FileName);
+                }
+
+                public int Register(Type configType, string fileName)
+                {
+                    string path = Path.Combine(WorkDirectory, fileName);
+                    Config config;
+
                     try
                     {
-                        if (config.File.Exists && config.File.Length > 0)
-                            config.Reload();
+
+                        if (!File.Exists(path))
+                        {
+                            config = (Config)Activator.CreateInstance(configType);
+                            if (config is IDefaultConfig idc) //如果配置文件不存在但该类实现了IDefaultConfig接口那么就创建默认的配置文件
+                            {
+                                idc.SetDefault();
+                                if (config is IManualConfig imc)
+                                {
+                                    TomlConfigWriter writer = new TomlConfigWriter();
+                                    imc.Write(writer);
+                                    writer.Save(path);
+                                }
+                                else
+                                {
+                                    TomlDocument document = TomletMain.DocumentFrom(configType, config);
+                                    document.ForceNoInline = true;
+                                    File.WriteAllText(path, document.SerializedValue, Encoding.UTF8);
+                                }
+                            }
+                        }
+                        else if (typeof(IManualConfig).IsAssignableFrom(configType)) //如果实现了IManualConfig接口那么就通过read来读取配置文件，否则就通过反序列化读取
+                        {
+                            config = (Config)Activator.CreateInstance(configType);
+                            if (config is IManualConfig imc)
+                                imc.Read(new TomlConfigReader(path));
+                        }
                         else
-                            config.Save();
+                        {
+                            config = (Config)TomletMain.To(configType, TomlParser.ParseFile(path));
+                        }
+
+                        ConfigFiles.Add(config);
+                        ConfigNameDictionary.Add(config.UniqueId, config);
+                        ConfigPathDictionary.Add(config.UniqueId, path);
+
+                        return ConfigFiles.Count - 1;
                     }
-                    catch (NullReferenceException) { }
-                    finally
+                    catch (Exception e)
                     {
-
-                        if (config.File.Exists)
-                            //用于全局重载和保存
-                            ConfigList.Add(config);
+                        NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", fileName));
+                        NyaProxy.Logger.Exception(e);
+                        return -1;
                     }
+         
+                }
 
+                public T Get<T>(int index) where T : Config
+                {
+                    return (T)ConfigFiles[index];
+                }
+
+                public T Get<T>(string name) where T : Config
+                {
+                    return (T)ConfigNameDictionary[name];
                 }
             }
 

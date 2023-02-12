@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace NyaProxy.API.Config
+namespace NyaProxy.API
 {
     public interface IManifest
     {
@@ -34,6 +34,8 @@ namespace NyaProxy.API.Config
         /// 插件至少需要什么版本的Api
         /// </summary>
         public Version MinimumApiVersion { get; }
+
+        public List<string> CommandPrefixes { get; }
 
     }
 }

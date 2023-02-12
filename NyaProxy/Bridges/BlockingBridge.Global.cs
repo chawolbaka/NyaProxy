@@ -24,10 +24,9 @@ namespace NyaProxy.Bridges
         private static ObjectPool<PacketSendEventArgs> PacketEventArgsPool = new ();
         private static ObjectPool<ChatSendEventArgs> ChatEventArgsPool = new();
         private static ObjectPool<PluginChannleSendEventArgs> PluginChannleEventArgsPool = new();
-        private static ObjectPool<AsyncChatEventArgs> AsyncChatEventArgsPool = new();
         private static CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
         private static ManualResetEvent SendSignal = new ManualResetEvent(false); //我那奇怪的CPU占有率不至于是因为这边导致的吧...
-
+        private static SafeIndex QueueIndex;
 
         internal static void Enqueue(Socket socket, Memory<byte> data) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, null));
         internal static void Enqueue(Socket socket, Memory<byte> data, Action callback) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, callback));
@@ -46,6 +45,7 @@ namespace NyaProxy.Bridges
                 ReceiveQueues = null;
             }
 
+            QueueIndex = new SafeIndex(networkThread);
             ReceiveQueues = new BlockingCollection<PacketSendEventArgs>[networkThread];
             for (int i = 0; i < ReceiveQueues.Length; i++)
                 ReceiveQueues[i] = new BlockingCollection<PacketSendEventArgs>();
@@ -74,27 +74,7 @@ namespace NyaProxy.Bridges
             sendThread.Start();
         }
 
-        private static int LastIndex;
-        private static SpinLock IndexLock = new SpinLock();
-        public static int GetQueueIndex()
-        {
-            int result = 0; bool lockTaken = false;
-            try
-            {
-                IndexLock.Enter(ref lockTaken);
-                if (LastIndex + 1 >= ReceiveQueues.Length)
-                    LastIndex = 0;
-                else
-                    result = ++LastIndex;
-            }
-            finally
-            {
-                if (lockTaken)
-                    IndexLock.Exit();
-            }
-
-            return result;
-        }
+      
 
         private static void SendQueueHandler(SocketAsyncEventArgs e)
         {

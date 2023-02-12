@@ -6,11 +6,11 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
-using Tommy;
+
 
 namespace NyaProxy.Configs
 {
-    public class HostConfig : ConfigFile, IHostConfig
+    public class HostConfig : Config, IDefaultConfig, IManualConfig, IHostConfig
     {
         public string Name { get; set; }
         public ServerSelectMode SelectMode { get; set; }
@@ -21,84 +21,103 @@ namespace NyaProxy.Configs
         public bool KickExistsPlayer { get; set; }
         public ServerFlags Flags { get; set; }
 
-        public HostConfig(FileInfo file) : base(file)
+        private static Random Random = new Random();
+        private SafeIndex ServerIndex;
+
+        public HostConfig(string uniqueId) : base(uniqueId)
         {
-            ServerEndPoints = new();
         }
 
-        public override void Reload()
+        public void Read(ConfigReader reader)
         {
-            base.Reload();
             try
             {
-                Name = base["host"];
-                ProtocolVersion = base["server-version"];
-                Flags = Enum.Parse<ServerFlags>(base["server-flags"]);
-                SelectMode = Enum.Parse<ServerSelectMode>(base["server-select-mode"]);
-                ForwardMode = Enum.Parse<ForwardMode>(base["player-info-forwarding-mode"]);
-                CompressionThreshold = base.HasKey("compression-threshold") ? base["compression-threshold"] : -1;
-                KickExistsPlayer = base["kick-exists-player"];
+                Name = reader.ReadStringProperty("host");
+                ProtocolVersion = (int)reader.ReadNumberProperty("server-version");
+                Flags = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
+                SelectMode = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
+                ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
 
-                foreach (TomlNode node in base["servers"])
+                CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
+                KickExistsPlayer = reader.ReadBooleanProperty("kick-exists-player");
+
+                List<EndPoint> serverEndPoints = new List<EndPoint>();
+                foreach (StringNode server in reader.ReadArray("servers"))
                 {
-                    string server = node.AsString;
                     if (IPEndPoint.TryParse(server, out IPEndPoint ipEndPoint))
                     {
-                        ServerEndPoints.Add(ipEndPoint);
+                        serverEndPoints.Add(ipEndPoint);
                     }
                     else
                     {
-                        string[] s = server.Split(':');
+                        string[] s = server.Value.Split(':');
                         if (s.Length == 2 && ushort.TryParse(s[1], out ushort port))
                         {
-                            ServerEndPoints.Add(new DnsEndPoint(s[0], port));
+                            serverEndPoints.Add(new DnsEndPoint(s[0], port));
                         }
                     }
-
                 }
+                ServerIndex = new SafeIndex(serverEndPoints.Count);
+                ServerEndPoints = serverEndPoints;
             }
             catch (Exception e)
             {
-                NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", File.Name));
+                NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", $"{Name}.{reader.FileType}"));
                 NyaProxy.Logger.Exception(e);
             }
         }
 
-        public override void Save()
+        public void Write(ConfigWriter writer)
         {
             try
             {
-                base["host"] = new TomlString(Name, i18n.Config.Host);
-                base["servers"] = GetServers();
-                base["server-select-mode"] = new TomlString(SelectMode, i18n.Config.SelectMode);
-                base["server-version"] = new TomlInteger(ProtocolVersion, i18n.Config.ProtocolVersion);
-                base["server-flags"] = new TomlString(Flags, i18n.Config.ServerFlags);
-                base["compression-threshold"] = new TomlInteger(CompressionThreshold, i18n.Config.CompressionThreshold);
-                base["player-info-forwarding-mode"] = new TomlString(ForwardMode, i18n.Config.ForwardMode);
-                base["kick-exists-player"] = new TomlBoolean(KickExistsPlayer, i18n.Config.KickExistsPlayer);
+                writer.WriteProperty("host", new StringNode(i18n.Config.Host));
+
+                ConfigArray servers = new ConfigArray();
+
+                for (int i = 0; i < ServerEndPoints.Count; i++)
+                {
+                    if (ServerEndPoints[i] is DnsEndPoint dnsEndPoint)
+                        servers.Value.Add(new StringNode($"{dnsEndPoint.Host}:{dnsEndPoint.Port}"));
+                    else
+                        servers.Value.Add(new StringNode(ServerEndPoints[i].ToString()));
+                }
+                writer.WriteArray("servers", servers);
+
+                writer.WriteProperty("server-select-mode",          new StringNode(SelectMode.ToString(),i18n.Config.SelectMode));
+                writer.WriteProperty("server-version",              new NumberNode(ProtocolVersion, i18n.Config.ProtocolVersion));
+                writer.WriteProperty("server-flags",                new StringNode(Flags.ToString(), i18n.Config.ServerFlags));
+                writer.WriteProperty("compression-threshold",       new NumberNode(CompressionThreshold, i18n.Config.CompressionThreshold));
+                writer.WriteProperty("player-info-forwarding-mode", new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
+                writer.WriteProperty("kick-exists-player",          new BooleanNode(KickExistsPlayer, i18n.Config.KickExistsPlayer));
+
             }
             catch (Exception e)
             {
-                NyaProxy.Logger.Error(i18n.Error.SaveConfigFailed.Replace("{File}", File.Name));
+                NyaProxy.Logger.Error(i18n.Error.SaveConfigFailed.Replace("{File}", $"{UniqueId}.{writer.FileType}"));
                 NyaProxy.Logger.Exception(e);
             }
         }
 
-        private TomlNode[] GetServers()
+        public void SetDefault()
         {
-            TomlNode[] nodes = new TomlNode[ServerEndPoints.Count];
-            for (int i = 0; i < ServerEndPoints.Count; i++)
-            {
-                if (ServerEndPoints[i] is DnsEndPoint dnsEndPoint)
-                    nodes[i] = $"{dnsEndPoint.Host}:{dnsEndPoint.Port}";
-                else
-                    nodes[i] = ServerEndPoints[i].ToString();
-            }
-            return nodes;
+            Name = "example";
+            ForwardMode = ForwardMode.Direct;
+            SelectMode = ServerSelectMode.Failover;
+            Flags = ServerFlags.None;
+            ServerEndPoints = new List<EndPoint>() { new DnsEndPoint("example.net", 25565), new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), 233) };
+            ProtocolVersion = -1;
+            CompressionThreshold = -1;
         }
 
-        private static Random Random = new Random();
-        private int LastServerIndex = 0;
+        
+        private async Task<Socket> OpenConnectAsync(EndPoint endPoint)
+        {
+            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
+            await socket.ConnectAsync(endPoint);
+            return socket;
+        }
+
         public async Task<Socket> OpenConnectAsync()
         {
             if (SelectMode == ServerSelectMode.Failover)
@@ -119,9 +138,7 @@ namespace NyaProxy.Configs
             }
             else if (SelectMode == ServerSelectMode.Pool)
             {
-                if (LastServerIndex >= ServerEndPoints.Count)
-                    LastServerIndex = 0;
-                return await OpenConnectAsync(ServerEndPoints[LastServerIndex++]);
+                return await OpenConnectAsync(ServerEndPoints[ServerIndex.Get()]);
             }
             else if (SelectMode == ServerSelectMode.Random)
             {
@@ -131,18 +148,10 @@ namespace NyaProxy.Configs
             throw new Exception(i18n.Error.NoSocketAvailable);
         }
 
-        private async Task<Socket> OpenConnectAsync(EndPoint endPoint)
-        {
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
-            await socket.ConnectAsync(endPoint);
-            return socket;
-        }
 
         public override int GetHashCode()
         {
             return Name.GetHashCode();
         }
-
-
     }
 }

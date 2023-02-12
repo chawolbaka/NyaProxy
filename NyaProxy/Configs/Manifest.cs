@@ -1,7 +1,8 @@
-﻿using System;
+﻿using NyaProxy.API;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using NyaProxy.API.Config;
 
 namespace NyaProxy.Configs
 {
@@ -33,6 +34,9 @@ namespace NyaProxy.Configs
 
         [JsonPropertyName("Checksum"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string Checksum { get; set; }
+
+        [JsonPropertyName("CommandPrefixes"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public List<string> CommandPrefixes { get; set; }
 
         public Manifest() { }
 

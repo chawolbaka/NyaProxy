@@ -81,7 +81,7 @@ namespace NyaProxy.Bridges
                     {
                         NyaProxy.Bridges[Host.Name].TryRemove(SessionId, out _);
                         //如果该host已被删除，那么就由最后一个移除连接的Bridge来从Bridges中移除该host
-                        if (!NyaProxy.Config.Hosts.ContainsKey(Host.Name) && NyaProxy.Bridges[Host.Name].IsEmpty)
+                        if (!NyaProxy.Hosts.ContainsKey(Host.Name) && NyaProxy.Bridges[Host.Name].IsEmpty)
                             NyaProxy.Bridges.TryRemove(Host.Name, out _);
                     }
                 }

@@ -86,7 +86,7 @@ namespace NyaProxy.Bridges
 
             ProtocolVersion = protocolVersion;
             ListenToken.Token.Register(Break);
-            _queueIndex = GetQueueIndex();
+            _queueIndex = QueueIndex.Get();
 
 
             //监听客户端发送给服务端的数据包

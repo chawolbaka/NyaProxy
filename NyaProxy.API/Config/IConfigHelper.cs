@@ -8,6 +8,10 @@ namespace NyaProxy.API
 {
     public interface IConfigHelper
     {
-        void Register(ITomlConfig config, string fileName);
+        T Get<T>(int index) where T : Config;
+        T Get<T>(string name) where T : Config;
+        
+        int Register(Type config);
+        int Register(Type config, string fileName);
     }
 }

@@ -3,6 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MinecraftProtocol" Version="1.0.0" />
+      <PackageReference Include="MinecraftProtocol" Version="1.0.0" />
+	  <ProjectReference Include="..\NyaProxy.API.Generator\NyaProxy.API.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

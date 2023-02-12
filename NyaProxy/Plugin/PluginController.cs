@@ -53,19 +53,8 @@ namespace NyaProxy.Plugin
 
             try
             {
-                foreach (var file in (plugin.Helper as PluginManager.PluginHelper)?._configHelper?.ConfigList)
-                {
-                    try
-                    {
-                        file.Save();
-                    }
-                    catch (IOException e)
-                    {
-                        NyaProxy.Logger.Error(i18n.Error.SaveConfigFailed);
-                        NyaProxy.Logger.Exception(e);
-                    }
-                }
-                await plugin.OnDisable();
+                await plugin.OnDisable();           
+                (plugin.Helper as PluginManager.PluginHelper)?._configHelper?.SaveAll();
                 Context.Unload();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();

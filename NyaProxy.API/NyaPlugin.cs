@@ -1,5 +1,4 @@
-﻿using NyaProxy.API.Config;
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace NyaProxy.API

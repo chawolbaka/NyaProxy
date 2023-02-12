@@ -30,9 +30,13 @@ namespace NyaProxy
         public static PluginManager Plugin { get; private set; }
         public static ConcurrentDictionary<string, ConcurrentDictionary<long, Bridge>> Bridges { get; private set; }
         public static IReadOnlyList<Socket> ServerSockets { get; set; }
-
-        public static MainConfig Config { get; private set; }
+        
+        
         public static ILogger Logger { get; private set; }
+
+        public static readonly MainConfig Config = new MainConfig();
+        public static readonly Dictionary<string, HostConfig> Hosts = new Dictionary<string, HostConfig>();
+        
 
         public static EventHandler<IConnectEventArgs> Connecting;
         public static EventHandler<IHandshakeEventArgs> Handshaking;
@@ -44,9 +48,8 @@ namespace NyaProxy
         public static EventHandler<IChatSendEventArgs> ChatMessageSendToServer;
         public static EventHandler<IDisconnectEventArgs> Disconnected;
 
-        public static async Task Setup(MainConfig config, ILogger logger)
+        public static async Task Setup(ILogger logger)
         {
-            Config = config ?? throw new ArgumentNullException(nameof(config));
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Plugin = new(logger);
             Bridges = new ();
@@ -54,11 +57,10 @@ namespace NyaProxy
             CommandManager = new();
 
             Thread.CurrentThread.Name = $"{nameof(NyaProxy)} thread";
-           
             TaskScheduler.UnobservedTaskException += (sender, e) => Crash.Report(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
-            if (!config.IsLoad)
-                config.Load();
+            ReloadConfig();
+            ReloadHosts();
 
             if (!Directory.Exists("Plugins"))
                 Directory.CreateDirectory("Plugins");
@@ -78,9 +80,61 @@ namespace NyaProxy
 #endif
                     }
                 }
-            BlockingBridge.Setup(config.NetworkThread);
+            BlockingBridge.Setup(Config.NetworkThread);
         }
 
+        public static void ReloadConfig()
+        {
+            const string fileName = "config.toml";
+            if (!File.Exists(fileName))
+            {
+                TomlConfigWriter writer = new TomlConfigWriter();
+                Config.SetDefault();
+                Config.Write(writer);
+                writer.Save(fileName);
+            }
+            else
+            {
+                TomlConfigReader reader = new TomlConfigReader(fileName);
+                Config.Read(reader);
+            }
+        }
+        public static void ReloadHosts()
+        {
+            const string directory = "Servers";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+                TomlConfigWriter writer = new TomlConfigWriter();
+                HostConfig exampleConfig = new HostConfig("example");
+                exampleConfig.SetDefault();
+                exampleConfig.Write(writer);
+                writer.Save(Path.Combine(directory, "example.toml"));
+                return;
+            }
+
+            HashSet<string> removeList = new HashSet<string>(Hosts.Values.Select(x => x.Name));
+            foreach (var file in Directory.GetFiles(directory).Select(f=>new FileInfo(f)))
+            {
+                if (file.Name == "example.toml")
+                    continue;
+
+                TomlConfigReader reader = new TomlConfigReader(file.FullName);
+                HostConfig hostConfig = new HostConfig(file.Name.Split('.')[0]);
+                hostConfig.Read(reader);
+                
+                if (Hosts.ContainsKey(hostConfig.Name))
+                    Hosts[hostConfig.Name] = hostConfig;
+                else
+                    Hosts.Add(hostConfig.Name, hostConfig);
+                removeList.Remove(hostConfig.Name);
+            }
+            //移除已经不存在的服务器
+            foreach (var name in removeList)
+            {
+                Hosts.Remove(name);
+            }
+        }
         public static void RebindSockets()
         {
             if (ServerSockets != null && ServerSockets.Count > 0)
@@ -277,10 +331,10 @@ namespace NyaProxy
 
         public static HostConfig ChooseServer(string host)
         {
-            if (Config.Hosts.ContainsKey(host))
-                return Config.Hosts[host];
-            else if (Config.Hosts.ContainsKey("default"))
-                return  Config.Hosts["default"];
+            if (Hosts.ContainsKey(host))
+                return Hosts[host];
+            else if (Hosts.ContainsKey("default"))
+                return  Hosts["default"];
             else
                 return null;
         }

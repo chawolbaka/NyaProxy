@@ -60,7 +60,7 @@ namespace NyaProxy.Debug
         {
             //这边太长了稍微简化了一些名称
             StringTable table = new StringTable("Host", "Servers", "Select Mode", "Forward Mode", "Protocol", "Threshold", "Flags");
-            foreach (HostConfig host in NyaProxy.Config.Hosts.Values.ToList())
+            foreach (HostConfig host in NyaProxy.Hosts.Values.ToList())
             {
                 table.AddRow(host.Name, string.Join('>', host.ServerEndPoints), host.SelectMode, host.ForwardMode, host.ProtocolVersion, host.CompressionThreshold, host.Flags);
             }
