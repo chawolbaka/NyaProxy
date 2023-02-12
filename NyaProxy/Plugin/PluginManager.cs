@@ -154,7 +154,7 @@ namespace NyaProxy.Plugin
 
                 public List<Config> ConfigFiles = new();
 
-                public Dictionary<string, Config> ConfigNameDictionary = new();
+                public Dictionary<string, Config> ConfigIdDictionary = new();
 
                 public Dictionary<string, string> ConfigPathDictionary = new();
 
@@ -164,19 +164,6 @@ namespace NyaProxy.Plugin
                 {
                     WorkDirectory = workDirectory;
                     _manifest = manifest;
-                }
-
-                public void Save(int index)
-                {
-                    throw new NotImplementedException();
-                }
-                public void Save(string Name)
-                {
-                    throw new NotImplementedException();
-                }
-                public void SaveAll()
-                {
-                    throw new NotImplementedException();
                 }
 
                 public int Register(Type configType)
@@ -202,18 +189,7 @@ namespace NyaProxy.Plugin
                             if (config is IDefaultConfig idc) //如果配置文件不存在但该类实现了IDefaultConfig接口那么就创建默认的配置文件
                             {
                                 idc.SetDefault();
-                                if (config is IManualConfig imc)
-                                {
-                                    TomlConfigWriter writer = new TomlConfigWriter();
-                                    imc.Write(writer);
-                                    writer.Save(path);
-                                }
-                                else
-                                {
-                                    TomlDocument document = TomletMain.DocumentFrom(configType, config);
-                                    document.ForceNoInline = true;
-                                    File.WriteAllText(path, document.SerializedValue, Encoding.UTF8);
-                                }
+                                Save(path);
                             }
                         }
                         else if (typeof(IManualConfig).IsAssignableFrom(configType)) //如果实现了IManualConfig接口那么就通过read来读取配置文件，否则就通过反序列化读取
@@ -228,7 +204,7 @@ namespace NyaProxy.Plugin
                         }
 
                         ConfigFiles.Add(config);
-                        ConfigNameDictionary.Add(config.UniqueId, config);
+                        ConfigIdDictionary.Add(config.UniqueId, config);
                         ConfigPathDictionary.Add(config.UniqueId, path);
 
                         return ConfigFiles.Count - 1;
@@ -242,6 +218,34 @@ namespace NyaProxy.Plugin
          
                 }
 
+
+                public void Save(int index)
+                {
+                    Config config = ConfigFiles[index];
+                    Save(config, ConfigPathDictionary[config.UniqueId]);
+                }
+                public void Save(string name)
+                {
+                    Config config = ConfigIdDictionary[name];
+                    Save(config, ConfigPathDictionary[config.UniqueId]);
+                }
+
+                private void Save(Config config, string path)
+                {
+                    if (config is IManualConfig imc)
+                    {
+                        TomlConfigWriter writer = new TomlConfigWriter();
+                        imc.Write(writer);
+                        writer.Save(path);
+                    }
+                    else
+                    {
+                        TomlDocument document = TomletMain.DocumentFrom(config.GetType(), config);
+                        document.ForceNoInline = true;
+                        File.WriteAllText(path, document.SerializedValue, Encoding.UTF8);
+                    }
+                }
+
                 public T Get<T>(int index) where T : Config
                 {
                     return (T)ConfigFiles[index];
@@ -249,7 +253,7 @@ namespace NyaProxy.Plugin
 
                 public T Get<T>(string name) where T : Config
                 {
-                    return (T)ConfigNameDictionary[name];
+                    return (T)ConfigIdDictionary[name];
                 }
             }
 
