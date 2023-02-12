@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NyaProxy.API
 {
-    public interface IConfigHelper
+    public interface IConfigContainer
     {
         T Get<T>(int index) where T : Config;
         T Get<T>(string name) where T : Config;

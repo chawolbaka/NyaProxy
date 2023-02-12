@@ -8,11 +8,18 @@ namespace NyaProxy.API
     {
         public virtual string ParamName { get; }
 
-        public CommandFormatException() : base() { }
-        public CommandFormatException(string message) : base(message) { }
-        public CommandFormatException(string message, Exception innerException) : base(message, innerException) { }
-
-        public CommandFormatException(string message, string paramName) : base(message) { ParamName = paramName; }
-        public CommandFormatException(string message, string paramName, Exception innerException) : base(message, innerException) { paramName = ParamName; }
+        public CommandFormatException(string command) : base(command) { }
+        public CommandFormatException(string command, string paramName) : base(command)
+        {
+            ParamName = paramName;
+        }
+        public CommandFormatException(string command, string paramName, string message) : base(command, message)
+        {
+            ParamName = paramName;
+        }
+        public CommandFormatException(string command, string paramName, string message, Exception innerException) : base(command, message, innerException)
+        {
+            ParamName = paramName;
+        }
     }
 }

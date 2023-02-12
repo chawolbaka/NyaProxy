@@ -38,9 +38,11 @@ namespace NyaProxy.Debug
         public static StringTable CreateCommandTable()
         {
             StringTable table = new StringTable("Command", "Description", "Usage", "Minimum Args");
-            foreach (var item in NyaProxy.CommandManager.RegisteredCommands.Values.ToArray())
+            List<Command> commands = new List<Command>(NyaProxy.CommandManager.RegisteredCommands.Values);
+            commands.Sort((x, y) => string.Compare(x.Name, y.Name));
+            foreach (var commnad in commands)
             {
-                table.AddRow(item.Commnad.Name, item.Commnad.Description, item.Commnad.Usage, item.Commnad.MinimumArgs);
+                table.AddRow(commnad.Name, commnad.Description, commnad.Usage, commnad.MinimumArgs);
             }
             return table;
         }

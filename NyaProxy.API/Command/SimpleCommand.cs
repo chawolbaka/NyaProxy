@@ -14,11 +14,11 @@ namespace NyaProxy.API
 
         public override string Description { get; }
 
-        private Func<string[], ICommandHelper, Task> _func;
+        private Func<ReadOnlyMemory<string>, ICommandHelper, Task> _func;
 
-        public SimpleCommand(string commandName, Func<string[], ICommandHelper, Task> executeAsync) : this(commandName, "", "", executeAsync) { }
-        public SimpleCommand(string commandName, string commandUsage, Func<string[], ICommandHelper, Task> executeAsync) : this(commandName, commandUsage, "", executeAsync) { }
-        public SimpleCommand(string commandName, string commandUsage, string commandDescription, Func<string[], ICommandHelper, Task> executeAsync)
+        public SimpleCommand(string commandName, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync) : this(commandName, "", "", executeAsync) { }
+        public SimpleCommand(string commandName, string commandUsage, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync) : this(commandName, commandUsage, "", executeAsync) { }
+        public SimpleCommand(string commandName, string commandUsage, string commandDescription, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync)
         {
             Name = commandName ?? throw new ArgumentNullException(nameof(commandName));
             Usage = commandUsage ?? throw new ArgumentNullException(nameof(commandUsage));
@@ -26,7 +26,7 @@ namespace NyaProxy.API
             _func = executeAsync ?? throw new ArgumentNullException(nameof(executeAsync));
         }
 
-        public override Task ExecuteAsync(string[] args, ICommandHelper helper)
+        public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             return _func(args, helper);
         }

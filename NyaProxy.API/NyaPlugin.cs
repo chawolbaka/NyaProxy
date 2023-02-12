@@ -21,12 +21,10 @@ namespace NyaProxy.API
         private IManifest _manifest;
         private IPluginHelper _helper;
         private ILogger _logger;
-        private Action<string, Command> _register;
 
         //该方法会被反射调用
-        private void Setup(Action<string, Command> register, IPluginHelper helper, ILogger logger, IManifest manifest)
+        private void Setup(IPluginHelper helper, ILogger logger, IManifest manifest)
         {
-            _register = register;
             _helper = helper;
             _logger = logger;
             _manifest = manifest;
@@ -41,13 +39,6 @@ namespace NyaProxy.API
         /// 插件被关闭
         /// </summary>
         public abstract Task OnDisable();
-
-        /// <summary>
-        /// 注册命令
-        /// </summary>
-        /// <param name="command">从Command派生的类</param>
-        protected void Register(Command command) => _register(ToString(), command);
-
 
         public override string ToString()
         {

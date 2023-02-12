@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using NyaProxy.API;
 using NyaProxy.Extension;
 
@@ -8,46 +12,44 @@ namespace NyaProxy
 {
     public class CommandManager
     {
-        public SortedDictionary<string, (string Source, Command Commnad)> RegisteredCommands { get; }
+        public Dictionary<string, Command> RegisteredCommands { get; }
 
         public CommandManager()
         {
             RegisteredCommands = new ();
         }
 
-        public CommandManager Register(string source, Command command)
+        public CommandManager Register(Command command)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
             if (!RegisteredCommands.ContainsKey(command.Name))
-                RegisteredCommands.Add(command.Name, (source,command));
+                RegisteredCommands.Add(command.Name, command);
             else
                 NyaProxy.Logger.Error(i18n.Error.CommandRegistered.Replace("{CommandName}", command.Name));
 
+
             return this;
         }
 
-        public bool Unregister(string commandName)
+        public async Task<CommandManager> RunAsync(string commandName, ReadOnlyMemory<string> args, ICommandHelper helper)
         {
-            return RegisteredCommands.Remove(commandName);
-        }
-
-        public async Task<CommandManager> RunAsync(string commandName, string[] args, ICommandHelper helper)
-        {
-            if (!RegisteredCommands.ContainsKey(commandName))
+            try
             {
-                NyaProxy.Logger.UnpreformatColorfully(i18n.Error.CommandNotFound.Replace("{CommandName}", commandName));
+                await RegisteredCommands[commandName].ExecuteAsync(args, helper);
             }
-            else if (RegisteredCommands[commandName].Commnad.MinimumArgs > args.Length)
+            catch (CommandLeastRequiredException clre)
             {
-                NyaProxy.Logger.UnpreformatColorfully(i18n.Error.CommandLeastRequired.Replace("{CommandName}", commandName, "{MinimumArgs}", RegisteredCommands[commandName].Commnad.MinimumArgs));
+                NyaProxy.Logger.UnpreformatColorfully(i18n.Error.CommandLeastRequired.Replace("{CommandName}", clre.Command, "{MinimumArgs}", clre.MinimumArgs));
             }
-            else
+            catch (CommandNotFoundException cnfe)
             {
-                await RegisteredCommands[commandName].Commnad.ExecuteAsync(args, helper);
+                NyaProxy.Logger.UnpreformatColorfully(i18n.Error.CommandNotFound.Replace("{CommandName}", cnfe.Command));
             }
             return this;
         }
+
+
     }
 }
