@@ -20,6 +20,7 @@ namespace NyaProxy.Configs
         public int ProtocolVersion { get; set; }
         public ServerFlags Flags { get; set; }
         public bool TcpFastOpen { get; set; }
+        public int ConnectionTimeout { get; set; }
 
         private static Random Random = new Random();
         private SafeIndex ServerIndex;
@@ -36,10 +37,11 @@ namespace NyaProxy.Configs
                 Flags = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
                 SelectMode = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
                 ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
-                TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
                 ProtocolVersion = (int)reader.ReadNumberProperty("server-version");
                 CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
-                
+                TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
+                ConnectionTimeout = (int)reader.ReadNumberProperty("connection-timeout");
+
                 List<EndPoint> serverEndPoints = new List<EndPoint>();
                 foreach (StringNode server in reader.ReadArray("servers"))
                 {
@@ -89,8 +91,9 @@ namespace NyaProxy.Configs
                 writer.WriteProperty("compression-threshold",       new NumberNode(CompressionThreshold, i18n.Config.CompressionThreshold));
                 writer.WriteProperty("player-info-forwarding-mode", new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
                 writer.WriteProperty("tcp-fast-open",               new BooleanNode(TcpFastOpen, i18n.Config.ClientTcpFastOpen));
+                writer.WriteProperty("connection-timeout",          new NumberNode(ConnectionTimeout, i18n.Config.ConnectionTimeout));
 
-                
+
             }
             catch (Exception e)
             {
@@ -109,6 +112,7 @@ namespace NyaProxy.Configs
             ProtocolVersion = -1;
             CompressionThreshold = -1;
             TcpFastOpen = false;
+            ConnectionTimeout = 1000 * 6;
         }
 
         
@@ -125,7 +129,6 @@ namespace NyaProxy.Configs
             
             var tcs = new TaskCompletionSource<Socket>();
             var eventArgs = new SocketAsyncEventArgs();
-
             eventArgs.Completed += (s, e) =>
             {
                 if (e.SocketError == SocketError.Success)
@@ -150,6 +153,23 @@ namespace NyaProxy.Configs
                 return Task.FromResult(socket);
             }
         }
+        public async Task<Socket> OpenConnectAsync(EndPoint endPoint, int timeout)
+        {
+            if (timeout < 0)
+                return await OpenConnectAsync(endPoint);
+
+            Task<Socket> task = OpenConnectAsync(endPoint);
+            await Task.WhenAny(task, Task.Delay(timeout));
+            if (!task.IsCompletedSuccessfully)
+            {
+                task.ContinueWith((t) => t.Result.Close());
+                throw new SocketException((int)SocketError.TimedOut);
+            }
+            else
+            {
+                return await task;
+            }
+        }
 
         public async Task<Socket> OpenConnectAsync()
         {
@@ -160,7 +180,7 @@ namespace NyaProxy.Configs
                 {
                     try
                     {
-                        return await OpenConnectAsync(servers[i]);
+                        return await OpenConnectAsync(servers[i], ConnectionTimeout);
                     }
                     catch (SocketException e)
                     {
@@ -171,11 +191,11 @@ namespace NyaProxy.Configs
             }
             else if (SelectMode == ServerSelectMode.Pool)
             {
-                return await OpenConnectAsync(ServerEndPoints[ServerIndex.Get()]);
+                return await OpenConnectAsync(ServerEndPoints[ServerIndex.Get()], ConnectionTimeout);
             }
             else if (SelectMode == ServerSelectMode.Random)
             {
-                return await OpenConnectAsync(ServerEndPoints[Random.Next(0, ServerEndPoints.Count - 1)]);
+                return await OpenConnectAsync(ServerEndPoints[Random.Next(0, ServerEndPoints.Count - 1)], ConnectionTimeout);
             }
 
             throw new Exception(i18n.Error.NoSocketAvailable);
