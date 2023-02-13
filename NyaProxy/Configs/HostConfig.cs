@@ -25,7 +25,7 @@ namespace NyaProxy.Configs
         public int ConnectionTimeout { get; set; }
         public int ConnectionThrottle { get; set; }
 
-        public Dictionary<string, HostTargetRule> PlayerRules = new Dictionary<string, HostTargetRule>();
+        public Dictionary<string, HostTargetRule> PlayerRules { get; set; }
 
         private static Random Random = new Random();
         private SafeIndex _serverIndex;
@@ -39,14 +39,14 @@ namespace NyaProxy.Configs
         public void Read(ConfigReader reader)
         {
             Name                 = reader.ReadStringProperty("host");
-            Flags                = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
-            SelectMode           = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
             ForwardMode          = Enum.Parse<ForwardMode>(reader.ReadStringProperty("forwarding-mode"));
-            ProtocolVersion      = ReadProtocolVersionByConfigNode(reader.ReadProperty("server-version"));
+            Flags                = reader.ContainsKey("server-flags") ? Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags")) : ServerFlags.None;
+            SelectMode           = reader.ContainsKey("server-select-mode") ? Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode")) : ServerSelectMode.Failover;
+            ProtocolVersion      = reader.ContainsKey("server-version") ? ReadProtocolVersionByConfigNode(reader.ReadProperty("server-version")) : -1;
             CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
-            TcpFastOpen          = reader.ReadBooleanProperty("tcp-fast-open");
-            ConnectionTimeout    = (int)reader.ReadNumberProperty("connection-timeout");
-            ConnectionThrottle   = (int)reader.ReadNumberProperty("connection-throttle");
+            TcpFastOpen          = reader.ContainsKey("tcp-fast-open") ? reader.ReadBooleanProperty("tcp-fast-open") : false;
+            ConnectionTimeout    = reader.ContainsKey("connection-timeout") ? (int)reader.ReadNumberProperty("connection-timeout")   : -1;
+            ConnectionThrottle   = reader.ContainsKey("connection-throttle") ? (int)reader.ReadNumberProperty("connection-throttle") : -1;
 
 
             List<EndPoint> serverEndPoints = new List<EndPoint>();
@@ -71,9 +71,9 @@ namespace NyaProxy.Configs
                 foreach (var rule in reader.ReadArray("rule").Select(a => (a as ConfigObject).Nodes))
                 {
                     HostTargetRule targetRule = new HostTargetRule(Enum.Parse<TargetType>((string)rule["target-type"]), (string)rule["target"]);
-                    targetRule.Flags = Enum.Parse<ServerFlags>((string)rule["server-flags"]);
-                    targetRule.ProtocolVersion = ReadProtocolVersionByConfigNode(rule["server-version"]);
-                    targetRule.CompressionThreshold = (int)rule["compression-threshold"];
+                    targetRule.Flags                = reader.ContainsKey("server-flags") ? Enum.Parse<ServerFlags>((string)rule["server-flags"]) : Flags;
+                    targetRule.ProtocolVersion      = reader.ContainsKey("server-version") ? ReadProtocolVersionByConfigNode(rule["server-version"]) : ProtocolVersion;
+                    targetRule.CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)rule["compression-threshold"] : CompressionThreshold;
                     playerRules.Add(targetRule.Target, targetRule);
                 }
             }
@@ -167,7 +167,7 @@ namespace NyaProxy.Configs
 
         public Task<Socket> OpenConnectAsync(EndPoint endPoint)
         {
-            if (_lastConnectTime != default && (DateTime.Now - _lastConnectTime).TotalMilliseconds < ConnectionThrottle)
+            if (ConnectionThrottle > 0 && _lastConnectTime != default && (DateTime.Now - _lastConnectTime).TotalMilliseconds < ConnectionThrottle)
                 throw new DisconnectException("连接频率过高");
 
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
