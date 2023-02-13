@@ -40,13 +40,12 @@ namespace NyaProxy.Configs
             }
 
             ConfigObject advanced   = reader.ReadObject("advanced");
-            TcpFastOpen             = (bool)advanced["tcp-fast-open"];
             NetworkThread           = (int)advanced["network-threads"];
+            TcpFastOpen             = (bool)advanced["tcp-fast-open"];
 
-            ConfigObject pool       = (ConfigObject)advanced["advanced"];
-            EnableReceivePool       = (bool)pool["enable-receive-pool"];
-            ReceivePoolBufferCount  = (int)pool["receive-pool-buffer-count"];
-            ReceivePoolBufferLength = (int)pool["receive-pool-buffer-length"];
+            EnableReceivePool       = (bool)advanced["enable-receive-pool"];
+            ReceivePoolBufferCount  = (int)advanced["receive-pool-buffer-count"];
+            ReceivePoolBufferLength = (int)advanced["receive-pool-buffer-length"];
 
             if (ReceivePoolBufferCount <= 1 || ReceivePoolBufferLength <= 64)
                 EnableReceivePool = false;
@@ -64,17 +63,11 @@ namespace NyaProxy.Configs
             {
                 Nodes = new Dictionary<string, ConfigNode>()
                 {
+                    ["network-threads"] = new NumberNode(NetworkThread, i18n.Config.NetworkThread),
                     ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen, i18n.Config.TcpFastOpen),
-                    ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread),
-                    ["pool"] = new ConfigObject()
-                    {
-                        Nodes = new Dictionary<string, ConfigNode>()
-                        {
-                            ["enable-receive-pool"] = new BooleanNode(EnableReceivePool),
-                            ["receive-pool-buffer-count"] = new NumberNode(ReceivePoolBufferCount),
-                            ["receive-pool-buffer-length"] = new NumberNode(ReceivePoolBufferLength)
-                        }
-                    }
+                    ["enable-receive-pool"] = new BooleanNode(EnableReceivePool),
+                    ["receive-pool-buffer-count"] = new NumberNode(ReceivePoolBufferCount),
+                    ["receive-pool-buffer-length"] = new NumberNode(ReceivePoolBufferLength)
                 }
             });
         }
