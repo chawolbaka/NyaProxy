@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using MinecraftProtocol.Compatible;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
 using NyaProxy.Extension;
@@ -40,11 +41,17 @@ namespace NyaProxy.Configs
                 Flags = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
                 SelectMode = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
                 ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
-                ProtocolVersion = (int)reader.ReadNumberProperty("server-version");
                 CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
                 TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
                 ConnectionTimeout = (int)reader.ReadNumberProperty("connection-timeout");
                 ConnectionThrottle = (int)reader.ReadNumberProperty("connection-throttle");
+
+                ConfigNode protocolVersionNode = reader.ReadProperty("server-version");
+                if (protocolVersionNode is StringNode pvsn)
+                    ProtocolVersion = ProtocolVersions.SearchByName(pvsn);
+                else
+                    ProtocolVersion = (int)protocolVersionNode;
+
 
                 List<EndPoint> serverEndPoints = new List<EndPoint>();
                 foreach (StringNode server in reader.ReadArray("servers"))
@@ -76,7 +83,7 @@ namespace NyaProxy.Configs
         {
             try
             {
-                writer.WriteProperty("host", new StringNode(i18n.Config.Host));
+                writer.WriteProperty("host", new StringNode(Name));
 
                 ConfigArray servers = new ConfigArray();
 
