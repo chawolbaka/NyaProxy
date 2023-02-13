@@ -18,7 +18,6 @@ namespace NyaProxy.Configs
         public List<EndPoint> ServerEndPoints { get; set; }
         public int CompressionThreshold { get; set; }
         public int ProtocolVersion { get; set; }
-        public bool KickExistsPlayer { get; set; }
         public ServerFlags Flags { get; set; }
 
         private static Random Random = new Random();
@@ -39,8 +38,7 @@ namespace NyaProxy.Configs
                 ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
 
                 CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
-                KickExistsPlayer = reader.ReadBooleanProperty("kick-exists-player");
-
+                
                 List<EndPoint> serverEndPoints = new List<EndPoint>();
                 foreach (StringNode server in reader.ReadArray("servers"))
                 {
@@ -89,8 +87,7 @@ namespace NyaProxy.Configs
                 writer.WriteProperty("server-flags",                new StringNode(Flags.ToString(), i18n.Config.ServerFlags));
                 writer.WriteProperty("compression-threshold",       new NumberNode(CompressionThreshold, i18n.Config.CompressionThreshold));
                 writer.WriteProperty("player-info-forwarding-mode", new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
-                writer.WriteProperty("kick-exists-player",          new BooleanNode(KickExistsPlayer, i18n.Config.KickExistsPlayer));
-
+                
             }
             catch (Exception e)
             {
