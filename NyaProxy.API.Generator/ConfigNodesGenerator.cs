@@ -1,8 +1,8 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
+﻿using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using Microsoft.CodeAnalysis;
 
 namespace NyaProxy.API.Generator
 {
@@ -20,7 +20,8 @@ namespace NyaProxy.API.Generator
         };
         public void Execute(GeneratorExecutionContext context)
         {
-            
+
+
             StringBuilder configNodePartial = new StringBuilder($@"using System;
 
 namespace NyaProxy.API
@@ -29,7 +30,7 @@ namespace NyaProxy.API
     {{
 
 ");
-
+            
             foreach (var type in types)
             {
 
@@ -51,17 +52,20 @@ namespace NyaProxy.API
         
         public {type.Key}Node({type.Value} value, string precedingComment)
         {{
-            Comment = new ConfigComment(precedingComment);
+            if (!string.IsNullOrWhiteSpace(precedingComment))
+                Comment = new ConfigComment(precedingComment);
             Value = value;
         }}
         public {type.Key}Node({type.Value} value, string precedingComment, string inlineComment)
         {{
-            Comment = new ConfigComment(precedingComment,inlineComment);
+            if (!string.IsNullOrWhiteSpace(precedingComment) && string.IsNullOrWhiteSpace(inlineComment))
+                Comment = new ConfigComment(precedingComment, inlineComment);
             Value = value;
         }}
         public {type.Key}Node({type.Value} value, ConfigComment comment)
         {{
-            Comment = comment;
+            if (comment!=null)
+                Comment = comment;
             Value = value;
         }}
 
