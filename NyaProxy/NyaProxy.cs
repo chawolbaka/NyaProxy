@@ -22,6 +22,7 @@ using NyaProxy.Channles;
 using System.Linq;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.Compatible;
+using System.Xml.Linq;
 
 namespace NyaProxy
 {
@@ -92,6 +93,7 @@ namespace NyaProxy
         public static void ReloadConfig()
         {
             const string fileName = "config.toml";
+            //这边不用try，如果主配置文件读取失败那么程序也不该继续运行了
             if (!File.Exists(fileName))
             {
                 TomlConfigWriter writer = new TomlConfigWriter();
@@ -105,6 +107,7 @@ namespace NyaProxy
                 Config.Read(reader);
             }
         }
+
         public static void ReloadHosts()
         {
             const string directory = "Servers";
@@ -125,15 +128,23 @@ namespace NyaProxy
                 if (file.Name == "example.toml")
                     continue;
 
-                TomlConfigReader reader = new TomlConfigReader(file.FullName);
-                HostConfig hostConfig = new HostConfig(file.Name.Split('.')[0]);
-                hostConfig.Read(reader);
-                
-                if (Hosts.ContainsKey(hostConfig.Name))
-                    Hosts[hostConfig.Name] = hostConfig;
-                else
-                    Hosts.Add(hostConfig.Name, hostConfig);
-                removeList.Remove(hostConfig.Name);
+                try
+                {
+                    TomlConfigReader reader = new TomlConfigReader(file.FullName);
+                    HostConfig hostConfig = new HostConfig(file.Name.Split('.')[0]);
+                    hostConfig.Read(reader);
+
+                    if (Hosts.ContainsKey(hostConfig.Name))
+                        Hosts[hostConfig.Name] = hostConfig;
+                    else
+                        Hosts.Add(hostConfig.Name, hostConfig);
+                    removeList.Remove(hostConfig.Name);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", file.Name));
+                    Logger.Exception(e);
+                }
             }
             //移除已经不存在的服务器
             foreach (var name in removeList)
@@ -141,6 +152,7 @@ namespace NyaProxy
                 Hosts.Remove(name);
             }
         }
+
         public static void RebindSockets()
         {
             if (ServerSockets != null && ServerSockets.Count > 0)

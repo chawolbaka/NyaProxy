@@ -9,6 +9,7 @@ using NyaProxy.Configs;
 using Tomlet;
 using Tomlet.Models;
 using System.Text;
+using System.Xml;
 
 namespace NyaProxy.Plugin
 {
@@ -104,10 +105,22 @@ namespace NyaProxy.Plugin
 
             private void Reload(int index)
             {
-                Config config = ConfigFiles[index];
-                config = LoadConfig(config.GetType(), ConfigPathDictionary[config.UniqueId]);
-                ConfigFiles[index] = config;
-                ConfigIdDictionary[config.UniqueId] = config;
+                if (index > ConfigFiles.Count)
+                    return;
+
+                Config config = null;
+                try
+                {
+                    config = ConfigFiles[index];
+                    config = LoadConfig(config.GetType(), ConfigPathDictionary[config.UniqueId]);
+                    ConfigFiles[index] = config;
+                    ConfigIdDictionary[config.UniqueId] = config;
+                }
+                catch (Exception e)
+                {
+                    NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", $"{config.UniqueId}.toml"));
+                    NyaProxy.Logger.Exception(e);
+                }
             }
 
             private void Reload(string uniqueId)

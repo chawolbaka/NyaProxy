@@ -35,48 +35,40 @@ namespace NyaProxy.Configs
 
         public void Read(ConfigReader reader)
         {
-            try
+            Name = reader.ReadStringProperty("host");
+            Flags = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
+            SelectMode = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
+            ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
+            CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
+            TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
+            ConnectionTimeout = (int)reader.ReadNumberProperty("connection-timeout");
+            ConnectionThrottle = (int)reader.ReadNumberProperty("connection-throttle");
+
+            ConfigNode protocolVersionNode = reader.ReadProperty("server-version");
+            if (protocolVersionNode is StringNode pvsn)
+                ProtocolVersion = ProtocolVersions.SearchByName(pvsn);
+            else
+                ProtocolVersion = (int)protocolVersionNode;
+
+
+            List<EndPoint> serverEndPoints = new List<EndPoint>();
+            foreach (StringNode server in reader.ReadArray("servers"))
             {
-                Name = reader.ReadStringProperty("host");
-                Flags = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
-                SelectMode = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
-                ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
-                CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
-                TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
-                ConnectionTimeout = (int)reader.ReadNumberProperty("connection-timeout");
-                ConnectionThrottle = (int)reader.ReadNumberProperty("connection-throttle");
-
-                ConfigNode protocolVersionNode = reader.ReadProperty("server-version");
-                if (protocolVersionNode is StringNode pvsn)
-                    ProtocolVersion = ProtocolVersions.SearchByName(pvsn);
-                else
-                    ProtocolVersion = (int)protocolVersionNode;
-
-
-                List<EndPoint> serverEndPoints = new List<EndPoint>();
-                foreach (StringNode server in reader.ReadArray("servers"))
+                if (IPEndPoint.TryParse(server, out IPEndPoint ipEndPoint))
                 {
-                    if (IPEndPoint.TryParse(server, out IPEndPoint ipEndPoint))
+                    serverEndPoints.Add(ipEndPoint);
+                }
+                else
+                {
+                    string[] s = server.Value.Split(':');
+                    if (s.Length == 2 && ushort.TryParse(s[1], out ushort port))
                     {
-                        serverEndPoints.Add(ipEndPoint);
-                    }
-                    else
-                    {
-                        string[] s = server.Value.Split(':');
-                        if (s.Length == 2 && ushort.TryParse(s[1], out ushort port))
-                        {
-                            serverEndPoints.Add(new DnsEndPoint(s[0], port));
-                        }
+                        serverEndPoints.Add(new DnsEndPoint(s[0], port));
                     }
                 }
-                _serverIndex = new SafeIndex(serverEndPoints.Count);
-                ServerEndPoints = serverEndPoints;
             }
-            catch (Exception e)
-            {
-                NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", $"{Name}.{reader.FileType}"));
-                NyaProxy.Logger.Exception(e);
-            }
+            _serverIndex = new SafeIndex(serverEndPoints.Count);
+            ServerEndPoints = serverEndPoints;
         }
 
         public void Write(ConfigWriter writer)
