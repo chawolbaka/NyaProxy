@@ -8,6 +8,6 @@
         /// <summary>
         /// 设定默认值，用于生成默认的配置文件
         /// </summary>
-        public virtual void SetDefault() { }
+        void SetDefault();
     }
 }
