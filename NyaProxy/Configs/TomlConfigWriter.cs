@@ -48,6 +48,8 @@ namespace NyaProxy.Configs
                 tomlValue = new TomlLocalDateTime(DTN);
             else if (node is StringNode SN)
                 tomlValue = new TomlString(SN);
+            else if (node is ConfigObject CO)
+                tomlValue = ConvertToTomlTable(CO);
             else
                 throw new InvalidCastException($"Unknow node {node.GetType()}");
 
