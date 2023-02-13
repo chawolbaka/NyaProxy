@@ -120,6 +120,9 @@
   <data name="Bind" xml:space="preserve">
     <value>What port should the proxy be bound to? By default, we'll bind to all addresses on port 25565.</value>
   </data>
+  <data name="ClientTcpFastOpen" xml:space="preserve">
+    <value />
+  </data>
   <data name="CompressionThreshold" xml:space="preserve">
     <value />
   </data>

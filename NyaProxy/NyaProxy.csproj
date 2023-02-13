@@ -15,6 +15,7 @@
 		<!--版权配置-->
 		<Authors>Chawol</Authors>
 		<Copyright>Copyright (c) 2023 Chawol</Copyright>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	  
   </PropertyGroup>
 	

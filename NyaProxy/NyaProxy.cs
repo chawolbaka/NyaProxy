@@ -181,6 +181,9 @@ namespace NyaProxy
             try
             {
                 Socket ServerSocket = new Socket(bind.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                if (Config.TcpFastOpen && OperatingSystem.IsLinux())
+                    ServerSocket.EnableLinuxFastOpenServer();
+
                 ServerSocket.Bind(bind);
                 ServerSocket.Listen();
                 SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();

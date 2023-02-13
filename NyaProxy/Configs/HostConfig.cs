@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
-
+using NyaProxy.Extension;
 
 namespace NyaProxy.Configs
 {
@@ -19,6 +19,7 @@ namespace NyaProxy.Configs
         public int CompressionThreshold { get; set; }
         public int ProtocolVersion { get; set; }
         public ServerFlags Flags { get; set; }
+        public bool TcpFastOpen { get; set; }
 
         private static Random Random = new Random();
         private SafeIndex ServerIndex;
@@ -32,11 +33,11 @@ namespace NyaProxy.Configs
             try
             {
                 Name = reader.ReadStringProperty("host");
-                ProtocolVersion = (int)reader.ReadNumberProperty("server-version");
                 Flags = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
                 SelectMode = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
                 ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
-
+                TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
+                ProtocolVersion = (int)reader.ReadNumberProperty("server-version");
                 CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
                 
                 List<EndPoint> serverEndPoints = new List<EndPoint>();
@@ -87,6 +88,8 @@ namespace NyaProxy.Configs
                 writer.WriteProperty("server-flags",                new StringNode(Flags.ToString(), i18n.Config.ServerFlags));
                 writer.WriteProperty("compression-threshold",       new NumberNode(CompressionThreshold, i18n.Config.CompressionThreshold));
                 writer.WriteProperty("player-info-forwarding-mode", new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
+                writer.WriteProperty("tcp-fast-open",               new BooleanNode(TcpFastOpen, i18n.Config.ClientTcpFastOpen));
+
                 
             }
             catch (Exception e)
@@ -105,14 +108,47 @@ namespace NyaProxy.Configs
             ServerEndPoints = new List<EndPoint>() { new DnsEndPoint("example.net", 25565), new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), 233) };
             ProtocolVersion = -1;
             CompressionThreshold = -1;
+            TcpFastOpen = false;
         }
 
         
-        private async Task<Socket> OpenConnectAsync(EndPoint endPoint)
+        public Task<Socket> OpenConnectAsync(EndPoint endPoint)
         {
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
-            await socket.ConnectAsync(endPoint);
-            return socket;
+            if (TcpFastOpen)
+            {
+                if (OperatingSystem.IsWindows())
+                    socket.EnableWindowsFastOpenClient();
+                else if (OperatingSystem.IsLinux())
+                    socket.EnableLinuxFastOpenConnect();
+            }
+            
+            var tcs = new TaskCompletionSource<Socket>();
+            var eventArgs = new SocketAsyncEventArgs();
+
+            eventArgs.Completed += (s, e) =>
+            {
+                if (e.SocketError == SocketError.Success)
+                {
+                    tcs.TrySetResult(socket);
+                }
+                else
+                {
+                    tcs.TrySetException(new SocketException((int)e.SocketError));
+                }
+            };
+
+            eventArgs.RemoteEndPoint = endPoint;
+            eventArgs.UserToken = tcs;
+
+            if (socket.ConnectAsync(eventArgs))
+            {
+                return tcs.Task;
+            }
+            else
+            {
+                return Task.FromResult(socket);
+            }
         }
 
         public async Task<Socket> OpenConnectAsync()

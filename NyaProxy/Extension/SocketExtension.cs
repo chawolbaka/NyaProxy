@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using NyaProxy.Bridges;
 using MinecraftProtocol.Chat;
 using MinecraftProtocol.Packets.Server;
+using System.Runtime.InteropServices;
+using System.Net;
 
 namespace NyaProxy.Extension
 {
@@ -28,6 +30,48 @@ namespace NyaProxy.Extension
                 BlockingBridge.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress), socket);
             else
                 BlockingBridge.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress));
+        }
+
+
+        //By: https://blog.hjc.im/dotnet-core-tcp-fast-open.html
+        [DllImport("libc.so.6", SetLastError = true)]
+        private static extern unsafe int setsockopt(int sockfd, int level, int optname, void* optval, int optlen);
+
+        public static unsafe void EnableLinuxFastOpenServer(this Socket socket)
+        {
+            const int TCP_FASTOPEN_LINUX = 23;
+            int qlen = 5;
+            int result = setsockopt(
+                (int)socket.Handle,
+                6 /* SOL_TCP */,
+                TCP_FASTOPEN_LINUX,
+                &qlen, sizeof(int));
+            if (result == -1)
+            {
+                throw new SocketException(Marshal.GetLastWin32Error());
+            }
+        }
+        
+        public static unsafe void EnableLinuxFastOpenConnect(this Socket socket)
+        {
+            const int TCP_FASTOPEN_CONNECT = 30;
+            int val = 1;
+            int result = setsockopt(
+                (int)socket.Handle,
+                6 /*SOL_TCP*/,
+                TCP_FASTOPEN_CONNECT,
+                &val, sizeof(int));
+            if (result == -1)
+            {
+                throw new SocketException(Marshal.GetLastWin32Error());
+            }
+        }
+
+
+        public static void EnableWindowsFastOpenClient(this Socket socket)
+        {
+            const int TCP_FASTOPEN_WINDOWS = 15;
+            socket.SetSocketOption(SocketOptionLevel.Tcp, (SocketOptionName)TCP_FASTOPEN_WINDOWS, 1);
         }
     }
 }
