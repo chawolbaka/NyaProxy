@@ -23,6 +23,7 @@ using System.Linq;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.Compatible;
 using System.Xml.Linq;
+using NyaProxy.Configs.Rule;
 
 namespace NyaProxy
 {
@@ -275,7 +276,6 @@ namespace NyaProxy
                              return;
                          }
 
-                         int ProtocolVersion = dest.ProtocolVersion > 0 ? dest.ProtocolVersion : hea.Packet.ProtocolVersion;
                          Socket serverSocket = await dest.OpenConnectAsync();
                          if (!NetworkUtils.CheckConnect(serverSocket))
                          {
@@ -289,7 +289,7 @@ namespace NyaProxy
                          {
                              BlockingBridge.Enqueue(serverSocket, hp.Pack(-1), () => 
                              {
-                                 FastBridge bridge = new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket);
+                                 FastBridge bridge = new FastBridge(dest.Name, rawHandshakeAddress, acceptSocket, serverSocket);
                                  bridge.Build();
                                  hp?.Dispose();
                              });                             
@@ -303,8 +303,11 @@ namespace NyaProxy
                                  EventUtils.InvokeCancelEvent(LoginStart, acceptSocket, lsea);
                                  if (lsea.IsBlock)
                                      return;
+                                 IHostTargetRule rule = dest.GetRule(lsp.PlayerName);
+                                 int ProtocolVersion = rule.ProtocolVersion > 0 ? rule.ProtocolVersion : hea.Packet.ProtocolVersion;
 
-                                
+
+
                                  string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
                                  switch (dest.ForwardMode)
                                  {
@@ -322,7 +325,7 @@ namespace NyaProxy
                                          throw new NotImplementedException();
                                  }
 
-                                 BlockingBridge bb = new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, ProtocolVersion);
+                                 BlockingBridge bb = new BlockingBridge(dest.Name, rule, rawHandshakeAddress, acceptSocket, serverSocket, ProtocolVersion);
                                  bb.Build(hea.Packet, lsea.Packet);
                                  Logger.Info(i18n.Message.ConnectCreated.Replace("{PlayerName}", lsea.Packet.PlayerName, "{Souce.EndPoint}", acceptSocket.RemoteEndPoint, "{Destination.EndPoint}", serverSocket.RemoteEndPoint));
                              }

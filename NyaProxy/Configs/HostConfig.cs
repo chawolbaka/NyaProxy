@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using MinecraftProtocol.Compatible;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
+using NyaProxy.Configs.Rule;
 using NyaProxy.Extension;
+using MinecraftProtocol.Compatible;
 
 namespace NyaProxy.Configs
 {
-    public class HostConfig : Config, IDefaultConfig, IManualConfig, IHostConfig
+    public class HostConfig : Config, IDefaultConfig, IManualConfig, IHostConfig, IHostTargetRule
     {
         public string Name { get; set; }
         public ServerSelectMode SelectMode { get; set; }
@@ -24,6 +25,8 @@ namespace NyaProxy.Configs
         public int ConnectionTimeout { get; set; }
         public int ConnectionThrottle { get; set; }
 
+        public Dictionary<string, HostTargetRule> PlayerRules = new Dictionary<string, HostTargetRule>();
+
         private static Random Random = new Random();
         private SafeIndex _serverIndex;
         private DateTime _lastConnectTime = default;
@@ -35,20 +38,15 @@ namespace NyaProxy.Configs
 
         public void Read(ConfigReader reader)
         {
-            Name = reader.ReadStringProperty("host");
-            Flags = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
-            SelectMode = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
-            ForwardMode = Enum.Parse<ForwardMode>(reader.ReadStringProperty("player-info-forwarding-mode"));
+            Name                 = reader.ReadStringProperty("host");
+            Flags                = Enum.Parse<ServerFlags>(reader.ReadStringProperty("server-flags"));
+            SelectMode           = Enum.Parse<ServerSelectMode>(reader.ReadStringProperty("server-select-mode"));
+            ForwardMode          = Enum.Parse<ForwardMode>(reader.ReadStringProperty("forwarding-mode"));
+            ProtocolVersion      = ReadProtocolVersionByConfigNode(reader.ReadProperty("server-version"));
             CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
-            TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
-            ConnectionTimeout = (int)reader.ReadNumberProperty("connection-timeout");
-            ConnectionThrottle = (int)reader.ReadNumberProperty("connection-throttle");
-
-            ConfigNode protocolVersionNode = reader.ReadProperty("server-version");
-            if (protocolVersionNode is StringNode pvsn)
-                ProtocolVersion = ProtocolVersions.SearchByName(pvsn);
-            else
-                ProtocolVersion = (int)protocolVersionNode;
+            TcpFastOpen          = reader.ReadBooleanProperty("tcp-fast-open");
+            ConnectionTimeout    = (int)reader.ReadNumberProperty("connection-timeout");
+            ConnectionThrottle   = (int)reader.ReadNumberProperty("connection-throttle");
 
 
             List<EndPoint> serverEndPoints = new List<EndPoint>();
@@ -67,8 +65,30 @@ namespace NyaProxy.Configs
                     }
                 }
             }
-            _serverIndex = new SafeIndex(serverEndPoints.Count);
+            Dictionary<string, HostTargetRule> playerRules = new Dictionary<string, HostTargetRule>();
+            if (reader.ContainsKey("rule"))
+            {
+                foreach (var rule in reader.ReadArray("rule").Select(a => (a as ConfigObject).Nodes))
+                {
+                    HostTargetRule targetRule = new HostTargetRule(Enum.Parse<TargetType>((string)rule["target-type"]), (string)rule["target"]);
+                    targetRule.Flags = Enum.Parse<ServerFlags>((string)rule["server-flags"]);
+                    targetRule.ProtocolVersion = ReadProtocolVersionByConfigNode(rule["server-version"]);
+                    targetRule.CompressionThreshold = (int)rule["compression-threshold"];
+                    playerRules.Add(targetRule.Target, targetRule);
+                }
+            }
+
             ServerEndPoints = serverEndPoints;
+            PlayerRules = playerRules;
+
+            _serverIndex = new SafeIndex(serverEndPoints.Count);
+            int ReadProtocolVersionByConfigNode(ConfigNode node)
+            {
+                if (node is StringNode pvsn)
+                    return ProtocolVersions.SearchByName(pvsn);
+                else
+                    return (int)node;
+            }
         }
 
         public void Write(ConfigWriter writer)
@@ -88,14 +108,32 @@ namespace NyaProxy.Configs
                 }
                 writer.WriteArray("servers", servers);
 
-                writer.WriteProperty("server-select-mode",          new StringNode(SelectMode.ToString(),i18n.Config.SelectMode));
-                writer.WriteProperty("server-version",              new NumberNode(ProtocolVersion, i18n.Config.ProtocolVersion));
+                writer.WriteProperty("server-select-mode",          new StringNode(SelectMode.ToString(), i18n.Config.SelectMode));
                 writer.WriteProperty("server-flags",                new StringNode(Flags.ToString(), i18n.Config.ServerFlags));
+                writer.WriteProperty("server-version",              new NumberNode(ProtocolVersion, i18n.Config.ProtocolVersion));
                 writer.WriteProperty("compression-threshold",       new NumberNode(CompressionThreshold, i18n.Config.CompressionThreshold));
                 writer.WriteProperty("player-info-forwarding-mode", new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
                 writer.WriteProperty("tcp-fast-open",               new BooleanNode(TcpFastOpen, i18n.Config.ClientTcpFastOpen));
                 writer.WriteProperty("connection-timeout",          new NumberNode(ConnectionTimeout, i18n.Config.ConnectionTimeout));
                 writer.WriteProperty("connection-throttle",         new NumberNode(ConnectionThrottle, i18n.Config.ConnectionThrottle));
+
+                if (PlayerRules.Count > 0)
+                {
+                    ConfigArray rules = new ConfigArray();
+
+                    foreach (var rule in PlayerRules.Values)
+                    {
+                        rules.Add(new ConfigObject(new Dictionary<string, ConfigNode>
+                        {
+                            ["target-type"]           = new StringNode(rule.Type.ToString()),
+                            ["target"]                = new StringNode(rule.Target),
+                            ["server-flags"]          = new StringNode(rule.Flags.ToString()),
+                            ["server-version"]        = new NumberNode(rule.ProtocolVersion),
+                            ["compression-threshold"] = new NumberNode(rule.CompressionThreshold)
+                        }));
+                    }
+                    writer.WriteArray("rule", rules);
+                }
             }
             catch (Exception e)
             {
@@ -118,7 +156,15 @@ namespace NyaProxy.Configs
             ConnectionThrottle = 2000;
         }
 
-        
+        public IHostTargetRule GetRule(string name)
+        {
+            if (PlayerRules.ContainsKey(name))
+                return PlayerRules[name];
+            else
+                return this;
+        }
+
+
         public Task<Socket> OpenConnectAsync(EndPoint endPoint)
         {
             if (_lastConnectTime != default && (DateTime.Now - _lastConnectTime).TotalMilliseconds < ConnectionThrottle)
@@ -132,7 +178,7 @@ namespace NyaProxy.Configs
                 else if (OperatingSystem.IsLinux())
                     socket.EnableLinuxFastOpenConnect();
             }
-            
+
             var tcs = new TaskCompletionSource<Socket>();
             var eventArgs = new SocketAsyncEventArgs();
             eventArgs.Completed += (s, e) =>
@@ -154,7 +200,7 @@ namespace NyaProxy.Configs
             if (!socket.ConnectAsync(eventArgs))
             {
                 _lastConnectTime = DateTime.Now;
-                return Task.FromResult(socket); 
+                return Task.FromResult(socket);
             }
             else
             {

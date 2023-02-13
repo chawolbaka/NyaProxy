@@ -14,6 +14,7 @@ using MinecraftProtocol.Crypto;
 using MinecraftProtocol.Auth.Yggdrasil;
 using System.Threading;
 using MinecraftProtocol.Compatible;
+using NyaProxy.Configs.Rule;
 
 namespace NyaProxy.Bridges
 {
@@ -55,7 +56,6 @@ namespace NyaProxy.Bridges
         public virtual bool IsOnlineMode { get; private set; }
 
 
-
         public virtual CryptoHandler CryptoHandler => _clientSocketListener.CryptoHandler;
 
         private readonly RSA _rsaService;
@@ -64,22 +64,27 @@ namespace NyaProxy.Bridges
 
         private enum States { Login, Play }
         private States _state = States.Login;
-        private int _queueIndex;
-        private int _forgeCheckCount;
+        
+        private IHostTargetRule _targetRule;
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
         private Packet[] _loginToServerPackets; //一般里面是客户端发给服务端的握手包和开始登录包
 
-        public BlockingBridge(IHostConfig host, string handshakeAddress, Socket source, Socket destination, int protocolVersion) : base(host, handshakeAddress, source, destination)
+        private int _forgeCheckCount;
+        private int _queueIndex;
+
+
+        public BlockingBridge(string host, IHostTargetRule rule, string handshakeAddress, Socket source, Socket destination, int protocolVersion) : base(host, handshakeAddress, source, destination)
         {
-            IsOnlineMode = host.Flags.HasFlag(ServerFlags.OnlineMode);
+
+            IsOnlineMode = rule.Flags.HasFlag(ServerFlags.OnlineMode);
             if (IsOnlineMode)
             {
                 _rsaService = RSA.Create(1024);
                 _verifyToken = CryptoUtils.GenerateRandomNumber(4);
             }
 
-            OverCompression = host.CompressionThreshold != -1;
+            OverCompression = rule.CompressionThreshold != -1;
            
             ClientCompressionThreshold = -1;
             ServerCompressionThreshold = -1;
@@ -87,6 +92,7 @@ namespace NyaProxy.Bridges
             ProtocolVersion = protocolVersion;
             ListenToken.Token.Register(Break);
             _queueIndex = QueueIndex.Get();
+            _targetRule = rule;
 
 
             //监听客户端发送给服务端的数据包
@@ -142,7 +148,7 @@ namespace NyaProxy.Bridges
 
             if (OverCompression)
             {
-                ClientCompressionThreshold = Host.CompressionThreshold;
+                ClientCompressionThreshold = _targetRule.CompressionThreshold;
                 _clientSocketListener.CompressionThreshold = ClientCompressionThreshold;
                 Packet packet = new SetCompressionPacket(ClientCompressionThreshold, ProtocolVersion);
                 Enqueue(Source, CryptoHandler.TryEncrypt(packet.Pack(-1)), packet);
@@ -205,7 +211,7 @@ namespace NyaProxy.Bridges
             {
                 if (e.Packet == PacketType.Login.Server.EncryptionRequest)
                 {
-                    NyaProxy.Logger.Error($"[{SessionId}]服务器{Host.Name}({Destination._remoteEndPoint()})开启了正版验证，请关闭或切换至直通模式");
+                    NyaProxy.Logger.Error($"[{SessionId}]服务器{HostName}({Destination._remoteEndPoint()})开启了正版验证，请关闭或切换至直通模式");
                     Break("服务端配置异常，请问管理员查看日志");
                     return;
                 }

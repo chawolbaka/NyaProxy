@@ -28,21 +28,20 @@ namespace NyaProxy.Bridges
 
         protected CancellationTokenSource ListenToken = new CancellationTokenSource();
 
-        protected IHostConfig Host { get; }
-
+        protected string HostName { get; }
         protected bool _isBreaked;
+
         private readonly object _breakLock = new object();
 
-
-        public Bridge(IHostConfig host, string handshakeAddress, Socket source, Socket destination)
+        public Bridge(string host, string handshakeAddress, Socket source, Socket destination)
         {
             SessionId = Interlocked.Increment(ref _sequence);
             HandshakeAddress = handshakeAddress;
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
-            Host = host ?? throw new ArgumentNullException(nameof(host));
+            HostName = host ?? throw new ArgumentNullException(nameof(host));
 
-            NyaProxy.Bridges[host.Name]?.TryAdd(SessionId, this);
+            NyaProxy.Bridges[host]?.TryAdd(SessionId, this);
         }
 
         public abstract IBridge Build(); 
@@ -57,7 +56,7 @@ namespace NyaProxy.Bridges
                 
                 try
                 {
-                    if (!NyaProxy.Bridges[Host.Name].ContainsKey(SessionId))
+                    if (!NyaProxy.Bridges[HostName].ContainsKey(SessionId))
                         return;
                     ListenToken?.Cancel();
                     if (Source is not null && NetworkUtils.CheckConnect(Source))
@@ -77,12 +76,12 @@ namespace NyaProxy.Bridges
                 catch (ObjectDisposedException) { }
                 finally
                 {
-                    if (NyaProxy.Bridges[Host.Name].ContainsKey(SessionId))
+                    if (NyaProxy.Bridges[HostName].ContainsKey(SessionId))
                     {
-                        NyaProxy.Bridges[Host.Name].TryRemove(SessionId, out _);
+                        NyaProxy.Bridges[HostName].TryRemove(SessionId, out _);
                         //如果该host已被删除，那么就由最后一个移除连接的Bridge来从Bridges中移除该host
-                        if (!NyaProxy.Hosts.ContainsKey(Host.Name) && NyaProxy.Bridges[Host.Name].IsEmpty)
-                            NyaProxy.Bridges.TryRemove(Host.Name, out _);
+                        if (!NyaProxy.Hosts.ContainsKey(HostName) && NyaProxy.Bridges[HostName].IsEmpty)
+                            NyaProxy.Bridges.TryRemove(HostName, out _);
                     }
                 }
             }

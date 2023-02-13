@@ -7,7 +7,7 @@ namespace NyaProxy.Bridges
 {
     public class FastBridge : Bridge
     {
-        public FastBridge(HostConfig host, string handshakeAddress, Socket source, Socket destination) : base(host, handshakeAddress, source, destination)
+        public FastBridge(string host, string handshakeAddress, Socket source, Socket destination) : base(host, handshakeAddress, source, destination)
         {
         }
 
