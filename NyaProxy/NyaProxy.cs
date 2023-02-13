@@ -262,27 +262,28 @@ namespace NyaProxy
 
                          Logger.Debug($"{acceptSocket._remoteEndPoint()} Try to handshake (Host = {hea.Packet.ServerAddress}, Port = {hea.Packet.ServerPort})");
 
+                        
                          string rawHandshakeAddress = hea.Packet.ServerAddress;
                          string host = hea.Packet.ServerAddress;
                          if (host.Contains('\0'))
                              host = host.Substring(0, host.IndexOf('\0'));
 
                          HostConfig dest = ChooseServer(host);
-                         Socket serverSocket = await dest?.OpenConnectAsync();
-                         
-                         
                          if (dest == null)
                          {
                              acceptSocket.DisconnectOnLogin(i18n.Disconnect.NoServerAvailable);
-                             acceptSocket.Close();
                              return;
                          }
-                         else if (!NetworkUtils.CheckConnect(serverSocket))
+
+                         int ProtocolVersion = dest.ProtocolVersion > 0 ? dest.ProtocolVersion : hea.Packet.ProtocolVersion;
+                         Socket serverSocket = await dest.OpenConnectAsync();
+                         if (!NetworkUtils.CheckConnect(serverSocket))
                          {
                              acceptSocket.DisconnectOnLogin(i18n.Disconnect.ConnectFailed);
-                             acceptSocket.Close();
                              return;
                          }
+                         
+              
 
                          if (dest.ForwardMode == ForwardMode.Direct || hea.Packet.NextState == HandshakePacket.State.GetStatus)
                          {
@@ -304,7 +305,7 @@ namespace NyaProxy
                                      return;
 
                                 
-                                 string forgeTag = dest.ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
+                                 string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
                                  switch (dest.ForwardMode)
                                  {
                                      case ForwardMode.Default:
@@ -321,7 +322,7 @@ namespace NyaProxy
                                          throw new NotImplementedException();
                                  }
 
-                                 BlockingBridge bb = new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, hea.Packet.ProtocolVersion);
+                                 BlockingBridge bb = new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, ProtocolVersion);
                                  bb.Build(hea.Packet, lsea.Packet);
                                  Logger.Info(i18n.Message.ConnectCreated.Replace("{PlayerName}", lsea.Packet.PlayerName, "{Souce.EndPoint}", acceptSocket.RemoteEndPoint, "{Destination.EndPoint}", serverSocket.RemoteEndPoint));
                              }
