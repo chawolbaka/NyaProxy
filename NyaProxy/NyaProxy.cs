@@ -21,6 +21,7 @@ using NyaProxy.Bridges;
 using NyaProxy.Channles;
 using System.Linq;
 using MinecraftProtocol.IO;
+using MinecraftProtocol.Compatible;
 
 namespace NyaProxy
 {
@@ -66,6 +67,8 @@ namespace NyaProxy
             if (Config.EnableReceivePool)
                 NetworkListener.SetPoolSize(Config.ReceivePoolBufferLength, Config.ReceivePoolBufferCount);
 
+            BlockingBridge.Setup(Config.NetworkThread);
+
             if (!Directory.Exists("Plugins"))
                 Directory.CreateDirectory("Plugins");
             else
@@ -84,7 +87,6 @@ namespace NyaProxy
 #endif
                     }
                 }
-            BlockingBridge.Setup(Config.NetworkThread);
         }
 
         public static void ReloadConfig()
@@ -270,12 +272,14 @@ namespace NyaProxy
                              return;
                          }
 
-                         if (hea.Packet.NextState == HandshakePacket.State.GetStatus)
+                         if (dest.ForwardMode == ForwardMode.Direct || hea.Packet.NextState == HandshakePacket.State.GetStatus)
                          {
-                             await NetworkUtils.SendDataAsync(serverSocket, hp.Pack(-1));
-                             hp?.Dispose();
-                             FastBridge bridge = new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket);
-                             bridge.Build();
+                             BlockingBridge.Enqueue(serverSocket, hp.Pack(-1), () => 
+                             {
+                                 FastBridge bridge = new FastBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket);
+                                 bridge.Build();
+                                 hp?.Dispose();
+                             });                             
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
@@ -287,32 +291,27 @@ namespace NyaProxy
                                  if (lsea.IsBlock)
                                      return;
 
-                                 Logger.Info(i18n.Message.ConnectCreated.Replace("{PlayerName}", lsea.Packet.PlayerName, "{Souce.EndPoint}", acceptSocket.RemoteEndPoint, "{Destination.EndPoint}", serverSocket.RemoteEndPoint));
-
+                                
+                                 string forgeTag = dest.ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
                                  switch (dest.ForwardMode)
                                  {
-                                     case ForwardMode.Direct:
-                                         if (dest.Flags.HasFlag(ServerFlags.Forge) && !hea.Packet.ServerAddress.Contains("\0FML\0"))
-                                             hea.Packet.ServerAddress += "\0FML\0";
-                                         break;
-                                     case ForwardMode.NyaProxy:
+                                     case ForwardMode.Default:
+                                         if (dest.Flags.HasFlag(ServerFlags.Forge) && !hea.Packet.ServerAddress.Contains(forgeTag))
+                                             hea.Packet.ServerAddress += forgeTag;
                                          break;
                                      case ForwardMode.BungeeCord:
                                          hea.Packet.ServerAddress = new StringBuilder(host)
                                              .Append($"\0{(acceptSocket._remoteEndPoint() as IPEndPoint).Address}")
-                                             .Append($"\0{(dest.Flags.HasFlag(ServerFlags.OnlineMode) ? await UUID.GetFromMojangAsync(lsea.Packet.PlayerName) : UUID.GetFromPlayerName(lsea.Packet.PlayerName))}\0")
-                                             .Append(dest.Flags.HasFlag(ServerFlags.Forge) ? "FML\0" : "").ToString();
-                                         break;
-                                     case ForwardMode.BungeeGuard:
-                                         break;
-                                     case ForwardMode.Modern:
+                                             .Append($"\0{(dest.Flags.HasFlag(ServerFlags.OnlineMode) ? await UUID.GetFromMojangAsync(lsea.Packet.PlayerName) : UUID.GetFromPlayerName(lsea.Packet.PlayerName))}")
+                                             .Append(dest.Flags.HasFlag(ServerFlags.Forge) ? forgeTag : "\0").ToString();
                                          break;
                                      default:
-                                         break;
+                                         throw new NotImplementedException();
                                  }
 
                                  BlockingBridge bb = new BlockingBridge(dest, rawHandshakeAddress, acceptSocket, serverSocket, hea.Packet.ProtocolVersion);
                                  bb.Build(hea.Packet, lsea.Packet);
+                                 Logger.Info(i18n.Message.ConnectCreated.Replace("{PlayerName}", lsea.Packet.PlayerName, "{Souce.EndPoint}", acceptSocket.RemoteEndPoint, "{Destination.EndPoint}", serverSocket.RemoteEndPoint));
                              }
                          }
                          else

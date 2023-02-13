@@ -8,6 +8,7 @@ namespace NyaProxy.API.Enum
 {
     public enum ForwardMode
     {
+        Default,
         Direct,
         NyaProxy,
         BungeeCord,
