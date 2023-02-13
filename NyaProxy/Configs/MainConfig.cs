@@ -10,7 +10,6 @@ namespace NyaProxy.Configs
     public class MainConfig : Config, IDefaultConfig, IManualConfig
     {
         public IPEndPoint[] Bind { get; set; }
-        public int ConnectionThrottle { get; set; }
         public bool TcpFastOpen { get; set; }
         public int NetworkThread { get; set; }
         
@@ -37,7 +36,6 @@ namespace NyaProxy.Configs
             }
 
             ConfigObject advanced = reader.ReadObject("advanced");
-            ConnectionThrottle    = (int)advanced["connection-throttle"];
             TcpFastOpen           = (bool)advanced["tcp-fast-open"];
             NetworkThread         = (int)advanced["network-threads"];
         }
@@ -53,7 +51,6 @@ namespace NyaProxy.Configs
             {
                 Nodes = new Dictionary<string, ConfigNode>()
                 {
-                    ["connection-throttle"] = new NumberNode(ConnectionThrottle, i18n.Config.ConnectionThrottle),
                     ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen, i18n.Config.TcpFastOpen),
                     ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread)
                 }
@@ -63,7 +60,6 @@ namespace NyaProxy.Configs
         public void SetDefault()
         {
             Bind = new IPEndPoint[] { new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 25565) };
-            ConnectionThrottle = 1000;
             TcpFastOpen = false;
             NetworkThread = Environment.ProcessorCount;
         }

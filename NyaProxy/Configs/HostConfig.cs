@@ -21,12 +21,15 @@ namespace NyaProxy.Configs
         public ServerFlags Flags { get; set; }
         public bool TcpFastOpen { get; set; }
         public int ConnectionTimeout { get; set; }
+        public int ConnectionThrottle { get; set; }
 
         private static Random Random = new Random();
-        private SafeIndex ServerIndex;
+        private SafeIndex _serverIndex;
+        private DateTime _lastConnectTime = default;
 
         public HostConfig(string uniqueId) : base(uniqueId)
         {
+
         }
 
         public void Read(ConfigReader reader)
@@ -41,6 +44,7 @@ namespace NyaProxy.Configs
                 CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
                 TcpFastOpen = reader.ReadBooleanProperty("tcp-fast-open");
                 ConnectionTimeout = (int)reader.ReadNumberProperty("connection-timeout");
+                ConnectionThrottle = (int)reader.ReadNumberProperty("connection-throttle");
 
                 List<EndPoint> serverEndPoints = new List<EndPoint>();
                 foreach (StringNode server in reader.ReadArray("servers"))
@@ -58,7 +62,7 @@ namespace NyaProxy.Configs
                         }
                     }
                 }
-                ServerIndex = new SafeIndex(serverEndPoints.Count);
+                _serverIndex = new SafeIndex(serverEndPoints.Count);
                 ServerEndPoints = serverEndPoints;
             }
             catch (Exception e)
@@ -92,8 +96,7 @@ namespace NyaProxy.Configs
                 writer.WriteProperty("player-info-forwarding-mode", new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
                 writer.WriteProperty("tcp-fast-open",               new BooleanNode(TcpFastOpen, i18n.Config.ClientTcpFastOpen));
                 writer.WriteProperty("connection-timeout",          new NumberNode(ConnectionTimeout, i18n.Config.ConnectionTimeout));
-
-
+                writer.WriteProperty("connection-throttle",         new NumberNode(ConnectionThrottle, i18n.Config.ConnectionThrottle));
             }
             catch (Exception e)
             {
@@ -113,11 +116,15 @@ namespace NyaProxy.Configs
             CompressionThreshold = -1;
             TcpFastOpen = false;
             ConnectionTimeout = 1000 * 6;
+            ConnectionThrottle = 2000;
         }
 
         
         public Task<Socket> OpenConnectAsync(EndPoint endPoint)
         {
+            if (_lastConnectTime != default && (DateTime.Now - _lastConnectTime).TotalMilliseconds < ConnectionThrottle)
+                throw new DisconnectException("连接频率过高");
+
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
             if (TcpFastOpen)
             {
@@ -134,6 +141,7 @@ namespace NyaProxy.Configs
                 if (e.SocketError == SocketError.Success)
                 {
                     tcs.TrySetResult(socket);
+                    _lastConnectTime = DateTime.Now;
                 }
                 else
                 {
@@ -144,13 +152,14 @@ namespace NyaProxy.Configs
             eventArgs.RemoteEndPoint = endPoint;
             eventArgs.UserToken = tcs;
 
-            if (socket.ConnectAsync(eventArgs))
+            if (!socket.ConnectAsync(eventArgs))
             {
-                return tcs.Task;
+                _lastConnectTime = DateTime.Now;
+                return Task.FromResult(socket); 
             }
             else
             {
-                return Task.FromResult(socket);
+                return tcs.Task;
             }
         }
         public async Task<Socket> OpenConnectAsync(EndPoint endPoint, int timeout)
@@ -191,7 +200,7 @@ namespace NyaProxy.Configs
             }
             else if (SelectMode == ServerSelectMode.Pool)
             {
-                return await OpenConnectAsync(ServerEndPoints[ServerIndex.Get()], ConnectionTimeout);
+                return await OpenConnectAsync(ServerEndPoints[_serverIndex.Get()], ConnectionTimeout);
             }
             else if (SelectMode == ServerSelectMode.Random)
             {

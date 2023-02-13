@@ -9,7 +9,7 @@ namespace NyaProxy.Extension
 {
     public static class ExceptionExtension
     {
-        public static bool CheckException<T>(this Exception e, out string message)
+        public static bool CheckException<T>(this Exception e, out string message) where T : Exception         
         {
             message = null;
             if (e is AggregateException ae)
