@@ -20,6 +20,7 @@ using NyaProxy.Plugin;
 using NyaProxy.Bridges;
 using NyaProxy.Channles;
 using System.Linq;
+using MinecraftProtocol.IO;
 
 namespace NyaProxy
 {
@@ -61,6 +62,9 @@ namespace NyaProxy
 			AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
             ReloadConfig();
             ReloadHosts();
+
+            if (Config.EnableReceivePool)
+                NetworkListener.SetPoolSize(Config.ReceivePoolBufferLength, Config.ReceivePoolBufferCount);
 
             if (!Directory.Exists("Plugins"))
                 Directory.CreateDirectory("Plugins");
@@ -326,6 +330,8 @@ namespace NyaProxy
                  {
                      if (e.CheckException<SocketException>(out string message))
                          Logger.Error(message);
+                     else if (e.CheckException<DisconnectException>(out string disconnectMessage))
+                         acceptSocket.DisconnectOnLogin(disconnectMessage);
                      else
                          Logger.Exception(e);
                  }

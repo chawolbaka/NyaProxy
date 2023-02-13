@@ -90,13 +90,13 @@ namespace NyaProxy.Bridges
 
 
             //监听客户端发送给服务端的数据包
-            _clientSocketListener = new PacketListener(Source);
+            _clientSocketListener = new PacketListener(Source, !NyaProxy.Config.EnableReceivePool);
             _clientSocketListener.ProtocolVersion = ProtocolVersion;
             _clientSocketListener.StopListen += (sender, e) => Break();
             _clientSocketListener.UnhandledException += SimpleExceptionHandle;
 
             //监听服务端发送给客户端的数据包
-            _serverSocketListener = new PacketListener(Destination);
+            _serverSocketListener = new PacketListener(Destination, !NyaProxy.Config.EnableReceivePool);
             _serverSocketListener.ProtocolVersion = ProtocolVersion;
             _serverSocketListener.StopListen += (sender, e) => Break();
             _serverSocketListener.PacketReceived += Disconnect;

@@ -12,7 +12,11 @@ namespace NyaProxy.Configs
         public IPEndPoint[] Bind { get; set; }
         public bool TcpFastOpen { get; set; }
         public int NetworkThread { get; set; }
-        
+
+        public bool EnableReceivePool;
+        public int ReceivePoolBufferCount;
+        public int ReceivePoolBufferLength;
+
         public MainConfig() : base("MainConfig")
         {
         }
@@ -35,9 +39,18 @@ namespace NyaProxy.Configs
                 Bind = new IPEndPoint[] { IPEndPoint.Parse(bind.ToString()) };
             }
 
-            ConfigObject advanced = reader.ReadObject("advanced");
-            TcpFastOpen           = (bool)advanced["tcp-fast-open"];
-            NetworkThread         = (int)advanced["network-threads"];
+            ConfigObject advanced   = reader.ReadObject("advanced");
+            TcpFastOpen             = (bool)advanced["tcp-fast-open"];
+            NetworkThread           = (int)advanced["network-threads"];
+
+            ConfigObject pool       = (ConfigObject)advanced["advanced"];
+            EnableReceivePool       = (bool)pool["enable-receive-pool"];
+            ReceivePoolBufferCount  = (int)pool["receive-pool-buffer-count"];
+            ReceivePoolBufferLength = (int)pool["receive-pool-buffer-length"];
+
+            if (ReceivePoolBufferCount <= 1 || ReceivePoolBufferLength <= 64)
+                EnableReceivePool = false;
+
         }
 
         public void Write(ConfigWriter writer)
@@ -52,7 +65,16 @@ namespace NyaProxy.Configs
                 Nodes = new Dictionary<string, ConfigNode>()
                 {
                     ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen, i18n.Config.TcpFastOpen),
-                    ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread)
+                    ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread),
+                    ["pool"] = new ConfigObject()
+                    {
+                        Nodes = new Dictionary<string, ConfigNode>()
+                        {
+                            ["enable-receive-pool"] = new BooleanNode(EnableReceivePool),
+                            ["receive-pool-buffer-count"] = new NumberNode(ReceivePoolBufferCount),
+                            ["receive-pool-buffer-length"] = new NumberNode(ReceivePoolBufferLength)
+                        }
+                    }
                 }
             });
         }
@@ -62,6 +84,9 @@ namespace NyaProxy.Configs
             Bind = new IPEndPoint[] { new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 25565) };
             TcpFastOpen = false;
             NetworkThread = Environment.ProcessorCount;
+            EnableReceivePool = true;
+            ReceivePoolBufferCount = 1024;
+            ReceivePoolBufferLength = 1024 * 8;
         }
     }
 }
