@@ -73,7 +73,9 @@ namespace NyaProxy.Configs
                 return new DateTimeNode(TODT.Value.DateTime);
             else if (tomlValue is TomlString TS)
                 return new StringNode(TS.Value);
-            else 
+            else if (tomlValue is TomlTable TT)
+                return ReadObject(TT);
+            else
                 throw new InvalidCastException($"Unknow toml value {tomlValue.GetType()}");
         }
 
