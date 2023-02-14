@@ -12,9 +12,11 @@ namespace NyaProxy.Configs
 {
     public class TomlConfigReader : ConfigReader
     {
-        private ConfigObject _configObject;
+        private ObjectNode _configObject;
         private TomlTable _tomlTable;
         public override string FileType => "toml";
+        public override int Count => _tomlTable.Entries.Count;
+
 
         public TomlConfigReader(string file) : this(TomlParser.ParseFile(file)) { }
         public TomlConfigReader(TomlTable tomlTable)
@@ -33,9 +35,14 @@ namespace NyaProxy.Configs
             return _configObject[key];
         }
 
-        private ConfigObject ReadObject(TomlTable tomlTable)
+        public override IEnumerator<ConfigProperty> GetEnumerator()
         {
-            ConfigObject table = new ConfigObject();
+            return _configObject.Nodes.Select(e => new ConfigProperty(e.Key, e.Value)).GetEnumerator();
+        }
+
+        private ObjectNode ReadObject(TomlTable tomlTable)
+        {
+            ObjectNode table = new ObjectNode();
             foreach (var item in tomlTable.Entries)
             {
                 if (item.Value is TomlTable tt)
@@ -48,9 +55,9 @@ namespace NyaProxy.Configs
             return table;
         }
 
-        private ConfigArray ReadArray(TomlArray array)
+        private ArrayNode ReadArray(TomlArray array)
         {
-            ConfigArray configArray = new ConfigArray();
+            ArrayNode configArray = new ArrayNode();
             configArray.Value.AddRange(array.ArrayValues.Select(x => ReadNode(x)));
             return configArray;
         }

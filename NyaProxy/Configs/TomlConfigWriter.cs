@@ -18,9 +18,9 @@ namespace NyaProxy.Configs
 
         public override ConfigWriter WriteProperty(string key, ConfigNode node)
         {
-            if (node is ConfigObject co)
+            if (node is ObjectNode co)
                 Document.Put(key, ConvertToTomlTable(co));
-            else if (node is ConfigArray ca)
+            else if (node is ArrayNode ca)
                 Document.Put(key, ConvertToTomlArray(ca));
             else
                 Document.Put(key, ConvertToTomlValue(node));
@@ -48,7 +48,7 @@ namespace NyaProxy.Configs
                 tomlValue = new TomlLocalDateTime(DTN);
             else if (node is StringNode SN)
                 tomlValue = new TomlString(SN);
-            else if (node is ConfigObject CO)
+            else if (node is ObjectNode CO)
                 tomlValue = ConvertToTomlTable(CO);
             else
                 throw new InvalidCastException($"Unknow node {node.GetType()}");
@@ -61,7 +61,7 @@ namespace NyaProxy.Configs
             return tomlValue;
         }
 
-        private TomlTable ConvertToTomlTable(ConfigObject @object)
+        private TomlTable ConvertToTomlTable(ObjectNode @object)
         {
             TomlTable tomlTable = new TomlTable();
             if (@object.Comment != null)
@@ -72,9 +72,9 @@ namespace NyaProxy.Configs
 
             foreach (var node in @object.Nodes)
             {
-                if (node.Value is ConfigObject co)
+                if (node.Value is ObjectNode co)
                     tomlTable.Put(node.Key, ConvertToTomlTable(co));
-                else if (node.Value is ConfigArray ca)
+                else if (node.Value is ArrayNode ca)
                     tomlTable.Put(node.Key, ConvertToTomlArray(ca));
                 else
                     tomlTable.Put(node.Key, ConvertToTomlValue(node.Value));
@@ -82,7 +82,7 @@ namespace NyaProxy.Configs
             return tomlTable;
         }
 
-        private TomlArray ConvertToTomlArray(ConfigArray array)
+        private TomlArray ConvertToTomlArray(ArrayNode array)
         {
             TomlArray tomlArray = new TomlArray();
             if (array.Comment != null)

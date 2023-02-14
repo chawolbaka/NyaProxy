@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NyaProxy.API
 {
-    public class ConfigArray : ConfigNode, IList<ConfigNode>
+    public class ArrayNode : ConfigNode, IList<ConfigNode>
     {
         public List<ConfigNode> Value { get; set; }
 
@@ -13,12 +13,12 @@ namespace NyaProxy.API
 
         public ConfigNode this[int index] { get => Value[index]; set => Value[index] = value; }
 
-        public ConfigArray()
+        public ArrayNode()
         {
             Value = new List<ConfigNode>();
         }
         
-        public ConfigArray(IEnumerable<ConfigNode> nodes)
+        public ArrayNode(IEnumerable<ConfigNode> nodes)
         {
             Value = new List<ConfigNode>(nodes);
         }

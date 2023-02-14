@@ -27,7 +27,7 @@ namespace NyaProxy.Configs
         public void Read(ConfigReader reader)
         {
             ConfigNode bind = reader.ReadProperty("bind");
-            if(bind is ConfigArray array)
+            if(bind is ArrayNode array)
             {
                 List<IPEndPoint> bindList = new List<IPEndPoint>();
                 foreach (var node in array)
@@ -45,7 +45,7 @@ namespace NyaProxy.Configs
             if (!reader.ContainsKey("advanced"))
                 return;
 
-            ConfigObject advanced   = reader.ReadObject("advanced");
+            ObjectNode advanced   = reader.ReadObjectProperty("advanced");
             NetworkThread           = (int)advanced["network-threads"];
             TcpFastOpen             = advanced.ContainsKey("tcp-fast-open") ? (bool)advanced["tcp-fast-open"] : false;
 
@@ -64,11 +64,11 @@ namespace NyaProxy.Configs
         public void Write(ConfigWriter writer)
         {
             if (Bind.Length > 1)
-                writer.WriteProperty("bind", new ConfigArray(Bind.Select(b => new StringNode(b.ToString(), i18n.Config.Bind))));
+                writer.WriteProperty("bind", new ArrayNode(Bind.Select(b => new StringNode(b.ToString(), i18n.Config.Bind))));
             else
                 writer.WriteProperty("bind", new StringNode(Bind[0].ToString(), i18n.Config.Bind));
 
-            writer.WriteProperty("advanced", new ConfigObject()
+            writer.WriteProperty("advanced", new ObjectNode()
             {
                 Nodes = new Dictionary<string, ConfigNode>()
                 {

@@ -25,7 +25,7 @@ namespace Keepalive
 
         public void Write(ConfigWriter writer)
         {
-            writer.WriteProperty("timeout", new NumberNode(Timeout));
+            writer.WriteProperty("timeout", Timeout);
         }
 
         public void SetDefault()

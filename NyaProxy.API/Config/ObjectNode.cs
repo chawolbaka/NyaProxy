@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace NyaProxy.API
 {
-    public class ConfigObject: ConfigNode, IDictionary<string, ConfigNode>
+    public class ObjectNode: ConfigNode, IDictionary<string, ConfigNode>
     {
         public ConfigNode this[string key]
         {
@@ -15,12 +15,12 @@ namespace NyaProxy.API
 
         public int Count => Nodes.Count;
 
-        public ConfigObject()
+        public ObjectNode()
         {
             Nodes = new Dictionary<string, ConfigNode>();
         }
 
-        public ConfigObject(IEnumerable<KeyValuePair<string, ConfigNode>> nodes)
+        public ObjectNode(IEnumerable<KeyValuePair<string, ConfigNode>> nodes)
         {
             Nodes = new Dictionary<string, ConfigNode>(nodes);
         }

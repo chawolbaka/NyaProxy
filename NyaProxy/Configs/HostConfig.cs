@@ -50,7 +50,7 @@ namespace NyaProxy.Configs
 
 
             List<EndPoint> serverEndPoints = new List<EndPoint>();
-            foreach (StringNode server in reader.ReadArray("servers"))
+            foreach (StringNode server in reader.ReadArrayProperty("servers"))
             {
                 if (IPEndPoint.TryParse(server, out IPEndPoint ipEndPoint))
                 {
@@ -68,7 +68,7 @@ namespace NyaProxy.Configs
             Dictionary<string, HostTargetRule> playerRules = new Dictionary<string, HostTargetRule>();
             if (reader.ContainsKey("rule"))
             {
-                foreach (var rule in reader.ReadArray("rule").Select(a => (a as ConfigObject).Nodes))
+                foreach (var rule in reader.ReadArrayProperty("rule").Select(a => (a as ObjectNode).Nodes))
                 {
                     HostTargetRule targetRule = new HostTargetRule(Enum.Parse<TargetType>((string)rule["target-type"]), (string)rule["target"]);
                     targetRule.Flags                = reader.ContainsKey("server-flags") ? Enum.Parse<ServerFlags>((string)rule["server-flags"]) : Flags;
@@ -97,7 +97,7 @@ namespace NyaProxy.Configs
             {
                 writer.WriteProperty("host", new StringNode(Name));
 
-                ConfigArray servers = new ConfigArray();
+                ArrayNode servers = new ArrayNode();
 
                 for (int i = 0; i < ServerEndPoints.Count; i++)
                 {
@@ -106,7 +106,7 @@ namespace NyaProxy.Configs
                     else
                         servers.Value.Add(new StringNode(ServerEndPoints[i].ToString()));
                 }
-                writer.WriteArray("servers", servers);
+                writer.WriteProperty("servers", servers);
 
                 writer.WriteProperty("server-select-mode",          new StringNode(SelectMode.ToString(), i18n.Config.SelectMode));
                 writer.WriteProperty("server-flags",                new StringNode(Flags.ToString(), i18n.Config.ServerFlags));
@@ -119,11 +119,11 @@ namespace NyaProxy.Configs
 
                 if (PlayerRules.Count > 0)
                 {
-                    ConfigArray rules = new ConfigArray();
+                    ArrayNode rules = new ArrayNode();
 
                     foreach (var rule in PlayerRules.Values)
                     {
-                        rules.Add(new ConfigObject(new Dictionary<string, ConfigNode>
+                        rules.Add(new ObjectNode(new Dictionary<string, ConfigNode>
                         {
                             ["target-type"]           = new StringNode(rule.Type.ToString()),
                             ["target"]                = new StringNode(rule.Target),
@@ -132,7 +132,7 @@ namespace NyaProxy.Configs
                             ["compression-threshold"] = new NumberNode(rule.CompressionThreshold)
                         }));
                     }
-                    writer.WriteArray("rule", rules);
+                    writer.WriteProperty("rule", rules);
                 }
             }
             catch (Exception e)
