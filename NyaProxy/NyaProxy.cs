@@ -253,7 +253,7 @@ namespace NyaProxy
              {
                  try
                  {
-                     using Packet FirstPacket = ProtocolUtils.ReceivePacket(acceptSocket);
+                     using Packet FirstPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
                      if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
                      {
                          HandshakeEventArgs hea = new HandshakeEventArgs(hp);
@@ -296,7 +296,7 @@ namespace NyaProxy
                          }
                          else if (hea.Packet.NextState == HandshakePacket.State.Login)
                          {
-                             using Packet SecondPacket = ProtocolUtils.ReceivePacket(acceptSocket);
+                             using Packet SecondPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
                              if (LoginStartPacket.TryRead(SecondPacket, -1, out LoginStartPacket lsp))
                              {
                                  LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
@@ -305,7 +305,6 @@ namespace NyaProxy
                                      return;
                                  IHostTargetRule rule = dest.GetRule(lsp.PlayerName);
                                  int ProtocolVersion = rule.ProtocolVersion > 0 ? rule.ProtocolVersion : hea.Packet.ProtocolVersion;
-
 
 
                                  string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?

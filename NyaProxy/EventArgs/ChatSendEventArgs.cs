@@ -22,12 +22,12 @@ namespace NyaProxy
                     switch (Direction)
                     {
                         case Direction.ToClient:
-                            CompatibleReader.TryReadChatMessage(Packet, out _message, out _definedPacket); break;
+                            CompatibleReader.TryReadServerChatMessage(Packet, out _message, out _definedPacket); break;
                         case Direction.ToServer:
-                            if(ClientChatMessagePacket.TryRead(Packet, out var ccmp))
+                            if (CompatibleReader.TryReadClientChatMessage(Packet, out var message, out var ccmp))
                             {
                                 _definedPacket = ccmp;
-                                _message = ChatComponent.Parse(ccmp.Message);
+                                _message = ChatComponent.Parse(message);
                             } break;
                     }
                 } 
@@ -60,9 +60,20 @@ namespace NyaProxy
                             throw new InvalidCastException($"Unknow chat packet {_definedPacket.Id}");
                         } break;
                     case Direction.ToServer:
-                        ClientChatMessagePacket ccmp = _definedPacket as ClientChatMessagePacket;
-                        ccmp.Message = value.ToString();
-                        Packet = ccmp.AsCompatible(Packet); break;
+                        if(_definedPacket is ClientChatMessagePacket ccmp)
+                        {
+                            ccmp.Message = value.ToString();
+                            Packet = ccmp.AsCompatible(Packet);
+                        }
+                        else if(_definedPacket  is ChatCommandPacket ccp)
+                        {
+                            ccp.Command = value.ToString();
+                            Packet = ccp.AsCompatible(Packet);
+                        }
+                        else
+                        {
+                            throw new InvalidCastException($"Unknow chat packet {_definedPacket.Id}");
+                        } break;
                 }
                 _message = value;
             }
