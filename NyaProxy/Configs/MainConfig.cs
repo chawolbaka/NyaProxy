@@ -21,7 +21,7 @@ namespace NyaProxy.Configs
         {
             EnableReceivePool = true;
             ReceivePoolBufferCount = 1024;
-            ReceivePoolBufferLength = 1024 * 8;
+            ReceivePoolBufferLength = 65536;
         }
 
         public void Read(ConfigReader reader)
@@ -88,7 +88,7 @@ namespace NyaProxy.Configs
             NetworkThread = Environment.ProcessorCount;
             EnableReceivePool = true;
             ReceivePoolBufferCount = 1024;
-            ReceivePoolBufferLength = 1024 * 8;
+            ReceivePoolBufferLength = 65536;
         }
     }
 }
