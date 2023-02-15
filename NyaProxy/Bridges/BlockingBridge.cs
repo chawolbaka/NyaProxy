@@ -15,6 +15,11 @@ using MinecraftProtocol.Auth.Yggdrasil;
 using System.Threading;
 using MinecraftProtocol.Compatible;
 using NyaProxy.Configs.Rule;
+using NyaProxy.Configs;
+using MinecraftProtocol.DataType;
+using System.Text;
+using System.Net;
+using System.Collections.Generic;
 
 namespace NyaProxy.Bridges
 {
@@ -23,12 +28,12 @@ namespace NyaProxy.Bridges
         /// <summary>
         /// 客户端在握手时使用的协议版本
         /// </summary>
-        public virtual int ProtocolVersion { get; }
+        public virtual int ProtocolVersion { get; private set; }
         
         /// <summary>
         /// 客户端到代理端之间是否强制使用了于服务端到代理端不一致的压缩阈值
         /// </summary>
-        public virtual bool OverCompression { get; }
+        public virtual bool OverCompression { get; private set; }
 
         /// <summary>
         /// 客户端到代理端的压缩阈值
@@ -58,9 +63,9 @@ namespace NyaProxy.Bridges
 
         public virtual CryptoHandler CryptoHandler => _clientSocketListener.CryptoHandler;
 
-        private readonly RSA _rsaService;
+        private RSA _rsaService;
         private readonly string _serverId = ""; //1.7开始默认是空的
-        private readonly byte[] _verifyToken;
+        private byte[] _verifyToken;
 
         private enum States { Login, Play }
         private States _state = States.Login;
@@ -68,61 +73,52 @@ namespace NyaProxy.Bridges
         private IHostTargetRule _targetRule;
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
-        private Packet[] _loginToServerPackets; //一般里面是客户端发给服务端的握手包和开始登录包
-
+        
         private int _forgeCheckCount;
         private int _queueIndex;
 
+        private HostConfig Host;
+        private HandshakePacket _handshakePacket;
+        private LoginStartPacket _loginStartPacket;
 
-        public BlockingBridge(string host, IHostTargetRule rule, string handshakeAddress, Socket source, Socket destination, int protocolVersion) : base(host, handshakeAddress, source, destination)
+        public BlockingBridge(HostConfig host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host.Name, handshakePacket.ServerAddress, source, destination)
         {
+            Host = host;
 
-            IsOnlineMode = rule.Flags.HasFlag(ServerFlags.OnlineMode);
-            if (IsOnlineMode)
-            {
-                _rsaService = RSA.Create(1024);
-                _verifyToken = CryptoUtils.GenerateRandomNumber(4);
-            }
-
-            OverCompression = rule.CompressionThreshold != -1;
-           
+            ProtocolVersion = -1;
             ClientCompressionThreshold = -1;
             ServerCompressionThreshold = -1;
 
-            ProtocolVersion = protocolVersion;
-            ListenToken.Token.Register(Break);
+            _handshakePacket = handshakePacket;
             _queueIndex = QueueIndex.Get();
-            _targetRule = rule;
-
 
             //监听客户端发送给服务端的数据包
-            _clientSocketListener = new PacketListener(Source, !NyaProxy.Config.EnableReceivePool);
-            _clientSocketListener.ProtocolVersion = ProtocolVersion;
+            _clientSocketListener = new PacketListener(Source, !NyaProxy.Config.EnableReceivePool);            
             _clientSocketListener.StopListen += (sender, e) => Break();
             _clientSocketListener.UnhandledException += SimpleExceptionHandle;
 
             //监听服务端发送给客户端的数据包
             _serverSocketListener = new PacketListener(Destination, !NyaProxy.Config.EnableReceivePool);
-            _serverSocketListener.ProtocolVersion = ProtocolVersion;
             _serverSocketListener.StopListen += (sender, e) => Break();
-            _serverSocketListener.PacketReceived += Disconnect;
             _serverSocketListener.UnhandledException += SimpleExceptionHandle;
         }
 
-        public override Bridge Build() => Build(null);
-        public virtual Bridge Build(params Packet[] packets)
+        public override Bridge Build()
         {
-            _loginToServerPackets = packets;
-            if (IsOnlineMode)
+            if(_handshakePacket.NextState == HandshakePacket.State.Login)
             {
-                _clientSocketListener.PacketReceived += BeforeEncryptionResponse;
+                _serverSocketListener.PacketReceived += Disconnect;
+                _clientSocketListener.PacketReceived += BeforeLoginStart;
                 _clientSocketListener.Start(ListenToken.Token);
-                EncryptionRequestPacket encryptionRequest = new EncryptionRequestPacket(_serverId, _rsaService.ExportSubjectPublicKeyInfo(), _verifyToken, ProtocolVersion);
-                Enqueue(Source, encryptionRequest.Pack(-1));
             }
             else
             {
-                StartExchange();
+                Enqueue(Destination, _handshakePacket.Pack(-1), _handshakePacket);
+                _clientSocketListener.PacketReceived += ClientPacketReceived;
+                _serverSocketListener.PacketReceived += ServerPacketReceived;
+                _clientSocketListener.Start(ListenToken.Token);
+                _serverSocketListener.Start(ListenToken.Token);
+                _handshakePacket = null;
             }
 
             return this;
@@ -137,30 +133,61 @@ namespace NyaProxy.Bridges
             ListenToken.Cancel();
         }
 
-
-        private void StartExchange()
+        private void BeforeLoginStart(object sender, PacketReceivedEventArgs e)
         {
-            _clientSocketListener.PacketReceived += ClientPacketReceived;
-            _serverSocketListener.PacketReceived += BeforeLoginSuccess;
-            if (!IsOnlineMode)
-                _clientSocketListener.Start(ListenToken.Token);
-            _serverSocketListener.Start(ListenToken.Token);
-
-            if (OverCompression)
+            _clientSocketListener.PacketReceived -= BeforeLoginStart;
+            if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
             {
-                ClientCompressionThreshold = _targetRule.CompressionThreshold;
-                _clientSocketListener.CompressionThreshold = ClientCompressionThreshold;
-                Packet packet = new SetCompressionPacket(ClientCompressionThreshold, ProtocolVersion);
-                Enqueue(Source, CryptoHandler.TryEncrypt(packet.Pack(-1)), packet);
-            }
-
-            if (_loginToServerPackets != null)
-            {
-                foreach (var packet in _loginToServerPackets)
+                LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
+                EventUtils.InvokeCancelEvent(NyaProxy.LoginStart, Source, lsea);
+                if (lsea.IsBlock)
                 {
-                    Enqueue(Destination, packet.Pack(-1), packet);
+                    Break();
+                    return;
                 }
-                _loginToServerPackets = null;
+                _loginStartPacket = lsea.Packet;
+                    
+                _targetRule = Host.GetRule(lsp.PlayerName);
+                IsOnlineMode    = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);
+                OverCompression = _targetRule.CompressionThreshold != -1;
+                ProtocolVersion = _targetRule.ProtocolVersion > 0 ? _targetRule.ProtocolVersion : _handshakePacket.ProtocolVersion;
+                
+                _clientSocketListener.ProtocolVersion = ProtocolVersion;
+                _serverSocketListener.ProtocolVersion = ProtocolVersion;
+
+                string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
+                switch (Host.ForwardMode)
+                {
+                    case ForwardMode.Default:
+                        if (Host.Flags.HasFlag(ServerFlags.Forge) && !_handshakePacket.ServerAddress.Contains(forgeTag))
+                            _handshakePacket.ServerAddress += forgeTag;
+                        break;
+                    case ForwardMode.BungeeCord:
+                        _handshakePacket.ServerAddress = new StringBuilder(_handshakePacket.GetServerAddressOnly())
+                            .Append($"\0{(Source._remoteEndPoint() as IPEndPoint).Address}")
+                            .Append($"\0{(_targetRule.Flags.HasFlag(ServerFlags.OnlineMode) ? UUID.GetFromMojangAsync(lsea.Packet.PlayerName).Result : UUID.GetFromPlayerName(lsea.Packet.PlayerName))}")
+                            .Append(_targetRule.Flags.HasFlag(ServerFlags.Forge) ? forgeTag : "\0").ToString();
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+
+                if (IsOnlineMode)
+                {
+                    _rsaService = RSA.Create(1024);
+                    _verifyToken = CryptoUtils.GenerateRandomNumber(4);
+                    _clientSocketListener.PacketReceived += BeforeEncryptionResponse;
+                    EncryptionRequestPacket encryptionRequest = new EncryptionRequestPacket(_serverId, _rsaService.ExportSubjectPublicKeyInfo(), _verifyToken, ProtocolVersion);
+                    Enqueue(Source, encryptionRequest.Pack(-1));
+                }
+                else
+                {
+                    StartExchange();
+                }
+            }
+            else
+            {
+                Break($"错误的的数据包：{e.Packet.Id}");
             }
         }
 
@@ -170,7 +197,7 @@ namespace NyaProxy.Bridges
             _clientSocketListener.PacketReceived -= BeforeEncryptionResponse;
             try
             {
-                string playerName = (_loginToServerPackets.FirstOrDefault(x => x is LoginStartPacket) as LoginStartPacket).PlayerName;
+                string playerName = _loginStartPacket.PlayerName;
                 if (EncryptionResponsePacket.TryRead(e.Packet, out EncryptionResponsePacket erp))
                 {
                     if (!CollectionUtils.Compare(_verifyToken, _rsaService.Decrypt(erp.VerifyToken, RSAEncryptionPadding.Pkcs1)))
@@ -203,6 +230,25 @@ namespace NyaProxy.Bridges
                 NyaProxy.Logger.Exception(ex);
                 Break();
             }
+        }
+
+        private void StartExchange()
+        {
+            _clientSocketListener.PacketReceived += ClientPacketReceived;
+            _serverSocketListener.PacketReceived += BeforeLoginSuccess;
+            _serverSocketListener.Start(ListenToken.Token);
+
+            if (OverCompression)
+            {
+                ClientCompressionThreshold = _targetRule.CompressionThreshold;
+                _clientSocketListener.CompressionThreshold = ClientCompressionThreshold;
+                Packet packet = new SetCompressionPacket(ClientCompressionThreshold, ProtocolVersion);
+                Enqueue(Source, CryptoHandler.TryEncrypt(packet.Pack(-1)), packet);
+            }
+
+            Enqueue(Destination, _handshakePacket.Pack(-1), _handshakePacket);
+            Enqueue(Destination, _loginStartPacket.Pack(-1), _loginStartPacket);
+            _handshakePacket = null; _loginStartPacket = null;
         }
 
         private void BeforeLoginSuccess(object sender, PacketReceivedEventArgs e)
@@ -287,7 +333,7 @@ namespace NyaProxy.Bridges
 
             if (_state == States.Play && e.Packet == PacketType.Play.Client.ChatMessage)
                 ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
-            else if (NyaProxy.Channles.Count > 0 && _state == States.Play && e.Packet == PacketType.Play.Client.PluginChannel)
+            else if (_state == States.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Client.PluginChannel)
                 ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Direction.ToServer, e));
             else
                 ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
@@ -304,7 +350,7 @@ namespace NyaProxy.Bridges
                 || e.Packet == PacketType.Play.Server.PlayerChatMessage
                 || e.Packet == PacketType.Play.Server.DisguisedChatMessage)
                 ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
-            else if (NyaProxy.Channles.Count > 0 && _state == States.Play && e.Packet == PacketType.Play.Server.PluginChannel)
+            else if (_state == States.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Server.PluginChannel)
                 ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
             else
                 ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));

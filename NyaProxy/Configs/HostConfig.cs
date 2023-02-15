@@ -9,6 +9,7 @@ using NyaProxy.API.Enum;
 using NyaProxy.Configs.Rule;
 using NyaProxy.Extension;
 using MinecraftProtocol.Compatible;
+using MinecraftProtocol.Utils;
 
 namespace NyaProxy.Configs
 {
@@ -165,7 +166,7 @@ namespace NyaProxy.Configs
         }
 
 
-        public Task<Socket> OpenConnectAsync(EndPoint endPoint)
+        public async Task<Socket> OpenConnectAsync(EndPoint endPoint)
         {
             if (ConnectionThrottle > 0 && _lastConnectTime != default && (DateTime.Now - _lastConnectTime).TotalMilliseconds < ConnectionThrottle)
                 throw new DisconnectException("连接频率过高");
@@ -179,49 +180,39 @@ namespace NyaProxy.Configs
                     socket.EnableLinuxFastOpenConnect();
             }
 
-            var tcs = new TaskCompletionSource<Socket>();
-            var eventArgs = new SocketAsyncEventArgs();
-            eventArgs.Completed += (s, e) =>
-            {
-                if (e.SocketError == SocketError.Success)
-                {
-                    tcs.TrySetResult(socket);
-                    _lastConnectTime = DateTime.Now;
-                }
-                else
-                {
-                    tcs.TrySetException(new SocketException((int)e.SocketError));
-                }
-            };
+            await socket.ConnectAsync(endPoint);
+            _lastConnectTime = DateTime.Now;
+            if (!NetworkUtils.CheckConnect(socket))
+                throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 
-            eventArgs.RemoteEndPoint = endPoint;
-            eventArgs.UserToken = tcs;
-
-            if (!socket.ConnectAsync(eventArgs))
-            {
-                _lastConnectTime = DateTime.Now;
-                return Task.FromResult(socket);
-            }
-            else
-            {
-                return tcs.Task;
-            }
+            return socket;
         }
         public async Task<Socket> OpenConnectAsync(EndPoint endPoint, int timeout)
         {
             if (timeout < 0)
                 return await OpenConnectAsync(endPoint);
 
-            Task<Socket> task = OpenConnectAsync(endPoint);
-            await Task.WhenAny(task, Task.Delay(timeout));
-            if (!task.IsCompletedSuccessfully)
+            Task<Socket> connectTask = OpenConnectAsync(endPoint);
+            Task timeoutTask = Task.Delay(timeout);
+            await Task.WhenAny(connectTask, timeoutTask);
+            if (timeoutTask.IsCompletedSuccessfully)
             {
-                task.ContinueWith((t) => t.Result.Close());
+
+#pragma warning disable CS4014 // 这边需要在connectTask完成后关闭连接，但异常需要立刻抛出而不是connectTask完成后再抛出，所以不需要等待。
+                timeoutTask.ContinueWith(async (_) => 
+                {
+                    try { 
+                        Socket socket = await connectTask; 
+                        if (socket.Connected) 
+                            socket.Close(); 
+                    }
+                    catch (Exception) {  }
+                });
                 throw new SocketException((int)SocketError.TimedOut);
             }
             else
             {
-                return await task;
+                return await connectTask;
             }
         }
 

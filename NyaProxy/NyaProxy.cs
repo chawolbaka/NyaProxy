@@ -139,6 +139,7 @@ namespace NyaProxy
                         Hosts[hostConfig.Name] = hostConfig;
                     else
                         Hosts.Add(hostConfig.Name, hostConfig);
+                    Bridges.TryAdd(hostConfig.Name, new ConcurrentDictionary<long, Bridge>());
                     removeList.Remove(hostConfig.Name);
                 }
                 catch (Exception e)
@@ -147,7 +148,7 @@ namespace NyaProxy
                     Logger.Exception(e);
                 }
             }
-            //移除已经不存在的服务器
+            //移除已经不存在的服务器(Bridges不需要在这边移除，Hosts内已经不存在的情况下，在连接清空后会由Bridge.Break移除)
             foreach (var name in removeList)
             {
                 Hosts.Remove(name);
@@ -247,119 +248,73 @@ namespace NyaProxy
             catch (ObjectDisposedException) { }
         }
 
-        private static Task SessionHanderAsync(Socket acceptSocket)
+        private static async Task SessionHanderAsync(Socket acceptSocket)
         {
-            return Task.Run(async () =>
-             {
-                 try
-                 {
-                     using Packet FirstPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
-                     if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
-                     {
-                         HandshakeEventArgs hea = new HandshakeEventArgs(hp);
-                         EventUtils.InvokeCancelEvent(Handshaking, acceptSocket, hea);
-                         if (hea.IsBlock)
-                             return;
-
-                         Logger.Debug($"{acceptSocket._remoteEndPoint()} Try to handshake (Host = {hea.Packet.ServerAddress}, Port = {hea.Packet.ServerPort})");
-
-                        
-                         string rawHandshakeAddress = hea.Packet.ServerAddress;
-                         string host = hea.Packet.ServerAddress;
-                         if (host.Contains('\0'))
-                             host = host.Substring(0, host.IndexOf('\0'));
-
-                         HostConfig dest = ChooseServer(host);
-                         if (dest == null)
-                         {
-                             acceptSocket.DisconnectOnLogin(i18n.Disconnect.NoServerAvailable);
-                             return;
-                         }
-
-                         Socket serverSocket = await dest.OpenConnectAsync();
-                         if (!NetworkUtils.CheckConnect(serverSocket))
-                         {
-                             acceptSocket.DisconnectOnLogin(i18n.Disconnect.ConnectFailed);
-                             return;
-                         }
-                         
-              
-
-                         if (dest.ForwardMode == ForwardMode.Direct || hea.Packet.NextState == HandshakePacket.State.GetStatus)
-                         {
-                             BlockingBridge.Enqueue(serverSocket, hp.Pack(-1), () => 
-                             {
-                                 FastBridge bridge = new FastBridge(dest.Name, rawHandshakeAddress, acceptSocket, serverSocket);
-                                 bridge.Build();
-                                 hp?.Dispose();
-                             });                             
-                         }
-                         else if (hea.Packet.NextState == HandshakePacket.State.Login)
-                         {
-                             using Packet SecondPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
-                             if (LoginStartPacket.TryRead(SecondPacket, -1, out LoginStartPacket lsp))
-                             {
-                                 LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
-                                 EventUtils.InvokeCancelEvent(LoginStart, acceptSocket, lsea);
-                                 if (lsea.IsBlock)
-                                     return;
-                                 IHostTargetRule rule = dest.GetRule(lsp.PlayerName);
-                                 int ProtocolVersion = rule.ProtocolVersion > 0 ? rule.ProtocolVersion : hea.Packet.ProtocolVersion;
+            HandshakeEventArgs hea = null;
+            try
+            {
+                using Packet FirstPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
+                if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
+                {
+                    hea = new HandshakeEventArgs(acceptSocket, hp);
+                    EventUtils.InvokeCancelEvent(Handshaking, acceptSocket, hea);
+                    if (hea.IsBlock)
+                    {
+                        acceptSocket.Close();
+                        return;
+                    }
 
 
-                                 string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
-                                 switch (dest.ForwardMode)
-                                 {
-                                     case ForwardMode.Default:
-                                         if (dest.Flags.HasFlag(ServerFlags.Forge) && !hea.Packet.ServerAddress.Contains(forgeTag))
-                                             hea.Packet.ServerAddress += forgeTag;
-                                         break;
-                                     case ForwardMode.BungeeCord:
-                                         hea.Packet.ServerAddress = new StringBuilder(host)
-                                             .Append($"\0{(acceptSocket._remoteEndPoint() as IPEndPoint).Address}")
-                                             .Append($"\0{(dest.Flags.HasFlag(ServerFlags.OnlineMode) ? await UUID.GetFromMojangAsync(lsea.Packet.PlayerName) : UUID.GetFromPlayerName(lsea.Packet.PlayerName))}")
-                                             .Append(dest.Flags.HasFlag(ServerFlags.Forge) ? forgeTag : "\0").ToString();
-                                         break;
-                                     default:
-                                         throw new NotImplementedException();
-                                 }
+                    HostConfig dest = GetHost(hea.Packet.GetServerAddressOnly());
+                    Socket serverSocket = await dest.OpenConnectAsync();
 
-                                 BlockingBridge bb = new BlockingBridge(dest.Name, rule, rawHandshakeAddress, acceptSocket, serverSocket, ProtocolVersion);
-                                 bb.Build(hea.Packet, lsea.Packet);
-                                 Logger.Info(i18n.Message.ConnectCreated.Replace("{PlayerName}", lsea.Packet.PlayerName, "{Souce.EndPoint}", acceptSocket.RemoteEndPoint, "{Destination.EndPoint}", serverSocket.RemoteEndPoint));
-                             }
-                         }
-                         else
-                         {
-                             acceptSocket.DisconnectOnLogin(i18n.Disconnect.HandshakeFailed);
-                         }
-                     }
-                     else
-                     {
-                         Logger.Debug("异常的握手包");
-                         acceptSocket.Close();
-                     }
-                 }
-                 catch (Exception e)
-                 {
-                     if (e.CheckException<SocketException>(out string message))
-                         Logger.Error(message);
-                     else if (e.CheckException<DisconnectException>(out string disconnectMessage))
-                         acceptSocket.DisconnectOnLogin(disconnectMessage);
-                     else
-                         Logger.Exception(e);
-                 }
-             });
+                    if (dest.ForwardMode == ForwardMode.Direct)
+                    {
+                        BlockingBridge.Enqueue(serverSocket, hp.Pack(-1), () =>
+                        {
+                            FastBridge fastBridge = new FastBridge(dest.Name, hea.Packet.ServerAddress, acceptSocket, serverSocket);
+                            fastBridge.Build();
+                            hea?.Packet?.Dispose();
+                        });
+                    }
+                    else
+                    {
+                        BlockingBridge blockingBridge = new BlockingBridge(dest, hea.Packet, acceptSocket, serverSocket);
+                        blockingBridge.Build();
+                    }
+                }
+                else
+                {
+                    Logger.Debug($"异常的握手包: {FirstPacket}");
+                    throw new DisconnectException(i18n.Disconnect.HandshakeFailed);
+                }
+            }
+            catch (Exception e)
+            {
+                if (e.CheckException<DisconnectException>(out string disconnectMessage))
+                {
+                    if (hea != null && hea.Packet.NextState == HandshakePacket.State.Login)
+                        acceptSocket.DisconnectOnLogin(i18n.Disconnect.ConnectFailed);
+                    else
+                        acceptSocket.Close();
+                    hea?.Packet?.Dispose();
+                    Logger.Debug(disconnectMessage);
+                }
+                else if(e.CheckException<SocketException>(out string message))
+                    Logger.Error(message);    
+                else
+                    Logger.Exception(e);
+            }
         }
 
-        public static HostConfig ChooseServer(string host)
+        public static HostConfig GetHost(string host)
         {
             if (Hosts.ContainsKey(host))
                 return Hosts[host];
             else if (Hosts.ContainsKey("default"))
                 return  Hosts["default"];
             else
-                return null;
+                throw new DisconnectException(i18n.Disconnect.NoServerAvailable);
         }
     }
 }
