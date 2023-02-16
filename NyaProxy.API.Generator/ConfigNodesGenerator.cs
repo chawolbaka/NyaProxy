@@ -72,7 +72,7 @@ namespace NyaProxy.API
                 return false;
 
             result = ReadProperty(key) as {type.Key};
-            return result == null;
+            return result != null;
         }}");
                 if (type.Value != "NULL")
                 {
