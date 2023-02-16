@@ -58,7 +58,7 @@ namespace NyaProxy
 
         }
 
-        internal PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
+        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
         {
             Direction = direction;
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));

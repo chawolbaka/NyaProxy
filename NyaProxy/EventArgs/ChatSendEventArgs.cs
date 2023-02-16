@@ -7,10 +7,13 @@ using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Compatible;
+using NyaProxy.Bridges;
+using System.Net.Sockets;
+using MinecraftProtocol.IO;
 
 namespace NyaProxy
 {
-    public class ChatSendEventArgs : PacketSendEventArgs, IChatSendEventArgs, IDisposable
+    public class ChatSendEventArgs : PacketSendEventArgs, IChatSendEventArgs
     {
         public override CompatiblePacket Packet { get => base.Packet; set { base.Packet = value; _message = null; } }
         public virtual ChatComponent Message
@@ -28,6 +31,10 @@ namespace NyaProxy
                             {
                                 _definedPacket = ccmp;
                                 _message = ChatComponent.Parse(message);
+                            }
+                            else
+                            {
+                                throw new InvalidCastException($"Unknow chat packet {_definedPacket.Id}");
                             } break;
                     }
                 } 
@@ -81,16 +88,12 @@ namespace NyaProxy
         private ChatComponent _message;
         private DefinedPacket _definedPacket;
 
-        public void Dispose()
+        internal override PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
         {
-            try
-            {
-                _definedPacket?.Dispose();
-            }
-            catch (Exception)
-            {
-
-            }
+            _message = null;
+            _definedPacket?.Dispose();
+            _definedPacket = null;
+            return base.Setup(bridge, destination, direction, e);
         }
     }
 }
