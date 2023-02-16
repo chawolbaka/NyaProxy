@@ -133,7 +133,7 @@ namespace NyaProxy.Bridges
         {
             try
             {
-                if (e._bridge.Source == null || e._bridge.Destination == null || !e._bridge.Source.Connected || !e._bridge.Destination.Connected)
+                if (e.Bridge.Source == null || e.Bridge.Destination == null || !e.Bridge.Source.Connected || !e.Bridge.Destination.Connected)
                     return;
 #if DEBUG
                 if (true)
@@ -145,20 +145,20 @@ namespace NyaProxy.Bridges
                     try
                     {
                         if (e is ChatSendEventArgs csea)
-                            EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.ChatMessageSendToClient : NyaProxy.ChatMessageSendToServer, e._bridge, csea);
+                            EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.ChatMessageSendToClient : NyaProxy.ChatMessageSendToServer, e.Bridge, csea);
                         else
-                            EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer, e._bridge, e);
+                            EventUtils.InvokeCancelEvent(e.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer, e.Bridge, e);
                         
                         if (!e.IsBlock && e is PluginChannleSendEventArgs pcsea && NyaProxy.Channles.ContainsKey(pcsea.ChannleName))
                         {
                             Channle channle = NyaProxy.Channles[pcsea.ChannleName] as Channle;
-                            channle?.Trigger(e.Direction == Direction.ToServer ? Side.Client : Side.Server, new ByteReader(pcsea.Data), e._bridge);
+                            channle?.Trigger(e.Direction == Direction.ToServer ? Side.Client : Side.Server, new ByteReader(pcsea.Data), e.Bridge);
                         }
                     }
                     catch (Exception ex)
                     {
                         if (ex is SocketException)
-                            e._bridge?.Break();
+                            e.Bridge?.Break();
                         NyaProxy.Logger.Exception(ex);
                     }
                 }
@@ -166,32 +166,34 @@ namespace NyaProxy.Bridges
                 if (!e.IsBlock)
                 {
                     //如果数据没有被修改过那么就直接发送接收到的原始数据，避免Pack造成的内存分配。
-                    if (!e._bridge.IsOnlineMode && !e._bridge.OverCompression && !e.PacketCheaged)
+                    if (e.EventArgs != null && !e.Bridge.IsOnlineMode && !e.Bridge.OverCompression && !e.PacketCheaged)
                     {
-                        var rawData = e._eventArgs.RawData.Span;
+                        var rawData = e.EventArgs.RawData.Span;
                         for (int i = 0; i < rawData.Length; i++)
                         {
                             if (rawData[i].Length > 0)
-                                Enqueue(e.Destination, rawData[i], i + 1 < e._eventArgs.RawData.Length ? null : e._eventArgs);
+                                Enqueue(e.Destination, rawData[i], i + 1 < e.EventArgs.RawData.Length ? null : e.EventArgs);
                         }
                     }
                     else
                     {
                         if (e.Direction == Direction.ToClient)
-                            Enqueue(e.Destination, e._bridge.CryptoHandler.TryEncrypt(e.Packet.Pack()), e._eventArgs);
+                            Enqueue(e.Destination, e.Bridge.CryptoHandler.TryEncrypt(e.Packet.Pack()), (IDisposable)e.EventArgs ?? e.Packet);
                         else
-                            Enqueue(e.Destination, e.Packet.Pack(), e._eventArgs);
-                        
+                            Enqueue(e.Destination, e.Packet.Pack(), (IDisposable)e.EventArgs ?? e.Packet);
                     }
                 }
                 else
                 {
-                    e._eventArgs?.Dispose();
+                    if (e.EventArgs == null)
+                        e.EventArgs?.Dispose();
+                    else
+                        e.Packet?.Dispose();
                 }
             }
             catch (Exception ex)
             {
-                e._bridge.Break();
+                e.Bridge.Break();
                 NyaProxy.Logger.Exception(ex);
             }
             finally

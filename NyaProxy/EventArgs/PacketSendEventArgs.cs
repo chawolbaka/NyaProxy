@@ -21,12 +21,14 @@ namespace NyaProxy
         public Socket Destination { get; set; }
 
         public virtual Direction Direction { get; private set; }
-        
-        public virtual DateTime ReceivedTime => _eventArgs.ReceivedTime;
 
-        public virtual int ProtocolVersion => _bridge.ProtocolVersion;
+        public virtual DateTime ReceivedTime { get; private set; }
 
-        public IPlayer Player => _bridge.Player;
+        public virtual int ProtocolVersion => Bridge.ProtocolVersion;
+
+        public IPlayer Player => Bridge.Player;
+
+        public bool PacketCheaged => _packetCheaged || _version != GetField_ByteWriter_versionn(_packet);
 
         public virtual CompatiblePacket Packet 
         { 
@@ -41,16 +43,13 @@ namespace NyaProxy
             }
         }
 
-        internal bool PacketCheaged => _packetCheaged || _version != GetField_ByteWriter_versionn(_packet);
-
-        
         private static Func<ByteWriter, int> GetField_ByteWriter_versionn = ExpressionTreeUtils.CreateGetFieldMethodFormInstance<ByteWriter, int>("_version");
         private CompatiblePacket _packet;
         private bool _packetCheaged;
         private int _version;
         
-        internal BlockingBridge _bridge;
-        internal PacketReceivedEventArgs _eventArgs;
+        internal BlockingBridge Bridge;
+        internal PacketReceivedEventArgs EventArgs;
 
 
         public PacketSendEventArgs()
@@ -58,17 +57,29 @@ namespace NyaProxy
 
         }
 
-        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
+        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, CompatiblePacket packet, DateTime receivedTime)
         {
+            if(destination == null)
+                throw new ArgumentNullException(nameof(destination));
+
             Direction = direction;
-            Destination = destination ?? throw new ArgumentNullException(nameof(destination));
-            _eventArgs = e ?? throw new ArgumentNullException(nameof(e));
+            Destination = destination;
+            Bridge = bridge;
+            EventArgs = null;
+            _packet = packet;
             _packetCheaged = false;
-            _version = GetField_ByteWriter_versionn(e.Packet);
-            _packet = e.Packet;
-            _bridge = bridge;
+            _version = GetField_ByteWriter_versionn(packet);
             _isBlock = false;
             _isCancelled = false;
+            return this;
+        }
+        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
+        {
+            if(e == null)
+                throw new ArgumentNullException(nameof(e));
+
+            Setup(bridge, destination, direction, e.Packet, e.ReceivedTime);
+            EventArgs = e;
             return this;
         }
     }
