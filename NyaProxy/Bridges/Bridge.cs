@@ -101,12 +101,12 @@ namespace NyaProxy.Bridges
         protected virtual void SimpleExceptionHandle(object sender, UnhandledIOExceptionEventArgs e)
         {
             e.Handled = true;
-            if (e.Exception is ZlibException or OverflowException && NetworkUtils.CheckConnect(Source) && NetworkUtils.CheckConnect(Destination))
+            if ((e.Exception is ZlibException || e.Exception is OverflowException) && NetworkUtils.CheckConnect(Source) && NetworkUtils.CheckConnect(Destination))
             {
                 NyaProxy.Logger.Error(i18n.Error.PacketDecompressFailed);
                 return;
             }
-            else if (e.Exception is not ObjectDisposedException or SocketException or ZlibException or OverflowException)
+            else if (e.Exception is not ObjectDisposedException && e.Exception is not SocketException && e.Exception is not ZlibException && e.Exception is not OverflowException)
             {
                 Crash.Report(e.Exception, true, true, false);
                 Break();
