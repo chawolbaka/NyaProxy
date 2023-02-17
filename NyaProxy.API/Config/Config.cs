@@ -2,7 +2,7 @@
 
 namespace NyaProxy.API
 {
-    public abstract class Config
+    public abstract class Config:IEquatable<Config>
     {
         //UniqueId会直接作为key，如果使用属性有变动的可能性，所以这边使用readonly来保证初始化后就不可变。
         public readonly string UniqueId;
@@ -16,6 +16,26 @@ namespace NyaProxy.API
         {
             UniqueId = uniqueId;
             AutoSave = true;
-        }   
+        }
+
+        public override string ToString()
+        {
+            return UniqueId.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Config other && UniqueId == other.UniqueId;
+        }
+
+        public bool Equals(Config other)
+        {
+            return other != null && UniqueId == other.UniqueId;
+        }
+
+        public override int GetHashCode()
+        {
+            return UniqueId.GetHashCode();
+        }
     }
 }

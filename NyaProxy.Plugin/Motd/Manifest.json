@@ -1,0 +1,8 @@
+{
+  "Name": "Motd",
+  "Author": "Chawol",
+  "Version": "1.0.0",
+  "UniqueId": "NyaProxy.Motd",
+  "EntryDll": "Motd.dll",
+  "CommandPrefixes": ["motd"]
+}

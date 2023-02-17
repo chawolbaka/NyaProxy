@@ -20,12 +20,12 @@ namespace NyaProxy.EventArgs
                 switch (Direction)
                 {
                     case Direction.ToClient:
-                        var spcp = Packet.AsServerPluginChannel(_bridge.IsForge);
+                        var spcp = Packet.AsServerPluginChannel(Bridge.IsForge);
                         _channleName = spcp.Channel;
                         _data = spcp.Data;
                         _definedPacket = spcp; break;
                     case Direction.ToServer:
-                        var cpcp = Packet.AsClientPluginChannel(_bridge.IsForge);
+                        var cpcp = Packet.AsClientPluginChannel(Bridge.IsForge);
                         _channleName = cpcp.Channel;
                         _data = cpcp.Data;
                         _definedPacket = cpcp; break;

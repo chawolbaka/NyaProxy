@@ -3,6 +3,7 @@ using MinecraftProtocol.Packets;
 using NyaProxy.API.Enum;
 using System;
 using System.Net.Sockets;
+using System.Net;
 
 namespace NyaProxy.API
 {
@@ -12,9 +13,15 @@ namespace NyaProxy.API
     /// </summary>
     public interface IPacketSendEventArgs : ICancelEvent, IBlockEventArgs
     {
+        string Host { get; }
 
         /// <summary>
-        /// 数据包将被发送到该套接字
+        /// 数据包的来源
+        /// </summary>
+        Socket Source { get; }
+
+        /// <summary>
+        /// 数据包将被发送到该套接字（可被修改）
         /// </summary>
         Socket Destination { get; set; }
 
@@ -22,6 +29,11 @@ namespace NyaProxy.API
         /// 数据包将被发送到的位置
         /// </summary>
         Direction Direction { get; }
+
+        /// <summary>
+        /// 当前的阶段
+        /// </summary>
+        Stage Stage { get; }
 
         /// <summary>
         /// 即将被发送的包，可进行修改或直接替换
@@ -33,19 +45,20 @@ namespace NyaProxy.API
         /// </summary>
         DateTime ReceivedTime { get; }
 
+        /// <summary>
+        /// 当前的协议版本
+        /// </summary>
         int ProtocolVersion { get; }
 
+        /// <summary>
+        /// 当前的压缩阈值
+        /// </summary>
+        int CompressionThreshold { get; }
+
+        /// <summary>
+        /// 玩家（可能为null）
+        /// </summary>
         IPlayer Player { get; }
-        
 
-        ///// <summary>
-        ///// Packet中的ProtocolVersion
-        ///// </summary>
-        //int ProtocolVersion { get; }
-
-        ///// <summary>
-        ///// Packet中的CompressionThreshold
-        ///// </summary>
-        //int CompressionThreshold { get; }
     }
 }

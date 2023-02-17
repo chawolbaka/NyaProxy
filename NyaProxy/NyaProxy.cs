@@ -21,9 +21,7 @@ using NyaProxy.Bridges;
 using NyaProxy.Channles;
 using System.Linq;
 using MinecraftProtocol.IO;
-using MinecraftProtocol.Compatible;
-using System.Xml.Linq;
-using NyaProxy.Configs.Rule;
+
 
 namespace NyaProxy
 {
@@ -272,7 +270,7 @@ namespace NyaProxy
                     {
                         BlockingBridge.Enqueue(serverSocket, hp.Pack(-1), () =>
                         {
-                            FastBridge fastBridge = new FastBridge(dest.Name, hea.Packet.ServerAddress, acceptSocket, serverSocket);
+                            FastBridge fastBridge = new FastBridge(dest, hea.Packet.ServerAddress, acceptSocket, serverSocket);
                             fastBridge.Build();
                             hea?.Packet?.Dispose();
                         });

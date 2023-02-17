@@ -88,12 +88,19 @@ namespace NyaProxy
         private ChatComponent _message;
         private DefinedPacket _definedPacket;
 
-        internal override PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
+        internal override PacketSendEventArgs Setup(BlockingBridge bridge, Socket source, Socket destination, Direction direction, CompatiblePacket packet, DateTime receivedTime)
         {
             _message = null;
             _definedPacket?.Dispose();
             _definedPacket = null;
-            return base.Setup(bridge, destination, direction, e);
+            return base.Setup(bridge, source, destination, direction, packet, receivedTime);
+        }
+        internal override PacketSendEventArgs Setup(BlockingBridge bridge, Socket source, Socket destination, Direction direction, PacketReceivedEventArgs e)
+        {
+            _message = null;
+            _definedPacket?.Dispose();
+            _definedPacket = null;
+            return base.Setup(bridge, source, destination, direction, e);
         }
     }
 }

@@ -17,7 +17,11 @@ namespace NyaProxy.Plugin
     {
         internal class ConfigContainer : IConfigContainer
         {
+            public string DefaultFileType => "toml";
             public string WorkDirectory { get; }
+
+            public int Count => ConfigFiles.Count;
+            public bool RegisterConfigCommand { get; set; }
 
             public List<Config> ConfigFiles = new();
 
@@ -30,6 +34,7 @@ namespace NyaProxy.Plugin
 
             public ConfigContainer(string workDirectory, IManifest manifest, CommandContainer commandContainer)
             {
+                RegisterConfigCommand = true;
                 WorkDirectory = workDirectory;
                 _manifest = manifest;
                 _commandContainer = commandContainer;
@@ -58,7 +63,7 @@ namespace NyaProxy.Plugin
                         if (config is IDefaultConfig idc) 
                         {
                             idc.SetDefault();
-                            SaveAsync(config,path).Wait();
+                            SaveAsync(config, path).Wait();
                         }
                     }
                     else
@@ -72,7 +77,7 @@ namespace NyaProxy.Plugin
 
 
                     //如果插件配置了CommandPrefixes那么就注册子命令config来重载和保存配置文件
-                    if (!_isConfigCommandRegistered&&!_commandContainer.IsRoot) 
+                    if (RegisterConfigCommand && !_isConfigCommandRegistered && !_commandContainer.IsRoot)
                     {
                         _commandContainer.Register(new ConfigCommand(this));
                         _isConfigCommandRegistered = true;
@@ -86,6 +91,35 @@ namespace NyaProxy.Plugin
                     NyaProxy.Logger.Exception(e);
                     return -1;
                 }
+            }
+
+            public bool Unregister(string uniqueId)
+            {
+                if (!ConfigIdDictionary.ContainsKey(uniqueId))
+                    return false;
+                Config config = ConfigIdDictionary[uniqueId];
+                ConfigIdDictionary.Remove(config.UniqueId);
+                ConfigPathDictionary.Remove(config.UniqueId);
+                ConfigFiles.Remove(config);
+                return true;
+            }
+
+            public bool Unregister(int index)
+            {
+                if (index > ConfigFiles.Count)
+                    return false;
+                Config config = ConfigFiles[index];
+                ConfigIdDictionary.Remove(config.UniqueId);
+                ConfigPathDictionary.Remove(config.UniqueId);
+                ConfigFiles.RemoveAt(index);
+                return true;
+            }
+
+            public void Clear()
+            {
+                ConfigFiles.Clear();
+                ConfigIdDictionary.Clear();
+                ConfigPathDictionary.Clear();
             }
 
             private Config LoadConfig(Type configType,string path)

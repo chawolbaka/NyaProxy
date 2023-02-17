@@ -1,16 +1,11 @@
-﻿using MinecraftProtocol.IO;
-using MinecraftProtocol.Packets;
-using MinecraftProtocol.Utils;
+﻿using System;
+using System.Net.Sockets;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using NyaProxy.Bridges;
+using MinecraftProtocol.IO;
+using MinecraftProtocol.Packets;
+using MinecraftProtocol.Utils;
 using MinecraftProtocol.Compatible;
 
 namespace NyaProxy
@@ -18,13 +13,21 @@ namespace NyaProxy
 
     public class PacketSendEventArgs : TransportEventArgs, IPacketSendEventArgs, ICompatible
     {
+        public string Host => Bridge.Host.Name;
+
+        public Socket Source { get; set; }
+     
         public Socket Destination { get; set; }
 
         public virtual Direction Direction { get; private set; }
 
         public virtual DateTime ReceivedTime { get; private set; }
 
+        public virtual Stage Stage => Bridge.Stage;
+
         public virtual int ProtocolVersion => Bridge.ProtocolVersion;
+
+        public virtual int CompressionThreshold => Direction == Direction.ToClient ? Bridge.ClientCompressionThreshold : Bridge.ServerCompressionThreshold;
 
         public IPlayer Player => Bridge.Player;
 
@@ -50,18 +53,18 @@ namespace NyaProxy
         
         internal BlockingBridge Bridge;
         internal PacketReceivedEventArgs EventArgs;
-
+        
 
         public PacketSendEventArgs()
         {
 
         }
 
-        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, CompatiblePacket packet, DateTime receivedTime)
+        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket source, Socket destination, Direction direction, CompatiblePacket packet, DateTime receivedTime)
         {
             if(destination == null)
                 throw new ArgumentNullException(nameof(destination));
-
+            Source = source;
             Direction = direction;
             Destination = destination;
             Bridge = bridge;
@@ -73,12 +76,12 @@ namespace NyaProxy
             _isCancelled = false;
             return this;
         }
-        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket destination, Direction direction, PacketReceivedEventArgs e)
+        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket source, Socket destination, Direction direction, PacketReceivedEventArgs e)
         {
             if(e == null)
                 throw new ArgumentNullException(nameof(e));
 
-            Setup(bridge, destination, direction, e.Packet, e.ReceivedTime);
+            Setup(bridge, source, destination, direction, e.Packet, e.ReceivedTime);
             EventArgs = e;
             return this;
         }

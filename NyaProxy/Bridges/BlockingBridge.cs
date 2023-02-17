@@ -67,8 +67,8 @@ namespace NyaProxy.Bridges
         private readonly string _serverId = ""; //1.7开始默认是空的
         private byte[] _verifyToken;
 
-        private enum States { Login, Play }
-        private States _state = States.Login;
+       
+        public Stage Stage { get; private set; }
         
         private IHostTargetRule _targetRule;
         private IPacketListener _serverSocketListener;
@@ -77,20 +77,19 @@ namespace NyaProxy.Bridges
         private int _forgeCheckCount;
         private int _queueIndex;
 
-        private HostConfig Host;
         private HandshakePacket _handshakePacket;
         private LoginStartPacket _loginStartPacket;
 
-        public BlockingBridge(HostConfig host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host.Name, handshakePacket.ServerAddress, source, destination)
+        public BlockingBridge(HostConfig host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
         {
-            Host = host;
-
             ProtocolVersion = -1;
             ClientCompressionThreshold = -1;
             ServerCompressionThreshold = -1;
 
             _handshakePacket = handshakePacket;
             _queueIndex = QueueIndex.Get();
+
+            Stage = Stage.Handshake;
 
             //监听客户端发送给服务端的数据包
             _clientSocketListener = new PacketListener(Source, !NyaProxy.Config.EnableReceivePool);            
@@ -113,7 +112,8 @@ namespace NyaProxy.Bridges
             }
             else
             {
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, _handshakePacket.AsCompatible(-1, -1), DateTime.Now));
+                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, _handshakePacket.AsCompatible(-1, -1), DateTime.Now));
+                _clientSocketListener.PacketReceived += (s, e) => { if (e.Packet == PacketType.Status.Client.Request) Stage = Stage.Status; };
                 _clientSocketListener.PacketReceived += ClientPacketReceived;
                 _serverSocketListener.PacketReceived += ServerPacketReceived;
                 _clientSocketListener.Start(ListenToken.Token);
@@ -130,7 +130,7 @@ namespace NyaProxy.Bridges
         }
         public virtual void Break(string reason)
         {
-            if (_state == States.Login)
+            if (Stage == Stage.Login)
                 Enqueue(Source, new DisconnectLoginPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
             else
                 Enqueue(Source, new DisconnectPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
@@ -142,6 +142,7 @@ namespace NyaProxy.Bridges
             _clientSocketListener.PacketReceived -= BeforeLoginStart;
             if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
             {
+                Stage = Stage.Login;
                 LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
                 EventUtils.InvokeCancelEvent(NyaProxy.LoginStart, Source, lsea);
                 if (lsea.IsBlock)
@@ -251,9 +252,9 @@ namespace NyaProxy.Bridges
             }
 
             ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().
-                Setup(this, Destination, Direction.ToServer, _handshakePacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
+                Setup(this, Source, Destination, Direction.ToServer, _handshakePacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
             ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().
-                Setup(this, Destination, Direction.ToServer, _loginStartPacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
+                Setup(this, Source, Destination, Direction.ToServer, _loginStartPacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
         }
 
         private void BeforeLoginSuccess(object sender, PacketReceivedEventArgs e)
@@ -262,7 +263,7 @@ namespace NyaProxy.Bridges
             {
                 if (e.Packet == PacketType.Login.Server.EncryptionRequest)
                 {
-                    NyaProxy.Logger.Error($"[{SessionId}]服务器{HostName}({Destination._remoteEndPoint()})开启了正版验证，请关闭或切换至直通模式");
+                    NyaProxy.Logger.Error($"[{SessionId}]服务器{base.Host}({Destination._remoteEndPoint()})开启了正版验证，请关闭或切换至直通模式");
                     Break("服务端配置异常，请问管理员查看日志");
                     return;
                 }
@@ -279,10 +280,10 @@ namespace NyaProxy.Bridges
                 {
                     Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
                     LoginSuccessEventArgs eventArgs = new LoginSuccessEventArgs();
-                    EventUtils.InvokeCancelEvent(NyaProxy.LoginSuccess, this, eventArgs.Setup(this, Source, Direction.ToClient, e) as LoginSuccessEventArgs);
+                    EventUtils.InvokeCancelEvent(NyaProxy.LoginSuccess, this, eventArgs.Setup(this, Source, Destination, Direction.ToClient, e) as LoginSuccessEventArgs);
                     if (!eventArgs.IsBlock)
                     {
-                        _state = States.Play;
+                        Stage = Stage.Play;
                         _serverSocketListener.PacketReceived -= BeforeLoginSuccess;
                         _serverSocketListener.PacketReceived += CheckForge;
                         _serverSocketListener.PacketReceived += ServerPacketReceived;
@@ -320,14 +321,17 @@ namespace NyaProxy.Bridges
 
         private void Disconnect(object sender, PacketReceivedEventArgs e)
         {
+            if (Stage == Stage.Handshake || Stage == Stage.Status)
+                return;
+
             if (OverCompression)
                 e.Packet.CompressionThreshold = ClientCompressionThreshold;
 
-            if (_state == States.Login ? e.Packet == PacketType.Login.Server.Disconnect : e.Packet == PacketType.Play.Server.Disconnect)
+            if (Stage == Stage.Play ? e.Packet == PacketType.Play.Server.Disconnect : e.Packet == PacketType.Login.Server.Disconnect)
             {
                 e.Cancel(); //阻止数据包被继续传递
 
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
+                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
                 ListenToken.Cancel();
             }
         }
@@ -337,12 +341,12 @@ namespace NyaProxy.Bridges
             if (OverCompression)
                 e.Packet.CompressionThreshold = ServerCompressionThreshold;
 
-            if (_state == States.Play && e.Packet == PacketType.Play.Client.ChatMessage)
-                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
-            else if (_state == States.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Client.PluginChannel)
-                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
+            if (Stage == Stage.Play && e.Packet == PacketType.Play.Client.ChatMessage)
+                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
+            else if (Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Client.PluginChannel)
+                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
             else
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Direction.ToServer, e));
+                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
         }
 
         private void ServerPacketReceived(object sender, PacketReceivedEventArgs e)
@@ -350,16 +354,16 @@ namespace NyaProxy.Bridges
             if (OverCompression)
                 e.Packet.CompressionThreshold = ClientCompressionThreshold;
 
-            if (_state == States.Play
+            if (Stage == Stage.Play
                 && e.Packet == PacketType.Play.Server.ChatMessage
                 || e.Packet == PacketType.Play.Server.SystemChatMessage
                 || e.Packet == PacketType.Play.Server.PlayerChatMessage
                 || e.Packet == PacketType.Play.Server.DisguisedChatMessage)
-                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
-            else if (_state == States.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Server.PluginChannel)
-                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
+                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
+            else if (Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Server.PluginChannel)
+                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
             else
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Direction.ToClient, e));
+                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
         }
     }
 }
