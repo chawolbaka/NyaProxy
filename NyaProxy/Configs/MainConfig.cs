@@ -73,10 +73,10 @@ namespace NyaProxy.Configs
                 Nodes = new Dictionary<string, ConfigNode>()
                 {
                     ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread),
-                    ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen, i18n.Config.TcpFastOpen),
-                    ["enable-receive-pool"] = new BooleanNode(EnableReceivePool),
-                    ["receive-pool-buffer-count"]  = new NumberNode(ReceivePoolBufferCount),
-                    ["receive-pool-buffer-length"] = new NumberNode(ReceivePoolBufferLength)
+                    ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen,  i18n.Config.TcpFastOpen),
+                    ["enable-receive-pool"] = new BooleanNode(EnableReceivePool, i18n.Config.EnableReceivePool),
+                    ["receive-pool-buffer-count"]  = new NumberNode(ReceivePoolBufferCount,  i18n.Config.ReceivePoolBufferCount),
+                    ["receive-pool-buffer-length"] = new NumberNode(ReceivePoolBufferLength, i18n.Config.ReceivePoolBufferLength)
                 }
             });
         }

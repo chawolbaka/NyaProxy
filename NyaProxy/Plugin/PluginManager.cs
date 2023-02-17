@@ -11,10 +11,7 @@ using NyaProxy.API;
 using NyaProxy.Configs;
 using NyaProxy.Extension;
 using MinecraftProtocol.Crypto;
-using MinecraftProtocol.Utils;
 using System.Text.Json;
-using System.Xml.Linq;
-using System.Reflection.PortableExecutable;
 
 namespace NyaProxy.Plugin
 {

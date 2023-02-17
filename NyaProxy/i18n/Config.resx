@@ -121,15 +121,18 @@
     <value>What port should the proxy be bound to? By default, we'll bind to all addresses on port 25565.</value>
   </data>
   <data name="ClientTcpFastOpen" xml:space="preserve">
-    <value />
+    <value>If set to true, NyaProxy will attempt to use TcpFastOpen when connecting to the server.</value>
   </data>
   <data name="CompressionThreshold" xml:space="preserve">
-    <value />
+    <value>If set to -1, the compression threshold will follow the server's setting. Otherwise, the compression threshold will be set between the client and NyaProxy.</value>
   </data>
   <data name="ConnectionThrottle" xml:space="preserve">
     <value />
   </data>
   <data name="ConnectionTimeout" xml:space="preserve">
+    <value />
+  </data>
+  <data name="EnableReceivePool" xml:space="preserve">
     <value />
   </data>
   <data name="ForwardMode" xml:space="preserve">
@@ -138,13 +141,16 @@
   <data name="Host" xml:space="preserve">
     <value />
   </data>
-  <data name="KickExistsPlayer" xml:space="preserve">
-    <value />
-  </data>
   <data name="NetworkThread" xml:space="preserve">
     <value />
   </data>
   <data name="ProtocolVersion" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ReceivePoolBufferCount" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ReceivePoolBufferLength" xml:space="preserve">
     <value />
   </data>
   <data name="SelectMode" xml:space="preserve">
@@ -157,6 +163,6 @@
     <value />
   </data>
   <data name="TcpFastOpen" xml:space="preserve">
-    <value>Enables TCP fast open support on the proxy. Requires the proxy to run on Linux.</value>
+    <value>Enables TcpFastOpen support on the proxy. Requires the proxy to run on Linux.</value>
   </data>
 </root>

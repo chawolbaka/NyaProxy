@@ -117,13 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AuthenticationFailed" xml:space="preserve">
+    <value>There is an issue with the authentication of the game, please contact the administrator.</value>
+  </data>
   <data name="ConnectFailed" xml:space="preserve">
     <value>Can't connect to server</value>
+  </data>
+  <data name="ConnectionThrottle" xml:space="preserve">
+    <value>Connection throttled! Please wait before reconnecting.</value>
   </data>
   <data name="HandshakeFailed" xml:space="preserve">
     <value>Handshake failed</value>
   </data>
+  <data name="IncorrectServerConfiguration" xml:space="preserve">
+    <value>There is an issue with the server configuration, please contact the server administrator.</value>
+  </data>
   <data name="NoServerAvailable" xml:space="preserve">
     <value>No server available</value>
+  </data>
+  <data name="ReceivedEnexpectedPacket" xml:space="preserve">
+    <value>Received abnormal packet (Id = {PacketId})</value>
   </data>
 </root>

@@ -132,6 +132,9 @@
   <data name="NoSocketAvailable" xml:space="preserve">
     <value>No socket available</value>
   </data>
+  <data name="OnlineModeNotTurned" xml:space="preserve">
+    <value>Host {Host} has online mode enabled. Please modify the server configuration file to turn off online mode or configure the host in NyaProxy to direct mode.</value>
+  </data>
   <data name="PacketDecompressFailed" xml:space="preserve">
     <value>Packet failed to decompress.</value>
   </data>

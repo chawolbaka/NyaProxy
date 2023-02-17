@@ -120,4 +120,7 @@
   <data name="ConfigFileConflict" xml:space="preserve">
     <value>Host [{Host}] is used by: {FileName}</value>
   </data>
+  <data name="VerifyTokenNotMatch" xml:space="preserve">
+    <value>The VerifyToken sent by {PlayerName} to the server does not match the VerifyToken sent by the server to the client. It's possible that the player is using an illegal client.</value>
+  </data>
 </root>

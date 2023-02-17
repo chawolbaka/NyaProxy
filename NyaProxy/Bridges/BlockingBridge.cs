@@ -192,7 +192,8 @@ namespace NyaProxy.Bridges
             }
             else
             {
-                Break($"错误的的数据包：{e.Packet.Id}");
+                Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{EndPoint}", Source._remoteEndPoint(), "{PacketId}", e.Packet.Id));
+                NyaProxy.Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringLoginStart.Replace("{EndPoint}", Source._remoteEndPoint(), "{Packet}", e.Packet));
             }
         }
 
@@ -207,8 +208,8 @@ namespace NyaProxy.Bridges
                 {
                     if (!CollectionUtils.Compare(_verifyToken, _rsaService.Decrypt(erp.VerifyToken, RSAEncryptionPadding.Pkcs1)))
                     {
-                        NyaProxy.Logger.Warn($"[{SessionId}]{playerName}发送至代理端的VerifyToken于代理端发送至{Player.Name}的不匹配");
-                        Break("正版验证异常，请联系管理员");
+                        NyaProxy.Logger.Warn(i18n.Warning.VerifyTokenNotMatch.Replace("{EndPoint}", Source._remoteEndPoint(), "{PlayerName}", playerName, "{Packet}", erp));
+                        Break(i18n.Disconnect.AuthenticationFailed);
                     }
 
                     byte[] sessionKey = _rsaService.Decrypt(erp.SharedSecret, RSAEncryptionPadding.Pkcs1);
@@ -219,15 +220,14 @@ namespace NyaProxy.Bridges
                     }
                     else
                     {
-                        NyaProxy.Logger.Info($"[{SessionId}]玩家{playerName}没有通过Yggdrasil进行Join行为，该玩家可能未开启正版验证或网络有问题");
-                        Break("正版验证失败，请检查你的网络。");
+                        NyaProxy.Logger.Debug(i18n.Debug.PlayerNotJoinedThroughYggdrasil.Replace("{PlayerName}", playerName));
+                        Break(i18n.Disconnect.AuthenticationFailed);
                     }
                 }
                 else
                 {
-                    NyaProxy.Logger.Error($"[{SessionId}]玩家{playerName}发送了加密响应以外的数据包");
-                    NyaProxy.Logger.Unpreformat(e.Packet.ToString());
-                    Break($"异常的数据包, 你可能使用了有问题的客户端。");
+                    Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{PacketId}", e.Packet.Id));
+                    NyaProxy.Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringEncryption.Replace("{EndPoint}", Source._remoteEndPoint(), "{PlayerName}", playerName, "{Packet}", e.Packet));
                 }
             }
             catch (Exception ex)
@@ -263,8 +263,8 @@ namespace NyaProxy.Bridges
             {
                 if (e.Packet == PacketType.Login.Server.EncryptionRequest)
                 {
-                    NyaProxy.Logger.Error($"[{SessionId}]服务器{base.Host}({Destination._remoteEndPoint()})开启了正版验证，请关闭或切换至直通模式");
-                    Break("服务端配置异常，请问管理员查看日志");
+                    NyaProxy.Logger.Error(i18n.Error.OnlineModeNotTurned.Replace("{Host}", Host.Name));
+                    Break(i18n.Disconnect.IncorrectServerConfiguration);
                     return;
                 }
                 else if (SetCompressionPacket.TryRead(e.Packet, out SetCompressionPacket scp))

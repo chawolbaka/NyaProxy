@@ -168,9 +168,6 @@ namespace NyaProxy.Configs
 
         public async Task<Socket> OpenConnectAsync(EndPoint endPoint)
         {
-            if (ConnectionThrottle > 0 && _lastConnectTime != default && (DateTime.Now - _lastConnectTime).TotalMilliseconds < ConnectionThrottle)
-                throw new DisconnectException("连接频率过高");
-
             Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
             if (TcpFastOpen)
             {
@@ -181,7 +178,7 @@ namespace NyaProxy.Configs
             }
 
             await socket.ConnectAsync(endPoint);
-            _lastConnectTime = DateTime.Now;
+            
             if (!NetworkUtils.CheckConnect(socket))
                 throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 
@@ -189,6 +186,10 @@ namespace NyaProxy.Configs
         }
         public async Task<Socket> OpenConnectAsync(EndPoint endPoint, int timeout)
         {
+            if (ConnectionThrottle > 0 && _lastConnectTime != default && (DateTime.Now - _lastConnectTime).TotalMilliseconds < ConnectionThrottle)
+                throw new DisconnectException(i18n.Disconnect.ConnectionThrottle);
+            _lastConnectTime = DateTime.Now;
+
             if (timeout < 0)
                 return await OpenConnectAsync(endPoint);
 
