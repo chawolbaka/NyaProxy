@@ -40,21 +40,21 @@ namespace NyaProxy
         public static readonly Dictionary<string, HostConfig> Hosts = new Dictionary<string, HostConfig>();
         
 
-        public static EventHandler<IConnectEventArgs> Connecting;
-        public static EventHandler<IHandshakeEventArgs> Handshaking;
-        public static EventHandler<ILoginStartEventArgs> LoginStart;
-        public static EventHandler<ILoginSuccessEventArgs> LoginSuccess;
-        public static EventHandler<IPacketSendEventArgs> PacketSendToClient;
-        public static EventHandler<IPacketSendEventArgs> PacketSendToServer;
-        public static EventHandler<IChatSendEventArgs> ChatMessageSendToClient;
-        public static EventHandler<IChatSendEventArgs> ChatMessageSendToServer;
-        public static EventHandler<IDisconnectEventArgs> Disconnected;
+        public static EventContainer<IConnectEventArgs>      Connecting              = new();
+        public static EventContainer<IHandshakeEventArgs>    Handshaking             = new();
+        public static EventContainer<ILoginStartEventArgs>   LoginStart              = new();
+        public static EventContainer<ILoginSuccessEventArgs> LoginSuccess            = new();
+        public static EventContainer<IPacketSendEventArgs>   PacketSendToClient      = new();
+        public static EventContainer<IPacketSendEventArgs>   PacketSendToServer      = new();
+        public static EventContainer<IChatSendEventArgs>     ChatMessageSendToClient = new();
+        public static EventContainer<IChatSendEventArgs>     ChatMessageSendToServer = new();
+        public static EventContainer<IDisconnectEventArgs>   Disconnected            = new();
 
         public static async Task Setup(ILogger logger)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Plugin = new(logger);
-            Bridges = new ();
+            Bridges = new();
             Channles = new();
             CommandManager = new();
 
@@ -227,7 +227,8 @@ namespace NyaProxy
             try
             {
                 ConnectEventArgs eventArgs = new ConnectEventArgs(e.AcceptSocket, e.SocketError);
-                EventUtils.InvokeCancelEvent(Connecting, e.AcceptSocket, eventArgs);
+
+                Connecting.Invoke(e.AcceptSocket, eventArgs);
                 if (!eventArgs.IsBlock)
                 {
                     Socket AcceptSocket = eventArgs.AcceptSocket;
@@ -255,7 +256,7 @@ namespace NyaProxy
                 if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
                 {
                     hea = new HandshakeEventArgs(acceptSocket, hp);
-                    EventUtils.InvokeCancelEvent(Handshaking, acceptSocket, hea);
+                    Handshaking.Invoke(acceptSocket, hea);
                     if (hea.IsBlock)
                     {
                         acceptSocket.Close();
@@ -283,7 +284,7 @@ namespace NyaProxy
                 }
                 else
                 {
-                    Logger.Debug($"异常的握手包: {FirstPacket}");
+                    Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringHandshake.Replace("{EndPoint}", acceptSocket._remoteEndPoint(), "{Packet}", FirstPacket));
                     throw new DisconnectException(i18n.Disconnect.HandshakeFailed);
                 }
             }

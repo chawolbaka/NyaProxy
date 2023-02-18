@@ -144,7 +144,7 @@ namespace NyaProxy.Bridges
             {
                 Stage = Stage.Login;
                 LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
-                EventUtils.InvokeCancelEvent(NyaProxy.LoginStart, Source, lsea);
+                NyaProxy.LoginStart.Invoke(this, lsea);
                 if (lsea.IsBlock)
                 {
                     Break();
@@ -280,7 +280,7 @@ namespace NyaProxy.Bridges
                 {
                     Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
                     LoginSuccessEventArgs eventArgs = new LoginSuccessEventArgs();
-                    EventUtils.InvokeCancelEvent(NyaProxy.LoginSuccess, this, eventArgs.Setup(this, Source, Destination, Direction.ToClient, e) as LoginSuccessEventArgs);
+                    NyaProxy.LoginSuccess.Invoke(this, eventArgs.Setup(this, Source, Destination, Direction.ToClient, e) as LoginSuccessEventArgs);
                     if (!eventArgs.IsBlock)
                     {
                         Stage = Stage.Play;

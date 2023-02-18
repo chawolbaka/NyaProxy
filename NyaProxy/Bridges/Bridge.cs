@@ -80,7 +80,7 @@ namespace NyaProxy.Bridges
                     Destination.Shutdown(SocketShutdown.Both);
                     Destination.Close();
                 }
-                EventUtils.InvokeCancelEvent(NyaProxy.Disconnected, this, new DisconnectEventArgs(Host.Name));
+                NyaProxy.Disconnected.Invoke(this, new DisconnectEventArgs(Host.Name));
                 NyaProxy.Logger.Info($"{GetType().Name} breaked ({Source._remoteEndPoint()}<->{Destination._remoteEndPoint()})");
             }
             catch (SocketException) { }
