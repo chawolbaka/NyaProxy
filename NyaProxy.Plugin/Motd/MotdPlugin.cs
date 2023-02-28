@@ -9,6 +9,8 @@ using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.IO.Extensions;
+using NyaProxy.API.Event;
+using MinecraftProtocol.Utils;
 
 namespace Motd
 {
@@ -33,14 +35,19 @@ namespace Motd
             {
                 ReloadConfig();
             }
-            Helper.Command.Register(new ConfigCommand(ReloadConfig));
             Helper.Events.Transport.PacketSendToServer += OnPacketSendToServer;
             Helper.Events.Transport.Handshaking  += OnHandshaking;
             Helper.Events.Transport.LoginSuccess += OnLoginSuccess;
             Helper.Events.Transport.Disconnected += OnDisconnected;
-
+            Helper.Command.Register(new ConfigCommand(ReloadConfig));
+            Helper.Command.Register(new SimpleCommand("get", async (args, helper) => {
+                ServerListPing slp = new ServerListPing(await NetworkUtils.GetAddressAsync(args.Span[1]));
+                PingReply result = await slp.SendAsync();
+                helper.Logger.Unpreformat(result.Json);
+            }));
         }
 
+        [EventPriority(EventPriority.Highest)]
         private void OnHandshaking(object? sender, IHandshakeEventArgs e)
         {
             if (e.Packet.NextState == HandshakePacket.State.Login)
@@ -94,7 +101,7 @@ namespace Motd
 
         public override async Task OnDisable()
         {
-            Helper.Events.Transport.Handshaking -= OnHandshaking;
+            Helper.Events.Transport.Handshaking  -= OnHandshaking;
             Helper.Events.Transport.LoginSuccess -= OnLoginSuccess;
             Helper.Events.Transport.Disconnected -= OnDisconnected;
             Helper.Events.Transport.PacketSendToServer -= OnPacketSendToServer;
