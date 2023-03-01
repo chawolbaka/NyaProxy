@@ -33,6 +33,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Config.resx</DependentUpon>
     </Compile>
+    <Compile Update="i18n\Debug.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Debug.resx</DependentUpon>
+    </Compile>
     <Compile Update="i18n\Disconnect.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -64,6 +69,10 @@
     <EmbeddedResource Update="i18n\Config.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Config.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="i18n\Debug.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Debug.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="i18n\Disconnect.resx">
       <Generator>ResXFileCodeGenerator</Generator>
