@@ -46,7 +46,10 @@ namespace NyaProxy.Plugin
                 if (attribute == null)
                     throw new NotImplementedException($"该类型未拥有{nameof(ConfigFileAttribute)}属性，请手动填写文件名");
 
-                return Register(configType, attribute.FileName);
+                if (!attribute.FileName.Contains('.'))
+                    return Register(configType, attribute.FileName + "." + DefaultFileType);
+                else
+                    return Register(configType, attribute.FileName);
             }
 
             public int Register(Type configType, string fileName)
