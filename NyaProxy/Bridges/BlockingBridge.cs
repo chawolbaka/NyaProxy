@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using NyaProxy.API;
@@ -12,14 +11,12 @@ using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Utils;
 using MinecraftProtocol.Crypto;
 using MinecraftProtocol.Auth.Yggdrasil;
-using System.Threading;
 using MinecraftProtocol.Compatible;
 using NyaProxy.Configs.Rule;
 using NyaProxy.Configs;
 using MinecraftProtocol.DataType;
 using System.Text;
 using System.Net;
-using System.Collections.Generic;
 
 namespace NyaProxy.Bridges
 {
@@ -131,9 +128,9 @@ namespace NyaProxy.Bridges
         public virtual void Break(string reason)
         {
             if (Stage == Stage.Login)
-                Enqueue(Source, new DisconnectLoginPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
+                NyaProxy.Network.Enqueue(Source, new DisconnectLoginPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
             else
-                Enqueue(Source, new DisconnectPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
+                NyaProxy.Network.Enqueue(Source, new DisconnectPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
             ListenToken.Cancel();
         }
 
@@ -183,7 +180,7 @@ namespace NyaProxy.Bridges
                     _verifyToken = CryptoUtils.GenerateRandomNumber(4);
                     _clientSocketListener.PacketReceived += BeforeEncryptionResponse;
                     EncryptionRequestPacket encryptionRequest = new EncryptionRequestPacket(_serverId, _rsaService.ExportSubjectPublicKeyInfo(), _verifyToken, ProtocolVersion);
-                    Enqueue(Source, encryptionRequest.Pack(-1));
+                    NyaProxy.Network.Enqueue(Source, encryptionRequest.Pack(-1));
                 }
                 else
                 {
@@ -248,7 +245,7 @@ namespace NyaProxy.Bridges
                 ClientCompressionThreshold = _targetRule.CompressionThreshold;
                 _clientSocketListener.CompressionThreshold = ClientCompressionThreshold;
                 Packet packet = new SetCompressionPacket(ClientCompressionThreshold, ProtocolVersion);
-                Enqueue(Source, CryptoHandler.TryEncrypt(packet.Pack(-1)), packet);
+                NyaProxy.Network.Enqueue(Source, CryptoHandler.TryEncrypt(packet.Pack(-1)), packet);
             }
 
             ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().

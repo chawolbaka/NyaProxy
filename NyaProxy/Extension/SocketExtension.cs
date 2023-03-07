@@ -18,18 +18,18 @@ namespace NyaProxy.Extension
         public static void DisconnectOnLogin(this Socket socket, ChatComponent message, bool closeSocket = true)
         {
             if (closeSocket)
-                BlockingBridge.Enqueue(socket, new DisconnectLoginPacket(message, -1).Pack(-1), socket);
+                NyaProxy.Network.Enqueue(socket, new DisconnectLoginPacket(message, -1).Pack(-1), socket);
             else
-                BlockingBridge.Enqueue(socket, new DisconnectLoginPacket(message, -1).Pack(-1));
+                NyaProxy.Network.Enqueue(socket, new DisconnectLoginPacket(message, -1).Pack(-1));
         }
 
         public static void DisconnectOnPlay(this Socket socket, string message, int protcolVersion, int compress, bool closeSocket = true) => DisconnectOnPlay(socket, new ChatComponent(message), protcolVersion, compress, closeSocket);
         public static void DisconnectOnPlay(this Socket socket, ChatComponent message, int protcolVersion, int compress, bool closeSocket = true)
         {
             if (closeSocket)
-                BlockingBridge.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress), socket);
+                NyaProxy.Network.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress), socket);
             else
-                BlockingBridge.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress));
+                NyaProxy.Network.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress));
         }
 
 

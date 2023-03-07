@@ -8,34 +8,20 @@ using NyaProxy.Channles;
 using NyaProxy.Debug;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.IO.Pools;
-using MinecraftProtocol.Packets.Server;
-using MinecraftProtocol.Utils;
-using MinecraftProtocol.Compatible;
-using MinecraftProtocol.Packets.Client;
-using MinecraftProtocol.Chat;
 
 namespace NyaProxy.Bridges
 {
     public partial class BlockingBridge : Bridge
     {
-        private static BlockingCollection<SendEventArgs> SendQueue = new();
         private static BlockingCollection<PacketSendEventArgs>[] ReceiveQueues;
-        private static ObjectPool<SendEventArgs> SendEventArgsPool = new();
         private static ObjectPool<PacketSendEventArgs> PacketEventArgsPool = new ();
         private static ObjectPool<ChatSendEventArgs> ChatEventArgsPool = new();
         private static ObjectPool<PluginChannleSendEventArgs> PluginChannleEventArgsPool = new();
-        private static CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
-        private static ManualResetEvent SendSignal = new ManualResetEvent(false); //我那奇怪的CPU占有率不至于是因为这边导致的吧...
         private static SafeIndex QueueIndex;
-
-        internal static void Enqueue(Socket socket, Memory<byte> data) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, null));
-        internal static void Enqueue(Socket socket, Memory<byte> data, Action callback) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, callback));
-        internal static void Enqueue(Socket socket, Memory<byte> data, IDisposable disposable) => SendQueue.Add(SendEventArgsPool.Rent().Setup(socket, data, disposable != null ? disposable.Dispose : null));
 
 
         internal static void Setup(int networkThread) 
         {
-            GlobalQueueToken.Token.Register(() => SendSignal.Set());
             if (ReceiveQueues != null)
             {
                 foreach (var queue in ReceiveQueues)
@@ -62,72 +48,10 @@ namespace NyaProxy.Bridges
                 thread.Name = $"Network IO #{i + 1}";
                 thread.Start();
             }
-
-            SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
-            eventArgs.Completed += (sender,e) => SendSignal.Set();
-            Thread sendThread = new Thread(() => {
-                AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
-                SendQueueHandler(eventArgs);
-            });
-            sendThread.IsBackground = true;
-            sendThread.Name = "Network IO #0";
-            sendThread.Start();
         }
 
       
 
-        private static void SendQueueHandler(SocketAsyncEventArgs e)
-        {
-            SendEventArgs sea = default; //必须在这边，否则每次循环都会创建一个空的
-            while (!GlobalQueueToken.IsCancellationRequested)
-            {
-                try
-                {
-                    sea = SendQueue.Take(GlobalQueueToken.Token);
-                    int send = 0, dataLength = sea.Data.Length;
-
-                    do
-                    {
-                        if (send > 0)
-                            e.SetBuffer(sea.Data.Slice(send));
-                        else
-                            e.SetBuffer(sea.Data);
-
-                        if (sea.Socket.SendAsync(e))
-                        {
-                            SendSignal.WaitOne();
-                            SendSignal.Reset();
-                            if (GlobalQueueToken.IsCancellationRequested)
-                            {
-                                SendSignal?.Dispose();
-                                return;
-                            }
-                        }
-
-                        if (e.SocketError != SocketError.Success || (e.BytesTransferred <= 0 && !NetworkUtils.CheckConnect(sea.Socket)))
-                            break;
-                        else
-                            send += e.BytesTransferred;
-
-                    } while (send < dataLength);
-
-                }
-                catch (OperationCanceledException) { }
-                catch (ObjectDisposedException) { }
-                catch (SocketException se)
-                {
-                    if (se.SocketErrorCode is SocketError.ConnectionRefused or SocketError.ConnectionReset)
-                        NyaProxy.Logger.Warn(se.Message);
-                    else
-                        NyaProxy.Logger.Error(se.Message);
-                }
-                finally
-                {
-                    sea?.Callback?.Invoke();
-                    SendEventArgsPool.Return(sea);
-                }
-            }
-        }
 
         private static void ReceiveQueueHandler(PacketSendEventArgs e)
         {
@@ -172,15 +96,15 @@ namespace NyaProxy.Bridges
                         for (int i = 0; i < rawData.Length; i++)
                         {
                             if (rawData[i].Length > 0)
-                                Enqueue(e.Destination, rawData[i], i + 1 < e.EventArgs.RawData.Length ? null : e.EventArgs);
+                                NyaProxy.Network.Enqueue(e.Destination, rawData[i], i + 1 < e.EventArgs.RawData.Length ? null : e.EventArgs);
                         }
                     }
                     else
                     {
                         if (e.Direction == Direction.ToClient)
-                            Enqueue(e.Destination, e.Bridge.CryptoHandler.TryEncrypt(e.Packet.Pack()), (IDisposable)e.EventArgs ?? e.Packet);
+                            NyaProxy.Network.Enqueue(e.Destination, e.Bridge.CryptoHandler.TryEncrypt(e.Packet.Pack()), (IDisposable)e.EventArgs ?? e.Packet);
                         else
-                            Enqueue(e.Destination, e.Packet.Pack(), (IDisposable)e.EventArgs ?? e.Packet);
+                            NyaProxy.Network.Enqueue(e.Destination, e.Packet.Pack(), (IDisposable)e.EventArgs ?? e.Packet);
                     }
                 }
                 else
@@ -211,16 +135,16 @@ namespace NyaProxy.Bridges
         {
             try
             {
-                while (!GlobalQueueToken.IsCancellationRequested)
+                while (!NyaProxy.GlobalQueueToken.IsCancellationRequested)
                 {
-                    action(queue.Take(GlobalQueueToken.Token));
+                    action(queue.Take(NyaProxy.GlobalQueueToken.Token));
                 }
             }
             catch (OperationCanceledException) { }
             catch (ObjectDisposedException) { }
             catch (Exception e)
             {
-                GlobalQueueToken.Cancel();
+                NyaProxy.GlobalQueueToken.Cancel();
                 NyaProxy.Logger.Exception(e);
             }
         }

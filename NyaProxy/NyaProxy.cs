@@ -36,10 +36,13 @@ namespace NyaProxy
         
         public static ILogger Logger { get; private set; }
 
+        public static readonly CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
+        
         public static readonly MainConfig Config = new MainConfig();
         public static readonly Dictionary<string, HostConfig> Hosts = new Dictionary<string, HostConfig>();
-        
+        public static readonly NetworkHelper Network = new NetworkHelper(GlobalQueueToken.Token);
 
+        
         public static EventContainer<IConnectEventArgs>      Connecting              = new();
         public static EventContainer<IHandshakeEventArgs>    Handshaking             = new();
         public static EventContainer<ILoginStartEventArgs>   LoginStart              = new();
@@ -269,7 +272,7 @@ namespace NyaProxy
 
                     if (dest.ForwardMode == ForwardMode.Direct)
                     {
-                        BlockingBridge.Enqueue(serverSocket, hp.Pack(-1), () =>
+                        Network.Enqueue(serverSocket, hp.Pack(-1), () =>
                         {
                             FastBridge fastBridge = new FastBridge(dest, hea.Packet.ServerAddress, acceptSocket, serverSocket);
                             fastBridge.Build();

@@ -15,8 +15,9 @@ namespace NyaProxy.Plugin
         public IChannleContainer Channles => NyaProxy.Channles;
         public IHostContainer Hosts => new HostCovariance(NyaProxy.Hosts);
 
+
         private static PluginEvents _events = new PluginEvents();
-        private static NetworkHelper _networkHelper = new NetworkHelper();
+        private static NetworkHelper _networkHelper = NyaProxy.Network;
         private ConfigContainer _configContainer;
         private CommandContainer _commandContainer;
 

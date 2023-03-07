@@ -84,14 +84,14 @@ namespace NyaProxy.Channles
             ByteWriter writer = new ByteWriter();
             writer.WriteByte(discriminator);
             handler.WriteMessage(writer);
-            BlockingBridge.Enqueue(dest, writer.AsMemory(), writer);
+            NyaProxy.Network.Enqueue(dest, writer.AsMemory(), writer);
         }
 
         public void SendMessage(IChannleMessage handler, Socket dest)
         {
             ByteWriter writer = new ByteWriter();
             handler.WriteMessage(writer);
-            BlockingBridge.Enqueue(dest, writer.AsMemory(), writer);
+            NyaProxy.Network.Enqueue(dest, writer.AsMemory(), writer);
         }
     }
 }

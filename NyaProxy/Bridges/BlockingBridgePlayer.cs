@@ -32,7 +32,7 @@ namespace NyaProxy.Bridges
 
             //不用考虑DisconnectLoginPacket，因为按现在的设计玩家被初始化的时候必定是已经加入服务器了的状态
             Packet packet = new DisconnectPacket(reason, Own.ProtocolVersion);
-            BlockingBridge.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () => 
+            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () => 
             {
                 Own.Break();
                 packet?.Dispose(); 
@@ -48,7 +48,7 @@ namespace NyaProxy.Bridges
         {
             TaskCompletionSource completionSource = new TaskCompletionSource();
             Packet packet = Own.BuildServerChatMessage(message.Serialize(), position);
-            BlockingBridge.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () => 
+            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () => 
             {
                 packet?.Dispose();
                 completionSource.SetResult();
