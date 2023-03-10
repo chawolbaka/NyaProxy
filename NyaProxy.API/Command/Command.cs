@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace NyaProxy.API
 {
-    public abstract class Command
+    public abstract class Command : IEquatable<Command>
     {
         public abstract string Name { get; }
         public abstract string Usage { get; }
@@ -17,12 +17,31 @@ namespace NyaProxy.API
         public virtual int MinimumArgs => 0;
         public virtual string Helper => Usage;
 
-
         public readonly Dictionary<string, Command> Children = new Dictionary<string, Command>();
 
         public Command Parent => _parent;
         private Command _parent;
-        
+
+        public bool Equals(Command other)
+        {
+            return other != null && other.Name == Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Command command && command.Name == Name;
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Name.ToString();
+        }
+
         public virtual void RegisterChild(Command command)
         {
             command._parent = this;

@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using NyaProxy.API;
 using NyaProxy.Extension;
 
@@ -30,6 +26,21 @@ namespace NyaProxy
                 NyaProxy.Logger.Error(i18n.Error.CommandRegistered.Replace("{CommandName}", command.Name));
 
 
+            return this;
+        }
+
+
+        public CommandManager Unregister(Command command)
+        {
+            return Unregister(command.Name);
+        }
+
+        public CommandManager Unregister(string commandName)
+        {
+            if (string.IsNullOrWhiteSpace(commandName))
+                throw new ArgumentNullException(nameof(commandName));
+
+            RegisteredCommands.Remove(commandName);
             return this;
         }
 

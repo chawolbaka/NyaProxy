@@ -54,12 +54,15 @@ namespace NyaProxy.Plugin
             try
             {
                 await plugin.OnDisable();
-                var helper = (plugin.Helper as PluginHelper)?.Config as PluginHelper.ConfigContainer;
-                for (int i = 0; i < helper.ConfigFiles.Count; i++)
+                var helper = plugin.Helper as PluginHelper;
+                var config = helper.Config as PluginHelper.ConfigContainer;
+                var commnad = helper.Command as PluginHelper.CommandContainer;
+                for (int i = 0; i < config.ConfigFiles.Count; i++)
                 {
-                    if (helper.ConfigFiles[i].AutoSave)
-                        await helper.SaveAsync(i);
+                    if (config.ConfigFiles[i].AutoSave)
+                        await config.SaveAsync(i);
                 }
+                commnad.UnregisterAll();
                 Context.Unload();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();

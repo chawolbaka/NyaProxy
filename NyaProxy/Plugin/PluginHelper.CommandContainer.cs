@@ -11,6 +11,7 @@ namespace NyaProxy.Plugin
         {
             public readonly IManifest Manifest;
             public readonly bool IsRoot;
+            public readonly List<string> CommandList = new List<string>();
 
             public CommandContainer(IManifest manifest)
             {
@@ -44,6 +45,33 @@ namespace NyaProxy.Plugin
                 else
                 {
                     NyaProxy.CommandManager.Register(command);
+                    CommandList.Add(command.Name);
+                }
+            }
+
+            public void UnregisterAll()
+            {
+                if (!IsRoot)
+                {
+                    foreach (var prefix in Manifest.CommandPrefixes)
+                    {
+                        try
+                        {
+                            NyaProxy.CommandManager.Unregister(prefix);
+                        }
+                        catch (Exception e)
+                        {
+                            NyaProxy.Logger.Exception(e);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var command in CommandList)
+                    {
+                        NyaProxy.CommandManager.Unregister(command);
+                    }
+                    CommandList.Clear();
                 }
             }
 
