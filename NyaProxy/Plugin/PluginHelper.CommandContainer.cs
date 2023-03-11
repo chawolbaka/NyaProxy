@@ -49,6 +49,22 @@ namespace NyaProxy.Plugin
                 }
             }
 
+            public void Unregister(string commandName)
+            {
+                if (!IsRoot)
+                {
+                    foreach (var prefix in Manifest.CommandPrefixes)
+                    {
+                        NyaProxy.CommandManager.RegisteredCommands[prefix].UnregisterChild(commandName);
+                    }
+                }
+                else
+                {
+                    NyaProxy.CommandManager.Unregister(commandName);
+                    CommandList.Remove(commandName);
+                }
+            }
+
             public void UnregisterAll()
             {
                 if (!IsRoot)

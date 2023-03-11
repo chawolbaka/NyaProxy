@@ -51,6 +51,14 @@ namespace NyaProxy.API
             Children.Add(command.Name, command);
         }
 
+        public virtual void UnregisterChild(string commandName)
+        {
+            if (string.IsNullOrWhiteSpace(commandName))
+                throw new ArgumentNullException(commandName);
+
+            Children.Remove(commandName);
+        }
+
         public virtual async Task ExecuteChildrenAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             if (Children.Count == 0)

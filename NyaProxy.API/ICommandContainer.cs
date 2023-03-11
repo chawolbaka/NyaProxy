@@ -9,5 +9,6 @@ namespace NyaProxy.API
     public interface ICommandContainer
     {
         void Register(Command command);
+        void Unregister(string commandName);
     }
 }
