@@ -14,22 +14,36 @@ namespace NyaProxy.Extension
 {
     public static class SocketExtension
     {
-        public static void DisconnectOnLogin(this Socket socket, string message, bool closeSocket = true) => DisconnectOnLogin(socket, new ChatComponent(message), closeSocket);
-        public static void DisconnectOnLogin(this Socket socket, ChatComponent message, bool closeSocket = true)
+
+
+        public static Dictionary<string, byte[]> DisconnectPacketCache = new Dictionary<string, byte[]>();
+        public static Dictionary<string, byte[]> DisconnectLoginPacketCache = new Dictionary<string, byte[]>();
+
+
+        public static void DisconnectOnLogin(this Socket socket, string message, bool closeSocket = true)
         {
-            if (closeSocket)
-                NyaProxy.Network.Enqueue(socket, new DisconnectLoginPacket(message, -1).Pack(-1), socket);
-            else
-                NyaProxy.Network.Enqueue(socket, new DisconnectLoginPacket(message, -1).Pack(-1));
+            if (!DisconnectLoginPacketCache.ContainsKey(message))
+                DisconnectLoginPacketCache.Add(message, new DisconnectLoginPacket(message, -1).Pack(-1));
+
+            NyaProxy.Network.Enqueue(socket, DisconnectLoginPacketCache[message], closeSocket ? socket : null);
+        }
+        
+        public static void DisconnectOnPlay(this Socket socket, string message, int protcolVersion, int compress, bool closeSocket = true)
+        {
+            if (!DisconnectPacketCache.ContainsKey(message))
+                DisconnectPacketCache.Add(message, new DisconnectPacket(message, protcolVersion).Pack(compress));
+
+            NyaProxy.Network.Enqueue(socket, DisconnectPacketCache[message], closeSocket ? socket : null);
         }
 
-        public static void DisconnectOnPlay(this Socket socket, string message, int protcolVersion, int compress, bool closeSocket = true) => DisconnectOnPlay(socket, new ChatComponent(message), protcolVersion, compress, closeSocket);
+        public static void DisconnectOnLogin(this Socket socket, ChatComponent message, bool closeSocket = true)
+        {
+            NyaProxy.Network.Enqueue(socket, new DisconnectLoginPacket(message, -1).Pack(-1), closeSocket ? socket : null);
+        }
+
         public static void DisconnectOnPlay(this Socket socket, ChatComponent message, int protcolVersion, int compress, bool closeSocket = true)
         {
-            if (closeSocket)
-                NyaProxy.Network.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress), socket);
-            else
-                NyaProxy.Network.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress));
+            NyaProxy.Network.Enqueue(socket, new DisconnectPacket(message, protcolVersion).Pack(compress), closeSocket ? socket : null);
         }
 
 
