@@ -10,12 +10,18 @@ namespace NyaProxy.API
     public abstract class Command : IEquatable<Command>
     {
         public abstract string Name { get; }
+        
         public abstract string Usage { get; }
+        
         public abstract string Description { get; }
+        
         public abstract Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper);
+        
         public abstract IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args);
+        
         public virtual int MinimumArgs => 0;
-        public virtual string Helper => Usage;
+       
+        public virtual string Helper => $"Usage: {Usage}\n";
 
         public readonly Dictionary<string, Command> Children = new Dictionary<string, Command>();
 
@@ -61,13 +67,13 @@ namespace NyaProxy.API
 
         public virtual async Task ExecuteChildrenAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
-            if (Children.Count == 0)
+            if (Children.Count == 0 || args.Length == 0)
                 return;
 
             string commnad = args.Span[0];
             if (!Children.ContainsKey(commnad))
                 throw new CommandNotFoundException(commnad);
-            else if (Children[commnad].MinimumArgs > args.Length)
+            else if (Children[commnad].MinimumArgs > args.Length - 1)
                 throw new CommandLeastRequiredException(commnad, Children[commnad].MinimumArgs);
             else
                 await Children[commnad].ExecuteAsync(args.Slice(1), helper);

@@ -48,6 +48,9 @@ namespace NyaProxy
         {
             try
             {
+                if (!RegisteredCommands.ContainsKey(commandName))
+                    throw new CommandNotFoundException(commandName);
+
                 await RegisteredCommands[commandName].ExecuteAsync(args, helper);
             }
             catch (CommandLeastRequiredException clre)
