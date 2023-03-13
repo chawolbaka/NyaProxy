@@ -114,11 +114,20 @@ namespace Motd
         {
             CurrentConnections.Clear();
             Helper.Config.Clear(); HostIndex.Clear();
-            foreach (var file in Directory.GetFiles(HostsPath!))
+            foreach (var file in Directory.GetFiles(HostsPath!).Select(f=>new FileInfo(f)))
             {
-                int index = Helper.Config.Register(typeof(MotdConfig), file);
-                MotdConfig config = Helper.Config.Get<MotdConfig>(index);
-                HostIndex.Add(config.Host, index);
+                try
+                {
+                    int index = Helper.Config.Register(typeof(MotdConfig), file.FullName);
+                    MotdConfig config = Helper.Config.Get<MotdConfig>(index);
+                    HostIndex.Add(config.Host, index);
+                    Logger.Info($"{file.Name} load success.");
+                }
+                catch (Exception e)
+                {
+                    Logger.Info($"{file.Name} load fail.");
+                    Logger.Exception(e);
+                }
             }
         }
     }

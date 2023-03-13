@@ -10,9 +10,11 @@ namespace Motd
     {
         public override string Name => "config";
 
-        public override string Usage => $"motd config generate [host] <file>";
+        public override string Usage => $"motd config generate [dest] <host>";
 
         public override string Description => "";
+
+        public override int MinimumArgs => 1;
 
         private static readonly IEnumerable<string> _firstTabList = new List<string>() { "reload", "generate" };
         private Action Reload;
@@ -24,27 +26,25 @@ namespace Motd
 
         public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
-            if (args.Length is 1 or 2)
+            switch (args.Span[0])
             {
-                switch (args.Span[0])
-                {
-                    case "reload": Reload(); break;
-                    case "generate":
-                        if (args.Length < 2)
-                            throw new CommandLeastRequiredException(Name, 3); //因为不是根命令所以这边需要+1
-                        IPEndPoint endPoint = await NetworkUtils.GetIPEndPointAsync(args.Span[1]);
-                        ServerListPing slp = new ServerListPing(endPoint);
-                        MotdConfig config = new MotdConfig();
-                        config.PingReply = await slp.SendAsync();
-                        config.Host = endPoint.Address.ToString();
+                case "reload": Reload(); break;
+                case "generate":
+                    if (args.Length < 2)
+                        throw new CommandLeastRequiredException("generate", 1); //因为不是根命令所以这边需要+1
+                    IPEndPoint endPoint = await NetworkUtils.GetIPEndPointAsync(args.Span[1]);
+                    ServerListPing slp = new ServerListPing(endPoint);
+                    MotdConfig config = new MotdConfig();
+                    config.PingReply = await slp.SendAsync();
+                    config.Host = args.Length > 2 ? args.Span[2] : endPoint.Address.ToString();
 
-                        string fileName = Path.Combine("Hosts", $"{(args.Length > 2 ? args.Span[2] : config.Host)}.{MotdPlugin.CurrentInstance.Helper.Config.DefaultFileType}");
-                        await MotdPlugin.CurrentInstance.Helper.Config.SaveAsync(MotdPlugin.CurrentInstance.Helper.Config.Register(config, fileName));
-
-                        break;
-                    default: helper.Logger.Unpreformat($"Unknow operate {args.Span[0]}"); break;
-                }
+                    string fileName = $"{config.Host}.{MotdPlugin.CurrentInstance.Helper.Config.DefaultFileType}";
+                    await MotdPlugin.CurrentInstance.Helper.Config.SaveAsync(MotdPlugin.CurrentInstance.Helper.Config.Register(config, Path.Combine("Hosts", fileName)));
+                    helper.Logger.UnpreformatColorfully("§aGenerate success.");
+                    break;
+                default: helper.Logger.Unpreformat($"Unknow operate {args.Span[0]}"); break;
             }
+
         }
 
         public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
