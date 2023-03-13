@@ -10,6 +10,7 @@ using Tomlet;
 using Tomlet.Models;
 using System.Text;
 using System.Xml;
+using Microsoft.Win32;
 
 namespace NyaProxy.Plugin
 {
@@ -74,10 +75,38 @@ namespace NyaProxy.Plugin
                         config = LoadConfig(configType, path);
                     }
 
+                    return Register(config, path);
+                }
+                catch (Exception e)
+                {
+                    NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", fileName));
+                    NyaProxy.Logger.Exception(e);
+                    return -1;
+                }
+            }
+            public int Register(Config config)
+            {
+                ConfigFileAttribute attribute = config.GetType().GetCustomAttribute<ConfigFileAttribute>();
+                if (attribute == null)
+                    throw new NotImplementedException($"该类型未拥有{nameof(ConfigFileAttribute)}属性，请手动填写文件名");
+
+                if (!attribute.FileName.Contains('.'))
+                    return Register(config, attribute.FileName + "." + DefaultFileType);
+                else
+                    return Register(config, attribute.FileName);
+            }
+
+            public int Register(Config config, string fileName)
+            {
+                try
+                {
+                    if (config == null)
+                        throw new ArgumentNullException(nameof(config));
+
+
                     ConfigFiles.Add(config);
                     ConfigIdDictionary.Add(config.UniqueId, config);
-                    ConfigPathDictionary.Add(config.UniqueId, path);
-
+                    ConfigPathDictionary.Add(config.UniqueId, Path.Combine(WorkDirectory, fileName));
 
                     //如果插件配置了CommandPrefixes那么就注册子命令config来重载和保存配置文件
                     if (RegisterConfigCommand && !_isConfigCommandRegistered && !_commandContainer.IsRoot)
@@ -85,7 +114,7 @@ namespace NyaProxy.Plugin
                         _commandContainer.Register(new ConfigCommand(this));
                         _isConfigCommandRegistered = true;
                     }
-                              
+
                     return ConfigFiles.Count - 1;
                 }
                 catch (Exception e)
@@ -140,7 +169,7 @@ namespace NyaProxy.Plugin
                 }
             }
 
-            private void Reload(int index)
+            public void Reload(int index)
             {
                 if (index > ConfigFiles.Count)
                     return;
@@ -160,12 +189,12 @@ namespace NyaProxy.Plugin
                 }
             }
 
-            private void Reload(string uniqueId)
+            public void Reload(string uniqueId)
             {
                 Reload(ConfigFiles.IndexOf(ConfigIdDictionary[uniqueId]));
             }
 
-            private void ReloadAll()
+            public void ReloadAll()
             {
                 for (int i = 0; i < ConfigFiles.Count; i++)
                 {
@@ -173,13 +202,13 @@ namespace NyaProxy.Plugin
                 }
             }
 
-            internal async Task SaveAsync(int index)
+            public async Task SaveAsync(int index)
             {
                 Config config = ConfigFiles[index];
                 await SaveAsync(config, ConfigPathDictionary[config.UniqueId]);
             }
             
-            internal async Task SaveAsync(string uniqueId)
+            public async Task SaveAsync(string uniqueId)
             {
                 Config config = ConfigIdDictionary[uniqueId];
                 await SaveAsync(config, ConfigPathDictionary[config.UniqueId]);

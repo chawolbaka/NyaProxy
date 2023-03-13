@@ -16,6 +16,7 @@ namespace Motd
 {
     public class MotdPlugin : NyaPlugin
     {
+        public static MotdPlugin CurrentInstance;
         public string HostsPath;
 
         public Dictionary<string, int> HostIndex = new Dictionary<string, int>();
@@ -23,6 +24,7 @@ namespace Motd
 
         public override async Task OnEnable()
         {
+            CurrentInstance = this;
             HostsPath = Path.Combine(Helper.WorkDirectory.FullName, "Hosts");
             Helper.Config.RegisterConfigCommand = false;
             
@@ -41,7 +43,7 @@ namespace Motd
             Helper.Events.Transport.Disconnected += OnDisconnected;
             Helper.Command.Register(new ConfigCommand(ReloadConfig));
             Helper.Command.Register(new SimpleCommand("get", async (args, helper) => {
-                ServerListPing slp = new ServerListPing(await NetworkUtils.GetAddressAsync(args.Span[1]));
+                ServerListPing slp = new ServerListPing(await NetworkUtils.GetIPEndPointAsync(args.Span[0]));
                 PingReply result = await slp.SendAsync();
                 helper.Logger.Unpreformat(result.Json);
             }));
