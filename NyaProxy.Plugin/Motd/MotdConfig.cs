@@ -69,9 +69,6 @@ namespace Motd
             writer.WriteProperty("motd", PingReply.Motd.ToString());
             writer.WriteProperty("max-player", PingReply.Player.Max);
 
-            if (!string.IsNullOrWhiteSpace(PingReply.Icon))
-                writer.WriteProperty("icon", PingReply.Icon);
-
             writer.WriteProperty("version", new ObjectNode(new Dictionary<string, ConfigNode>()
             {
                 ["name"] = new StringNode(PingReply.Version.Name),
@@ -85,9 +82,12 @@ namespace Motd
                     ["mods"] = new StringNode(string.Join(',', PingReply.Forge.ModList))
                 }));
 
-
             if (PingReply.Player.Samples != null && PingReply.Player.Samples.Count > 0)
                 writer.WriteProperty("player-samples", new ArrayNode(PingReply.Player.Samples.Select(p => new StringNode( new StringNode(p.Name)))));
+
+
+            if (!string.IsNullOrWhiteSpace(PingReply.Icon))
+                writer.WriteProperty("icon", PingReply.Icon);
         }
 
         public void SetDefault()
