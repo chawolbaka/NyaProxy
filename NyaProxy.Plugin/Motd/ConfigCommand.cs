@@ -10,9 +10,10 @@ namespace Motd
     {
         public override string Name => "config";
 
-        public override string Usage => $"motd config generate [dest] <host>";
-
-        public override string Description => "";
+        public override string Help => @"Usage: motd config [optine]
+    reload <host>
+    generate  [dest] <host>
+";
 
         public override int MinimumArgs => 1;
 

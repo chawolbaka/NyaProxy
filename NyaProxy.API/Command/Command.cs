@@ -11,17 +11,13 @@ namespace NyaProxy.API
     {
         public abstract string Name { get; }
         
-        public abstract string Usage { get; }
-        
-        public abstract string Description { get; }
+        public abstract string Help { get; }
         
         public abstract Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper);
         
         public abstract IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args);
         
         public virtual int MinimumArgs => 0;
-       
-        public virtual string Helper => $"Usage: {Usage}\n";
 
         public readonly Dictionary<string, Command> Children = new Dictionary<string, Command>();
 

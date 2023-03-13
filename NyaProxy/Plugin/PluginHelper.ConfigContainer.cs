@@ -266,9 +266,7 @@ namespace NyaProxy.Plugin
             {
                 public override string Name => "config";
 
-                public override string Usage => "";
-
-                public override string Description => "";
+                public override string Help => $"Usege: {Parent.Name} config [{string.Join('/', _firstTabList)}]";
 
                 private ConfigContainer _configContainer;
 

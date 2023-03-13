@@ -10,19 +10,15 @@ namespace NyaProxy.API
     {
         public override string Name { get; }
 
-        public override string Usage { get; }
-
-        public override string Description { get; }
+        public override string Help { get; }
 
         private Func<ReadOnlyMemory<string>, ICommandHelper, Task> _func;
 
-        public SimpleCommand(string commandName, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync) : this(commandName, "", "", executeAsync) { }
-        public SimpleCommand(string commandName, string commandUsage, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync) : this(commandName, commandUsage, "", executeAsync) { }
-        public SimpleCommand(string commandName, string commandUsage, string commandDescription, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync)
+        public SimpleCommand(string commandName, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync) : this(commandName, "", executeAsync) { }
+        public SimpleCommand(string commandName, string commandHelp, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync)
         {
             Name = commandName ?? throw new ArgumentNullException(nameof(commandName));
-            Usage = commandUsage ?? throw new ArgumentNullException(nameof(commandUsage));
-            Description = commandDescription ?? throw new ArgumentNullException(nameof(commandDescription));
+            Help = commandHelp ?? throw new ArgumentNullException(nameof(commandHelp));
             _func = executeAsync ?? throw new ArgumentNullException(nameof(executeAsync));
         }
 

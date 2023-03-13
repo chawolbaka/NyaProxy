@@ -95,9 +95,7 @@ namespace NyaProxy.Plugin
             {
                 public override string Name { get; }
 
-                public override string Usage => "";
-
-                public override string Description => "";
+                public override string Help => "";
 
                 public RootCommand(string name)
                 {
