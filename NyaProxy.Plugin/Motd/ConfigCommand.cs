@@ -10,7 +10,7 @@ namespace Motd
     {
         public override string Name => "config";
 
-        public override string Usage => "";
+        public override string Usage => $"motd config generate [host] <file>";
 
         public override string Description => "";
 
@@ -37,7 +37,8 @@ namespace Motd
                         MotdConfig config = new MotdConfig();
                         config.PingReply = await slp.SendAsync();
                         config.Host = endPoint.Address.ToString();
-                        string fileName = Path.Combine("Hosts", $"{config.Host}.{MotdPlugin.CurrentInstance.Helper.Config.DefaultFileType}");
+
+                        string fileName = Path.Combine("Hosts", $"{(args.Length > 2 ? args.Span[2] : config.Host)}.{MotdPlugin.CurrentInstance.Helper.Config.DefaultFileType}");
                         await MotdPlugin.CurrentInstance.Helper.Config.SaveAsync(MotdPlugin.CurrentInstance.Helper.Config.Register(config, fileName));
 
                         break;
