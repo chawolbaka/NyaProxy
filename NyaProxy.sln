@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NyaProxy", "NyaProxy\NyaPro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NyaProxy.API", "NyaProxy.API\NyaProxy.API.csproj", "{0074C2D2-2E36-4055-9F9C-D1EC040ED847}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NyaProxy.CLI", "NyaProxy.CLI\NyaProxy.CLI.csproj", "{06C0DE17-1C64-41AD-918E-5F5FB28BEE40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0074C2D2-2E36-4055-9F9C-D1EC040ED847}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0074C2D2-2E36-4055-9F9C-D1EC040ED847}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0074C2D2-2E36-4055-9F9C-D1EC040ED847}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06C0DE17-1C64-41AD-918E-5F5FB28BEE40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06C0DE17-1C64-41AD-918E-5F5FB28BEE40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06C0DE17-1C64-41AD-918E-5F5FB28BEE40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06C0DE17-1C64-41AD-918E-5F5FB28BEE40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
