@@ -101,13 +101,13 @@ namespace NyaProxy.Bridges
 
         public override Bridge Build()
         {
-            if(_handshakePacket.NextState == HandshakePacket.State.Login)
+            if(_handshakePacket.NextState == HandshakeState.Login)
             {
                 _serverSocketListener.PacketReceived += Disconnect;
                 _clientSocketListener.PacketReceived += BeforeLoginStart;
                 _clientSocketListener.Start(ListenToken.Token);
             }
-            else
+            else if(_handshakePacket.NextState == HandshakeState.GetStatus)
             {
                 ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, _handshakePacket.AsCompatible(-1, -1), DateTime.Now));
                 _clientSocketListener.PacketReceived += (s, e) => { if (e.Packet == PacketType.Status.Client.Request) Stage = Stage.Status; };
@@ -115,6 +115,10 @@ namespace NyaProxy.Bridges
                 _serverSocketListener.PacketReceived += ServerPacketReceived;
                 _clientSocketListener.Start(ListenToken.Token);
                 _serverSocketListener.Start(ListenToken.Token);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unknow handshake state {_handshakePacket.NextState}");
             }
             return this;
         }

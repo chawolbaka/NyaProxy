@@ -1,6 +1,4 @@
-﻿#pragma warning disable CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑声明为可以为 null。
-#pragma warning disable CS1998 // 异步方法缺少 "await" 运算符，将以同步方式运行using MinecraftProtocol.DataType;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
@@ -52,7 +50,7 @@ namespace Motd
         [EventPriority(EventPriority.Highest)]
         private void OnHandshaking(object? sender, IHandshakeEventArgs e)
         {
-            if (e.Packet.NextState == HandshakePacket.State.Login)
+            if (e.Packet.NextState == HandshakeState.Login)
                 return;
 
             //如果存在该Host的配置文件就接管该连接
@@ -66,7 +64,7 @@ namespace Motd
             if (e.Stage == Stage.Login || e.Stage == Stage.Play)
                 return;
 
-            if (e.Stage == Stage.Handshake && e.Packet == PacketType.Handshake && e.Packet.AsHandshake().NextState == HandshakePacket.State.GetStatus)
+            if (e.Stage == Stage.Handshake && e.Packet == PacketType.Handshake && e.Packet.AsHandshake().NextState == HandshakeState.GetStatus)
             {
                 //如果该连接已被接管就阻止握手包被发送到服务器
                 if (CurrentConnections.ContainsKey(e.Source.RemoteEndPoint!))
