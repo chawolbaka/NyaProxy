@@ -1,63 +1,58 @@
-﻿using NLog;
+﻿using NyaProxy.API;
 using System;
+using System.Collections.Concurrent;
 
 namespace NyaProxy.CLI
 {
-    public class NyaLogger : API.ILogger
+    public class NyaLogger : ILogger
     {
-        public Logger Logger { get; set; }
+        public readonly BlockingCollection<string> LogQueues = new BlockingCollection<string>();
+        public string BaseMessage => $"§f[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{Thread.CurrentThread.Name}] ";
 
-        public NyaLogger(Logger logger)
+        public NyaLogger()
         {
-            Logger = logger;
+            
         }
 
-        public API.ILogger Debug(string message)
+        public ILogger Debug(string message)
         {
-            Logger.Debug(message);
+            LogQueues.Add($"{BaseMessage}[{nameof(Debug)}]: {message}");
             return this;
         }
 
-        public API.ILogger Error(string message)
+        public ILogger Error(string message)
         {
-            Logger.Error(message);
+            LogQueues.Add($"{BaseMessage}[{nameof(Error)}]: {message}");
             return this;
         }
 
-        public API.ILogger Exception(Exception exception)
+        public ILogger Exception(Exception exception)
         {
-            Logger.Error(exception.Message);
-            Console.WriteLine(exception);
+            LogQueues.Add($"{BaseMessage}[{nameof(Error)}]: {exception.Message}\n{exception}");
             return this;
         }
 
-        public API.ILogger Info(string message)
+        public ILogger Info(string message)
         {
-            Logger.Info(message);
+            LogQueues.Add($"{BaseMessage}[{nameof(Info)}]: {message}");
             return this;
         }
 
-        public API.ILogger Trace(string message)
+        public ILogger Trace(string message)
         {
-            Logger.Trace(message);
+            LogQueues.Add($"{BaseMessage}[{nameof(Trace)}]: {message}");
             return this;
         }
 
-        public API.ILogger Unpreformat(string message)
+        public ILogger Warn(string message)
         {
-            Console.WriteLine(message);
+            LogQueues.Add($"{BaseMessage}[{nameof(Warn)}]: {message}");
             return this;
         }
 
-        public API.ILogger UnpreformatColorfully(string message)
+        public ILogger Unpreformat(string message)
         {
-            ConsolePlus.ColorfullyConsole.WriteLine(message);
-            return this;
-        }
-
-        public API.ILogger Warn(string message)
-        {
-            Logger.Warn(message);
+            LogQueues.Add( message);
             return this;
         }
     }

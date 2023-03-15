@@ -41,7 +41,7 @@ namespace Motd
 
                     string fileName = $"{config.Host}.{MotdPlugin.CurrentInstance.Helper.Config.DefaultFileType}";
                     await MotdPlugin.CurrentInstance.Helper.Config.SaveAsync(MotdPlugin.CurrentInstance.Helper.Config.Register(config, Path.Combine("Hosts", fileName)));
-                    helper.Logger.UnpreformatColorfully("§aGenerate success.");
+                    helper.Logger.Unpreformat("§aGenerate success.");
                     break;
                 default: helper.Logger.Unpreformat($"Unknow operate {args.Span[0]}"); break;
             }

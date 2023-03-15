@@ -1,5 +1,4 @@
 ﻿using System;
-using NLog;
 using ConsolePlus;
 
 namespace NyaProxy.CLI
@@ -9,14 +8,19 @@ namespace NyaProxy.CLI
         private static async Task Main(string[] args)
         {
             ColorfullyConsole.Init();
-            await NyaProxy.Setup(new NyaLogger(LogManager.GetCurrentClassLogger()));
+            NyaLogger logger = new NyaLogger();
+            await NyaProxy.Setup(logger);
             
             foreach (var server in NyaProxy.Hosts)
             {
                 NyaProxy.Logger.Info($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
             }
             NyaProxy.BindSockets();
-            Console.ReadKey();
+
+            while (!NyaProxy.GlobalQueueToken.IsCancellationRequested)
+            {
+                ColorfullyConsole.WriteLine(logger.LogQueues.Take());
+            }
         }
     }
 }

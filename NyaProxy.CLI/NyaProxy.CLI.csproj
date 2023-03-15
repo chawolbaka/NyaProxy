@@ -9,17 +9,7 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="NLog" Version="4.7.13" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\NyaProxy\NyaProxy.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Update="nlog.config">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	</ItemGroup>
 
 </Project>

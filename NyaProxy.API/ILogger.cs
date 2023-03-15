@@ -11,7 +11,6 @@ namespace NyaProxy.API
         ILogger Error(string message);
         ILogger Exception(Exception exception);
         ILogger Unpreformat(string message);
-        ILogger UnpreformatColorfully(string message);
         
     }
 }

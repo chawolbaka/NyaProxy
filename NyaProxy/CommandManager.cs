@@ -55,11 +55,11 @@ namespace NyaProxy
             }
             catch (CommandLeastRequiredException clre)
             {
-                NyaProxy.Logger.UnpreformatColorfully(i18n.Error.CommandLeastRequired.Replace("{CommandName}", clre.Command, "{MinimumArgs}", clre.MinimumArgs));
+                NyaProxy.Logger.Unpreformat(i18n.Error.CommandLeastRequired.Replace("{CommandName}", clre.Command, "{MinimumArgs}", clre.MinimumArgs));
             }
             catch (CommandNotFoundException cnfe)
             {
-                NyaProxy.Logger.UnpreformatColorfully(i18n.Error.CommandNotFound.Replace("{CommandName}", cnfe.Command));
+                NyaProxy.Logger.Unpreformat(i18n.Error.CommandNotFound.Replace("{CommandName}", cnfe.Command));
             }
             return this;
         }
