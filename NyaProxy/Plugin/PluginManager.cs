@@ -12,6 +12,7 @@ using NyaProxy.Configs;
 using NyaProxy.Extension;
 using MinecraftProtocol.Crypto;
 using System.Text.Json;
+using System.Threading;
 
 namespace NyaProxy.Plugin
 {
@@ -93,9 +94,14 @@ namespace NyaProxy.Plugin
                     {
                         NyaPlugin plugin = (NyaPlugin)Activator.CreateInstance(type);
                         pluginController = new PluginController(plugin, context, this, directory);
-                        Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
                         SetupPlugin.Invoke(plugin, new object[] { new PluginHelper(directory, manifest), Logger, manifest });
+
+                        Thread thread = Thread.CurrentThread;
+                        string oldName = thread.Name;
+                        thread.Name = manifest.Name;
                         await plugin.OnEnable();
+                        thread.Name = oldName;
+                        Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
                         Plugins.Add(manifest.UniqueId, pluginController);
                         return true;
                     }

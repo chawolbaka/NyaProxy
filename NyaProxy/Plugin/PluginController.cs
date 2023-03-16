@@ -1,4 +1,5 @@
 ﻿using NyaProxy.API;
+using NyaProxy.Configs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,7 +54,11 @@ namespace NyaProxy.Plugin
 
             try
             {
+                Thread thread = Thread.CurrentThread;
+                string oldName = thread.Name;
+                thread.Name = Plugin.Manifest.Name;
                 await plugin.OnDisable();
+                thread.Name = oldName;
                 var helper = plugin.Helper as PluginHelper;
                 var config = helper.Config as PluginHelper.ConfigContainer;
                 var commnad = helper.Command as PluginHelper.CommandContainer;
