@@ -42,6 +42,7 @@ namespace NyaProxy.Plugin
             if (!Directory.GetFiles(directory).Any(f => f.EndsWith("Manifest.json")))
                 return false;
             Manifest manifest = null;
+            PluginController pluginController = null;
             try
             {
                 manifest = JsonSerializer.Deserialize<Manifest>(File.ReadAllText(Path.Combine(directory, "Manifest.json")));
@@ -91,11 +92,11 @@ namespace NyaProxy.Plugin
                     if (type.BaseType != null && type.BaseType.Equals(typeof(NyaPlugin)))
                     {
                         NyaPlugin plugin = (NyaPlugin)Activator.CreateInstance(type);
-
+                        pluginController = new PluginController(plugin, context, this, directory);
                         Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
                         SetupPlugin.Invoke(plugin, new object[] { new PluginHelper(directory, manifest), Logger, manifest });
                         await plugin.OnEnable();
-                        Plugins.Add(manifest.UniqueId, new PluginController(plugin, context, this, directory));
+                        Plugins.Add(manifest.UniqueId, pluginController);
                         return true;
                     }
                 }
@@ -103,11 +104,16 @@ namespace NyaProxy.Plugin
             catch (PluginLoadException pe)
             {
                 Logger.Error(pe.Message);
+                if (pluginController != null)
+                    await pluginController.UnloadAsync();
             }
             catch (Exception e)
             {
                 Logger.Error(i18n.Plugin.Load_Error.Replace("{File}", manifest != null ? manifest.Name : new DirectoryInfo(directory).Name));
                 Logger.Exception(e);
+
+                if (pluginController != null)
+                    await pluginController.UnloadAsync();
                 return false;
             }
             return false;
