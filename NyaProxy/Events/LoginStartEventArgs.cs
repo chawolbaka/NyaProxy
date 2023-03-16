@@ -1,20 +1,25 @@
-﻿using MinecraftProtocol.Packets.Client;
+﻿using MinecraftProtocol.DataType;
+using MinecraftProtocol.Packets.Client;
 using NyaProxy.API;
+using NyaProxy.API.Enum;
+using NyaProxy.Bridges;
 using System;
+using System.Net.Sockets;
 
 namespace NyaProxy
 {
-    public class LoginStartEventArgs : TransportEventArgs, ILoginStartEventArgs
+    public class LoginStartEventArgs : PacketSendEventArgs, ILoginStartEventArgs
     {
-        public LoginStartPacket Packet { get; set; }
 
-        public LoginStartEventArgs()
-        {
+        public string PlayerName { get; set; }
 
-        }
-        public LoginStartEventArgs(LoginStartPacket packet)
+        public UUID PlayerUUID { get; set; }
+
+        public LoginStartEventArgs(BlockingBridge bridge, Socket source, Socket destination, Direction direction, LoginStartPacket packet, DateTime receivedTime)
         {
-            Packet = packet ?? throw new ArgumentNullException(nameof(packet));
+            Setup(bridge, source, destination, direction, packet.AsCompatible(bridge.ProtocolVersion, bridge.ClientCompressionThreshold), receivedTime);
+            PlayerName = packet.PlayerName;
+            PlayerUUID = packet.PlayerUUID;
         }
     }
 }

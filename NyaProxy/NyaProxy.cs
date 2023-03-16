@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using MinecraftProtocol.IO;
 using MinecraftProtocol.Utils;
 using MinecraftProtocol.DataType;
 using MinecraftProtocol.Packets;
@@ -20,7 +21,6 @@ using NyaProxy.Plugin;
 using NyaProxy.Bridges;
 using NyaProxy.Channles;
 using System.Linq;
-using MinecraftProtocol.IO;
 
 
 namespace NyaProxy
@@ -61,7 +61,7 @@ namespace NyaProxy
             Channles = new();
             CommandManager = new();
 
-            Thread.CurrentThread.Name = $"{nameof(NyaProxy)} thread";
+            Thread.CurrentThread.Name = nameof(NyaProxy);
             TaskScheduler.UnobservedTaskException += (sender, e) => Crash.Report(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
             ReloadConfig();
@@ -258,7 +258,8 @@ namespace NyaProxy
                 using Packet FirstPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
                 if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
                 {
-                    hea = new HandshakeEventArgs(acceptSocket, hp);
+                    HostConfig dest = GetHost(hea.Packet.GetServerAddressOnly());
+                    hea = new HandshakeEventArgs(acceptSocket, hp, dest);
                     Handshaking.Invoke(acceptSocket, hea);
                     if (hea.IsBlock)
                     {
@@ -267,7 +268,6 @@ namespace NyaProxy
                     }
 
 
-                    HostConfig dest = GetHost(hea.Packet.GetServerAddressOnly());
                     Socket serverSocket = await dest.OpenConnectAsync();
 
                     if (dest.ForwardMode == ForwardMode.Direct)

@@ -17,6 +17,7 @@ using NyaProxy.Configs;
 using MinecraftProtocol.DataType;
 using System.Text;
 using System.Net;
+using MinecraftProtocol.IO.Extensions;
 
 namespace NyaProxy.Bridges
 {
@@ -144,14 +145,14 @@ namespace NyaProxy.Bridges
             if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
             {
                 Stage = Stage.Login;
-                LoginStartEventArgs lsea = new LoginStartEventArgs(lsp);
+                LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, _loginStartPacket, DateTime.Now);
                 NyaProxy.LoginStart.Invoke(this, lsea);
                 if (lsea.IsBlock)
                 {
                     Break();
                     return;
                 }
-                _loginStartPacket = lsea.Packet;
+                _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : _loginStartPacket;
                     
                 _targetRule = Host.GetRule(lsp.PlayerName);
                 IsOnlineMode    = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);
@@ -171,7 +172,7 @@ namespace NyaProxy.Bridges
                     case ForwardMode.BungeeCord:
                         _handshakePacket.ServerAddress = new StringBuilder(_handshakePacket.GetServerAddressOnly())
                             .Append($"\0{(Source._remoteEndPoint() as IPEndPoint).Address}")
-                            .Append($"\0{(_targetRule.Flags.HasFlag(ServerFlags.OnlineMode) ? UUID.GetFromMojangAsync(lsea.Packet.PlayerName).Result : UUID.GetFromPlayerName(lsea.Packet.PlayerName))}")
+                            .Append($"\0{(_targetRule.Flags.HasFlag(ServerFlags.OnlineMode) ? UUID.GetFromMojangAsync(_loginStartPacket.PlayerName).Result : UUID.GetFromPlayerName(_loginStartPacket.PlayerName))}")
                             .Append(_targetRule.Flags.HasFlag(ServerFlags.Forge) ? forgeTag : "\0").ToString();
                         break;
                     default:

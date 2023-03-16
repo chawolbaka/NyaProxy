@@ -1,10 +1,12 @@
-﻿using MinecraftProtocol.Packets.Client;
+﻿using MinecraftProtocol.DataType;
+using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Utils;
 
 namespace NyaProxy.API
 {
-    public interface ILoginStartEventArgs : ICancelEvent, IBlockEventArgs
+    public interface ILoginStartEventArgs : IPacketSendEventArgs
     {
-        LoginStartPacket Packet { get; set; }
+        string PlayerName { get; set; }
+        UUID PlayerUUID { get; set; }
     }
 }

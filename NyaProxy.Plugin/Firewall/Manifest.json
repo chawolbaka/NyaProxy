@@ -1,0 +1,7 @@
+{
+  "Name": "Firewall",
+  "Author": "Chawol",
+  "Version": "1.0.0",
+  "UniqueId": "NyaProxy.Firewall",
+  "EntryDll": "Firewall.dll"
+  }
