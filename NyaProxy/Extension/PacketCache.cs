@@ -1,19 +1,37 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Server;
 
 namespace NyaProxy.Extension
 {
     public static class PacketCache
     {
-        public static Dictionary<string, byte[]> Disconnect = new Dictionary<string, byte[]>();
-        public static Dictionary<string, byte[]> DisconnectLogin = new Dictionary<string, byte[]>();
-
-        public static byte[] Get(this Dictionary<string, byte[]> cache, string message)
+        private static Dictionary<int, byte[]> DisconnectLogin = new ();
+        private static Dictionary<int, byte[]> Disconnect = new();
+        
+        public static byte[] GetDisconnect(string message,int protocolVersion,int compressionThreshold)
         {
-            if (!cache.ContainsKey(message))
-                cache.Add(message, new DisconnectLoginPacket(message, -1).Pack(-1));
+            int hashCode = HashCode.Combine(message, (ushort)protocolVersion, compressionThreshold);
+            if (!Disconnect.ContainsKey(hashCode))
+            {
+                using Packet packet = new DisconnectPacket(message, protocolVersion);
+                Disconnect.Add(hashCode, packet.Pack(compressionThreshold));
+            }
+
+            return Disconnect[hashCode];
+        }
+
+        public static byte[] GetDisconnectLogin(string message)
+        {
+            int hashCode = message.GetHashCode();
+            if (!DisconnectLogin.ContainsKey(hashCode))
+            {
+                using Packet packet = new DisconnectLoginPacket(message, -1);
+                DisconnectLogin.Add(hashCode, packet.Pack(-1));
+            }
          
-            return cache[message];
+            return DisconnectLogin[hashCode];
         }
     }
 }

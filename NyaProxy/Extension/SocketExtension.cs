@@ -15,12 +15,12 @@ namespace NyaProxy.Extension
     {
         public static void DisconnectOnLogin(this Socket socket, string message, bool closeSocket = true)
         {
-            NyaProxy.Network.Enqueue(socket, PacketCache.DisconnectLogin.Get(message), closeSocket ? socket : null);
+            NyaProxy.Network.Enqueue(socket, PacketCache.GetDisconnectLogin(message), closeSocket ? socket : null);
         }
         
         public static void DisconnectOnPlay(this Socket socket, string message, int protcolVersion, int compress, bool closeSocket = true)
         {
-            NyaProxy.Network.Enqueue(socket, PacketCache.Disconnect.Get(message), closeSocket ? socket : null);
+            NyaProxy.Network.Enqueue(socket, PacketCache.GetDisconnect(message, protcolVersion, compress), closeSocket ? socket : null);
         }
 
         public static void DisconnectOnLogin(this Socket socket, ChatComponent message, bool closeSocket = true)

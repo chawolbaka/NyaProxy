@@ -27,7 +27,8 @@ namespace NyaProxy.Bridges
         public Task KickAsync(string reason)
         {
             TaskCompletionSource completionSource = new TaskCompletionSource();
-            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt((Own.Stage == Stage.Play ? PacketCache.Disconnect : PacketCache.DisconnectLogin).Get(reason)), () =>
+            byte[] packet = Own.Stage == Stage.Play ? PacketCache.GetDisconnect(reason, Own.ProtocolVersion, Own.ServerCompressionThreshold) : PacketCache.GetDisconnectLogin(reason);
+            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet), () =>
             {
                 Own.Break();
                 completionSource.SetResult();
@@ -39,7 +40,7 @@ namespace NyaProxy.Bridges
         {
             Packet packet = Own.Stage == Stage.Play ? new DisconnectPacket(reason, Own.ProtocolVersion) : new DisconnectLoginPacket(reason, -1);
             TaskCompletionSource completionSource = new TaskCompletionSource();
-            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () =>
+            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ServerCompressionThreshold)), () =>
             {
                 Own.Break();
                 packet?.Dispose();
@@ -55,7 +56,7 @@ namespace NyaProxy.Bridges
 
             TaskCompletionSource completionSource = new TaskCompletionSource();
             Packet packet = Own.BuildServerChatMessage(message.Serialize(), position);
-            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () => 
+            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ServerCompressionThreshold)), () => 
             {
                 packet?.Dispose();
                 completionSource.SetResult();
