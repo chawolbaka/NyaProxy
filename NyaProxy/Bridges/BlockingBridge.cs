@@ -46,7 +46,7 @@ namespace NyaProxy.Bridges
         /// <summary>
         /// 玩家信息
         /// </summary>
-        public virtual IPlayer Player { get; private set; }
+        public virtual BlockingBridgePlayer Player { get; private set; }
 
         /// <summary>
         /// 服务端是否发送了Forge的数据包
@@ -145,7 +145,7 @@ namespace NyaProxy.Bridges
             if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
             {
                 Stage = Stage.Login;
-                Player = new BlockingBridgePlayer(this, default, null);
+                Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
                 LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, _loginStartPacket, DateTime.Now);
                 NyaProxy.LoginStart.Invoke(this, lsea);
                 if (lsea.IsBlock)
@@ -281,7 +281,9 @@ namespace NyaProxy.Bridges
                 }
                 else if (LoginSuccessPacket.TryRead(e.Packet, out LoginSuccessPacket lsp))
                 {
-                    Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
+                    //防止和LoginStart的不同步，这边需要重新赋值一次
+                    Player.Id = lsp.PlayerUUID;
+                    Player.Name = lsp.PlayerName;
                     LoginSuccessEventArgs eventArgs = new LoginSuccessEventArgs();
                     NyaProxy.LoginSuccess.Invoke(this, eventArgs.Setup(this, Source, Destination, Direction.ToClient, e) as LoginSuccessEventArgs);
                     if (!eventArgs.IsBlock)

@@ -20,8 +20,23 @@ namespace NyaProxy.API
         /// </summary>
         string Name { get; }
 
-
+        /// <summary>
+        /// 对该玩家发送聊天消息
+        /// </summary>
         Task SendMessageAsync(ChatComponent message, ChatPosition position = ChatPosition.ChatMessage);
+
+
+        /// <summary>
+        /// 踢掉该玩家
+        /// </summary>
+        /// <param name="reason">踢掉的原因</param>
+        Task KickAsync(string reason);
+
+        /// <summary>
+        /// 踢掉该玩家
+        /// </summary>
+        /// <param name="reason">踢掉的原因</param>
         Task KickAsync(ChatComponent reason);
+
     }
 }

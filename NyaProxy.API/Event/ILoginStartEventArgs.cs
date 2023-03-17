@@ -6,7 +6,7 @@ namespace NyaProxy.API
 {
     public interface ILoginStartEventArgs : IPacketSendEventArgs
     {
-        string PlayerName { get; set; }
-        UUID PlayerUUID { get; set; }
+        string PlayerName { get; }
+        UUID PlayerUUID { get; }
     }
 }

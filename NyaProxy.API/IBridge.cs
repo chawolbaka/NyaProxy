@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinecraftProtocol.Chat;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -10,11 +11,9 @@ namespace NyaProxy.API
     public interface IBridge
     {
         long SessionId { get; }
-        string HandshakeAddress { get; }
         Socket Source { get; }
         Socket Destination { get; }
 
-        IBridge Build();
         void Break();
     }
 }
