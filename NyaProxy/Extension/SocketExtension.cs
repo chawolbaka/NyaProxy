@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NyaProxy.Bridges;
 using MinecraftProtocol.Chat;
+using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Server;
 using System.Runtime.InteropServices;
 using System.Net;

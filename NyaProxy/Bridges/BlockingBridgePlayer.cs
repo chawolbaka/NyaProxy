@@ -7,7 +7,6 @@ using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Compatible;
 using System.Threading.Tasks;
 using NyaProxy.API.Enum;
-using NyaProxy.Extension;
 
 namespace NyaProxy.Bridges
 {
