@@ -4,6 +4,7 @@ using NyaProxy.API;
 using Firewall.Rules;
 using Firewall.Tables;
 using MinecraftProtocol.DataType;
+using MinecraftProtocol.Chat;
 
 namespace Firewall
 {
@@ -35,6 +36,9 @@ namespace Firewall
         private void OnConnecting(object? sender, IConnectEventArgs e)
         {
             IPEndPoint source = (IPEndPoint)e.AcceptSocket.RemoteEndPoint!;
+            //SYN > SYN ACK > RST ≈ 端口扫描
+            if (e.SocketError == SocketError.ConnectionReset)
+                Firewall.Chains.Connect.FilterTable.Rules.Add(new Rule() { Source = source.Address, Action = RuleAction.Block });
 
             for (int i = 0; i < Firewall.Chains.Connect.FilterTable.Rules.Count; i++)
             {
@@ -45,16 +49,16 @@ namespace Firewall
                 if (rule.Source != null && !rule.Source.Match(source.Address, source.Port))
                     continue;
 
-                if (ExecuteAction(rule, e))
-                    return;
+                switch (rule.Action)
+                {
+                    case RuleAction.Pass:   return;
+                    case RuleAction.Block:  e.Block(); return;
+                    case RuleAction.Reject: e.Block(); e.AcceptSocket.Close(); return;
+                    default: throw new InvalidOperationException();
+                }
             }
 
-            //SYN > SYN ACK > RST ≈ 端口扫描
-            if (e.SocketError == SocketError.ConnectionReset)
-            {
-                Firewall.Chains.Connect.FilterTable.Rules.Add(new Rule() { Source = source.Address, Action = RuleAction.Block });
-                e.Block();
-            }
+            
         }
 
         private void OnHandshaking(object? sender, IHandshakeEventArgs e)
@@ -82,8 +86,13 @@ namespace Firewall
                 if (rule.NextState != null && rule.NextState.Match(e.Packet.NextState))
                     continue;
 
-                if (ExecuteAction(rule, e))
-                    return;
+                switch (rule.Action)
+                {
+                    case RuleAction.Pass:   return;
+                    case RuleAction.Block:  e.Block(); return;
+                    case RuleAction.Reject: e.Block(); e.Source.Close(); return;
+                    default: throw new InvalidOperationException();
+                }
             }
         }
 
@@ -98,9 +107,14 @@ namespace Firewall
                     continue;
                 if (rule.PlayerUUID != null && rule.PlayerUUID.Match(e.PlayerUUID != UUID.Empty ? e.PlayerUUID : UUID.GetFromPlayerName(e.PlayerName)))
                     continue;
-
-                if (ExecuteAction(rule, e))
-                    return;
+               
+                switch (rule.Action)
+                {
+                    case RuleAction.Pass: return;
+                    case RuleAction.Block:  e.Block(); return;
+                    case RuleAction.Reject: e.Block(); e.Player.KickAsync("你已被防火墙拦截。").Wait(); return;
+                    default: throw new InvalidOperationException();
+                }
             }
         }
 

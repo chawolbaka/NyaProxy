@@ -4,6 +4,7 @@
     {
         Pass,
         Block,
+        Reject,
         Log
     }
 }
