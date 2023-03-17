@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -14,26 +13,14 @@ namespace NyaProxy.Extension
 {
     public static class SocketExtension
     {
-
-
-        public static Dictionary<string, byte[]> DisconnectPacketCache = new Dictionary<string, byte[]>();
-        public static Dictionary<string, byte[]> DisconnectLoginPacketCache = new Dictionary<string, byte[]>();
-
-
         public static void DisconnectOnLogin(this Socket socket, string message, bool closeSocket = true)
         {
-            if (!DisconnectLoginPacketCache.ContainsKey(message))
-                DisconnectLoginPacketCache.Add(message, new DisconnectLoginPacket(message, -1).Pack(-1));
-
-            NyaProxy.Network.Enqueue(socket, DisconnectLoginPacketCache[message], closeSocket ? socket : null);
+            NyaProxy.Network.Enqueue(socket, PacketCache.DisconnectLogin.Get(message), closeSocket ? socket : null);
         }
         
         public static void DisconnectOnPlay(this Socket socket, string message, int protcolVersion, int compress, bool closeSocket = true)
         {
-            if (!DisconnectPacketCache.ContainsKey(message))
-                DisconnectPacketCache.Add(message, new DisconnectPacket(message, protcolVersion).Pack(compress));
-
-            NyaProxy.Network.Enqueue(socket, DisconnectPacketCache[message], closeSocket ? socket : null);
+            NyaProxy.Network.Enqueue(socket, PacketCache.Disconnect.Get(message), closeSocket ? socket : null);
         }
 
         public static void DisconnectOnLogin(this Socket socket, ChatComponent message, bool closeSocket = true)

@@ -6,6 +6,10 @@ using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Compatible;
 using System.Threading.Tasks;
+using NyaProxy.API.Enum;
+using System.Net.Sockets;
+using NyaProxy.i18n;
+using NyaProxy.Extension;
 
 namespace NyaProxy.Bridges
 {
@@ -26,16 +30,29 @@ namespace NyaProxy.Bridges
         /// 踢掉该玩家
         /// </summary>
         /// <param name="reason">踢掉的原因</param>
-        public Task KickAsync(ChatComponent reason)
+        public Task KickAsync(string reason)
         {
             TaskCompletionSource completionSource = new TaskCompletionSource();
-
-            //不用考虑DisconnectLoginPacket，因为按现在的设计玩家被初始化的时候必定是已经加入服务器了的状态
-            Packet packet = new DisconnectPacket(reason, Own.ProtocolVersion);
-            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () => 
+            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt((Own.Stage == Stage.Play ? PacketCache.Disconnect : PacketCache.DisconnectLogin).Get(reason)), () =>
             {
                 Own.Break();
-                packet?.Dispose(); 
+                completionSource.SetResult();
+            });
+            return completionSource.Task;
+        }
+
+        /// <summary>
+        /// 踢掉该玩家
+        /// </summary>
+        /// <param name="reason">踢掉的原因</param>
+        public Task KickAsync(ChatComponent reason)
+        {
+            Packet packet = Own.Stage == Stage.Play ? new DisconnectPacket(reason, Own.ProtocolVersion) : new DisconnectLoginPacket(reason, -1);
+            TaskCompletionSource completionSource = new TaskCompletionSource();
+            NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ClientCompressionThreshold)), () =>
+            {
+                Own.Break();
+                packet?.Dispose();
                 completionSource.SetResult();
             });
             return completionSource.Task;

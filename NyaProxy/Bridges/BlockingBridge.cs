@@ -145,6 +145,7 @@ namespace NyaProxy.Bridges
             if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
             {
                 Stage = Stage.Login;
+                Player = new BlockingBridgePlayer(this, default, null);
                 LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, _loginStartPacket, DateTime.Now);
                 NyaProxy.LoginStart.Invoke(this, lsea);
                 if (lsea.IsBlock)
