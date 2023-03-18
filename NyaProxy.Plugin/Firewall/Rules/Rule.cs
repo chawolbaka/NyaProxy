@@ -1,4 +1,6 @@
-﻿using System;
+﻿using StringTables;
+using System;
+using System.Text;
 using System.Xml;
 
 namespace Firewall.Rules
@@ -42,7 +44,7 @@ namespace Firewall.Rules
                     return;
             } while (reader.Read());
         }
-
+        
         internal protected virtual object Read(XmlReader reader)
         {
             if (reader.Name == nameof(Host))
@@ -64,5 +66,22 @@ namespace Firewall.Rules
             if (Destination != null && !Destination.IsEmpty)
                 Destination?.Write(writer, nameof(Destination));
         }
+
+        internal virtual List<string> CreateFirstColumns()
+        {
+            List<string> list = new List<string>
+            {
+                nameof(Action),
+                nameof(Host),
+                nameof(Source),
+                nameof(Destination)
+            };
+            return list;
+        }
+        internal virtual List<object> CreateRow()
+        {
+            return new List<object> { Action, Host, Source, Destination};
+        }
+
     }
 }

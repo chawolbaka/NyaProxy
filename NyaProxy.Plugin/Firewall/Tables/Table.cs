@@ -1,11 +1,14 @@
 ﻿using Firewall.Rules;
+using StringTables;
 using System.Xml;
 
 namespace Firewall.Tables
 {
     public class Table<T> where T : Rule, new()
     {
-        public List<T> Rules { get; set; }
+        public virtual bool IsEmpty => Rules.Count == 0;
+
+        public virtual List<T> Rules { get; set; }
 
         public Table()
         {
@@ -25,7 +28,7 @@ namespace Firewall.Tables
             } while (reader.Read());
         }
 
-        public void Write(XmlWriter writer)
+        public virtual void Write(XmlWriter writer)
         {
             string key = typeof(T).Name;
             foreach (var rule in Rules)
@@ -42,6 +45,18 @@ namespace Firewall.Tables
                 rule.Write(writer);
                 writer.WriteEndElement();
             }
+        }
+
+        public virtual string ToTable()
+        {
+            if (Rules.Count == 0)
+                return string.Empty;
+            StringTable table = new StringTable(Rules[0].CreateFirstColumns());
+            foreach (var rule in Rules)
+            {
+                table.AddRow(rule.CreateRow().Select(x => x == null ? "Any" : x.ToString()).ToArray());
+            }
+            return table.ToMinimalString();
         }
     }
 }

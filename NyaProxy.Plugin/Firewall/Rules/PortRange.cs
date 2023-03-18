@@ -2,6 +2,8 @@
 {
     public class PortRange : IEquatable<int>, IEquatable<PortRange>
     {
+        private static readonly string Delimiter = "-";
+
         public ushort Start;
         public ushort End;
 
@@ -22,11 +24,11 @@
             if (string.IsNullOrWhiteSpace(str))
                 throw new ArgumentNullException(nameof(str));
 
-            int index = str.IndexOf("...");
+            int index = str.IndexOf(Delimiter);
             if (index == -1)
                 return new PortRange(ushort.Parse(str), ushort.Parse(str));
             else
-                return new PortRange(ushort.Parse(str.AsSpan().Slice(0, index)), ushort.Parse(str.AsSpan().Slice(index + 3)));
+                return new PortRange(ushort.Parse(str.AsSpan().Slice(0, index)), ushort.Parse(str.AsSpan().Slice(index + Delimiter.Length)));
 
         }
 
@@ -52,7 +54,7 @@
 
         public override string ToString()
         {
-            return Start == End ? Start.ToString() : $"{Start}...{End}";
+            return Start == End ? Start.ToString() : $"{Start}{Delimiter}{End}";
         }
     }
 }

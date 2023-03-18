@@ -4,7 +4,6 @@ using NyaProxy.API;
 using Firewall.Rules;
 using Firewall.Tables;
 using MinecraftProtocol.DataType;
-using MinecraftProtocol.Chat;
 
 namespace Firewall
 {
@@ -14,12 +13,12 @@ namespace Firewall
         public override async Task OnEnable()
         {
             await Firewall.Chains.LoadAsync(Helper.WorkDirectory.FullName);
-
             Helper.Events.Transport.Connecting  += OnConnecting;
             Helper.Events.Transport.Handshaking += OnHandshaking;
             Helper.Events.Transport.LoginStart  += OnLoginStart;
             Helper.Events.Transport.PacketSendToClient += OnPacketSendToClient;
             Helper.Events.Transport.PacketSendToServer += OnPacketSendToServer;
+            Helper.Command.Register(new SimpleCommand("print", async (args, helper) => helper.Logger.Unpreformat(Firewall.Chains.ToStringTable())));
         }
 
         public override async Task OnDisable()

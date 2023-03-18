@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Text;
+using System.Xml;
 using Firewall.Rules;
 using Firewall.Tables;
 
@@ -6,6 +7,8 @@ namespace Firewall.Chains
 {
     public class ConnectChain : Chain
     {
+        public override bool IsEmpty => FilterTable == null || FilterTable.IsEmpty;
+
         public Table<Rule> FilterTable { get; set; }
 
         public ConnectChain()
@@ -18,9 +21,17 @@ namespace Firewall.Chains
             FilterTable = new(reader, (r) => new Rule(r), nameof(FilterTable));
         }
 
-        protected override void WriteTables(XmlWriter writer)
+        internal protected override void WriteTables(XmlWriter writer)
         {
             FilterTable.Write(writer);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder(base.ToString());
+            sb.AppendLine($"{nameof(FilterTable)}({FilterTable.Rules.Count})");
+            sb.Append(FilterTable.ToTable());
+            return sb.ToString();
         }
     }
 }

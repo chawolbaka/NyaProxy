@@ -40,6 +40,17 @@ namespace Firewall
                    Task.Run(() => Input     = Load(workDirectory, (reader) => new InputChain(reader))));
             }
 
+            public static string ToStringTable()
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var chain in new Chain[] { Connect, Handshake, Login, Output, Input })
+                {
+                    if(!chain.IsEmpty)
+                        sb.AppendLine(chain.ToString());
+                }
+                return sb.ToString();
+            }
+
             private static T Load<T>(string workDirectory, Func<XmlReader, T> create) where T : Chain, new()
             {
                 string file = Path.Combine(workDirectory, "Chains", $"{typeof(T).Name}.xml");

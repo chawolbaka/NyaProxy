@@ -62,7 +62,7 @@ namespace Firewall.Rules
 
         public override string ToString()
         {
-            return Value.ToString();
+            return Invert ? "!" : "" + Value.ToString();
         }
 
         public static implicit operator RuleItem<T>(T value) => new RuleItem<T>(value);

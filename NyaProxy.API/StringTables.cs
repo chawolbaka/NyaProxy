@@ -13,8 +13,8 @@ namespace StringTables
     /// </summary>
     public class StringTable
     {
-        public IList<object> Columns { get; set; }
-        public IList<object[]> Rows { get; protected set; }
+        public List<object> Columns { get; set; }
+        public List<object[]> Rows { get; protected set; }
 
         public StringTablesOptions Options { get; protected set; }
         public Type[] ColumnTypes { get; private set; }
@@ -27,8 +27,13 @@ namespace StringTables
             typeof(uint), typeof(float)
         };
 
-        public StringTable(params string[] columns)
-            : this(new StringTablesOptions { Columns = new List<string>(columns) })
+
+        public StringTable(IEnumerable<string> columns) : this(new StringTablesOptions { Columns = columns })
+        {
+        
+        }
+
+        public StringTable(params string[] columns) : this(new StringTablesOptions { Columns = new List<string>(columns) })
         {
         }
 
@@ -283,10 +288,6 @@ namespace StringTables
         /// </summary>
         public Alignment NumberAlignment { get; set; } = Alignment.Left;
 
-        /// <summary>
-        /// The <see cref="TextWriter"/> to write to. Defaults to <see cref="Console.Out"/>.
-        /// </summary>
-        public TextWriter OutputTo { get; set; } = Console.Out;
     }
 
     public enum Format

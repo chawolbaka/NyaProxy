@@ -32,5 +32,21 @@ namespace Firewall.Rules
             PlayerName?.Write(writer, nameof(PlayerName));
             PlayerUUID?.Write(writer, nameof(PlayerUUID));
         }
+
+        internal override List<string> CreateFirstColumns()
+        {
+            List<string> list = base.CreateFirstColumns();
+            list.Add(nameof(PlayerUUID));
+            list.Add(nameof(PlayerName));
+            return list;
+        }
+
+        internal override List<object> CreateRow()
+        {
+            List<object> row = base.CreateRow();
+            row.Add(PacketId);
+            row.Add(PlayerName);
+            return row;
+        }
     }
 }

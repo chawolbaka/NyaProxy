@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using System.Xml;
 
 namespace Firewall.Rules
@@ -110,6 +111,18 @@ namespace Firewall.Rules
         public virtual bool Match(PortRange port)
         {
             return Port.Match(port);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            if (IP != null)
+                sb.Append(IP.ToString());
+            if (Port != null)
+                sb.Append(IP != null ? ":" : "Port=").Append(Port);
+            if (Mask != null)
+                sb.Append('/').Append(Mask.ToString());
+            return sb.ToString();
         }
 
         public static implicit operator BaseNetworkRuleItem(RuleItem<IPAddress> value) => new BaseNetworkRuleItem(value);

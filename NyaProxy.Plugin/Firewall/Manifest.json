@@ -3,5 +3,6 @@
   "Author": "Chawol",
   "Version": "1.0.0",
   "UniqueId": "NyaProxy.Firewall",
-  "EntryDll": "Firewall.dll"
-  }
+  "EntryDll": "Firewall.dll",
+  "CommandPrefixes": [ "firewall" ]
+}

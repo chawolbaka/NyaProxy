@@ -42,5 +42,25 @@ namespace Firewall.Rules
             NextState?.Write(writer, nameof(NextState));
             ProtocolVersion?.Write(writer, nameof(ProtocolVersion));
         }
+
+        internal override List<string> CreateFirstColumns()
+        {
+            List<string> list = base.CreateFirstColumns();
+            list.Add(nameof(ServerAddress));
+            list.Add(nameof(ServerPort));
+            list.Add(nameof(NextState));
+            list.Add(nameof(ProtocolVersion));
+            return list;
+        }
+
+        internal override List<object> CreateRow()
+        {
+            List<object> row = base.CreateRow();
+            row.Add(ServerAddress);
+            row.Add(ServerPort);
+            row.Add(NextState);
+            row.Add(ProtocolVersion);
+            return row;
+        }
     }
 }
