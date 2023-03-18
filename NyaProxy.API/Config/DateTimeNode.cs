@@ -32,6 +32,8 @@ namespace NyaProxy.API
 
         public static implicit operator DateTime(DateTimeNode node) => node.Value;
 
+        public static implicit operator DateTimeNode(DateTime value) => new DateTimeNode(value);
+
         public override string ToString()
         {
             return Value.ToString();

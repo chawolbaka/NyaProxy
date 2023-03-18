@@ -32,6 +32,8 @@ namespace NyaProxy.API
 
         public static implicit operator float(FloatNode node) => node.Value;
 
+        public static implicit operator FloatNode(float value) => new FloatNode(value);
+
         public override string ToString()
         {
             return Value.ToString();

@@ -32,6 +32,8 @@ namespace NyaProxy.API
 
         public static implicit operator long(NumberNode node) => node.Value;
 
+        public static implicit operator NumberNode(long value) => new NumberNode(value);
+
         public override string ToString()
         {
             return Value.ToString();

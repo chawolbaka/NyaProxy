@@ -32,6 +32,8 @@ namespace NyaProxy.API
 
         public static implicit operator bool(BooleanNode node) => node.Value;
 
+        public static implicit operator BooleanNode(bool value) => new BooleanNode(value);
+
         public override string ToString()
         {
             return Value.ToString();

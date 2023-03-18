@@ -1,7 +1,6 @@
 using System;
 namespace NyaProxy.API
 {
-
     public class StringNode : ConfigNode
     {
         public virtual string Value { get; set; }
@@ -31,6 +30,8 @@ namespace NyaProxy.API
         }
 
         public static implicit operator string(StringNode node) => node.Value;
+
+        public static implicit operator StringNode(string value) => new StringNode(value);
 
         public override string ToString()
         {
