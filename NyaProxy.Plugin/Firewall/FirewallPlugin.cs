@@ -37,11 +37,10 @@ namespace Firewall
             IPEndPoint source = (IPEndPoint)e.AcceptSocket.RemoteEndPoint!;
             //SYN > SYN ACK > RST ≈ 端口扫描
             if (e.SocketError == SocketError.ConnectionReset)
-                Firewall.Chains.Connect.FilterTable.Rules.Add(new Rule() { Source = source.Address, Action = RuleAction.Block });
+                Firewall.Chains.Connect.FilterTable.Rules.AddFirst(new Rule() { Source = source.Address, Action = RuleAction.Block });
 
-            for (int i = 0; i < Firewall.Chains.Connect.FilterTable.Rules.Count; i++)
+            foreach (var rule in Firewall.Chains.Connect.FilterTable)
             {
-                Rule rule = Firewall.Chains.Connect.FilterTable.Rules[i];
                 if (rule.Disabled)
                     continue;
 
@@ -65,24 +64,23 @@ namespace Firewall
             IPEndPoint source = (IPEndPoint)e.Source.RemoteEndPoint!;
             string host = e.Packet.GetServerAddressOnly();
 
-            for (int i = 0; i < Firewall.Chains.Handshake.FilterTable.Rules.Count; i++)
+            foreach (var rule in Firewall.Chains.Handshake.FilterTable)
             {
-                HandshakeRule rule = Firewall.Chains.Handshake.FilterTable.Rules[i];
                 if (rule.Disabled)
                     continue;
 
                 if (rule.Source != null && !rule.Source.Match(source.Address, source.Port))
                     continue;
 
-                if (rule.Host != null && rule.Host.Match(host))
+                if (rule.Host != null && !rule.Host.Match(host))
                     continue;
-                if (rule.ServerAddress != null && rule.ServerAddress.Match(e.Packet.ServerAddress))
+                if (rule.ServerAddress != null && !rule.ServerAddress.Match(e.Packet.ServerAddress))
                     continue;
-                if (rule.ServerPort != null && rule.ServerPort.Match(e.Packet.ServerPort))
+                if (rule.ServerPort != null && !rule.ServerPort.Match(e.Packet.ServerPort))
                     continue;
-                if (rule.ProtocolVersion != null && rule.ProtocolVersion.Match(e.Packet.ProtocolVersion))
+                if (rule.ProtocolVersion != null && !rule.ProtocolVersion.Match(e.Packet.ProtocolVersion))
                     continue;
-                if (rule.NextState != null && rule.NextState.Match(e.Packet.NextState))
+                if (rule.NextState != null && !rule.NextState.Match(e.Packet.NextState))
                     continue;
 
                 switch (rule.Action)
@@ -97,14 +95,14 @@ namespace Firewall
 
         private void OnLoginStart(object? sender, ILoginStartEventArgs e)
         {
-            for (int i = 0; i < Firewall.Chains.Login.FilterTable.Rules.Count; i++)
+            foreach (var rule in Firewall.Chains.Login.FilterTable)
             {
-                LoginRule rule = Firewall.Chains.Login.FilterTable.Rules[i];
                 if (HasNotMatchPacketRule(rule, e))
                     continue;
-                if (rule.PlayerName != null && rule.PlayerName.Match(e.PlayerName))
+
+                if (rule.PlayerName != null && !rule.PlayerName.Match(e.PlayerName))
                     continue;
-                if (rule.PlayerUUID != null && rule.PlayerUUID.Match(e.PlayerUUID != UUID.Empty ? e.PlayerUUID : UUID.GetFromPlayerName(e.PlayerName)))
+                if (rule.PlayerUUID != null && !rule.PlayerUUID.Match(e.PlayerUUID != UUID.Empty ? e.PlayerUUID : UUID.GetFromPlayerName(e.PlayerName)))
                     continue;
                
                 switch (rule.Action)
@@ -129,9 +127,8 @@ namespace Firewall
 
         private void PacketFilter(Table<PacketRule> table, IPacketSendEventArgs e)
         {
-            for (int i = 0; i < table.Rules.Count; i++)
+            foreach (var rule in Firewall.Chains.Login.FilterTable)
             {
-                PacketRule rule = table.Rules[i];
                 if (HasNotMatchPacketRule(rule, e))
                     continue;
 

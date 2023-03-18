@@ -1,34 +1,34 @@
 ﻿using Firewall.Rules;
 using StringTables;
+using System.Collections;
 using System.Xml;
 
 namespace Firewall.Tables
 {
-    public class Table<T> where T : Rule, new()
+    public class Table<T> : IEnumerable<T> where T : Rule, new()
     {
         public virtual bool IsEmpty => Rules.Count == 0;
 
-        public virtual List<T> Rules { get; set; }
+        public virtual LinkedList<T> Rules { get; set; }
 
         public Table()
         {
-            Rules = new List<T>();
+            Rules = new ();
         }
 
-        internal Table(XmlReader reader, Func<XmlReader, T> create, string tableName)
+        internal Table(XmlReader reader, Func<XmlReader, T> create, string tableName) : this()
         {
-            Rules = new List<T>();
             do
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == nameof(PacketRule))
-                    Rules.Add(create(reader));
+                    Rules.AddLast(create(reader));
 
                 if (reader.NodeType == XmlNodeType.EndElement && reader.Name == tableName)
                     return;
             } while (reader.Read());
         }
 
-        public virtual void Write(XmlWriter writer)
+        internal virtual void Write(XmlWriter writer)
         {
             string key = typeof(T).Name;
             foreach (var rule in Rules)
@@ -47,16 +47,26 @@ namespace Firewall.Tables
             }
         }
 
-        public virtual string ToTable()
+        internal virtual string ToTable()
         {
             if (Rules.Count == 0)
                 return string.Empty;
-            StringTable table = new StringTable(Rules[0].CreateFirstColumns());
+            StringTable table = new StringTable(Rules.First.Value.CreateFirstColumns());
             foreach (var rule in Rules)
             {
                 table.AddRow(rule.CreateRow().Select(x => x == null ? "Any" : x.ToString()).ToArray());
             }
             return table.ToMinimalString();
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return ((IEnumerable<T>)Rules).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)Rules).GetEnumerator();
         }
     }
 }
