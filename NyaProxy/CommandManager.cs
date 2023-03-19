@@ -53,6 +53,14 @@ namespace NyaProxy
 
                 await RegisteredCommands[commandName].ExecuteAsync(args, helper);
             }
+            catch (MissingArgumentException mcae)
+            {
+                NyaProxy.Logger.Unpreformat(i18n.Error.MissingArgument.Replace("{CommandName}", mcae.Command, "{Argument}", mcae.Argument));
+            }
+            catch (UnrecognizedArgumentException ucae)
+            {
+                NyaProxy.Logger.Unpreformat(i18n.Error.UnrecognizedCommandArgument.Replace("{CommandName}", ucae.Command, "{Argument}", ucae.Argument));
+            }
             catch (CommandLeastRequiredException clre)
             {
                 NyaProxy.Logger.Unpreformat(i18n.Error.CommandLeastRequired.Replace("{CommandName}", clre.Command, "{MinimumArgs}", clre.MinimumArgs));

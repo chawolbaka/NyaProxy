@@ -129,6 +129,9 @@
   <data name="LoadConfigFailed" xml:space="preserve">
     <value>Config file {File} failed to load</value>
   </data>
+  <data name="MissingArgument" xml:space="preserve">
+    <value>§cRequired argument missing for option: '{Argument}'.</value>
+  </data>
   <data name="NoSocketAvailable" xml:space="preserve">
     <value>No socket available</value>
   </data>
@@ -140,5 +143,8 @@
   </data>
   <data name="SaveConfigFailed" xml:space="preserve">
     <value>Config file {File} failed to save</value>
+  </data>
+  <data name="UnrecognizedCommandArgument" xml:space="preserve">
+    <value>§cUnrecognized argument '{Argument}'.</value>
   </data>
 </root>
