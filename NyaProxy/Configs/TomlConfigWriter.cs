@@ -38,8 +38,6 @@ namespace NyaProxy.Configs
                 tomlValue = BN ? TomlBoolean.True : TomlBoolean.False;
             else if (node is NumberNode NN)
                 tomlValue = new TomlLong(NN);
-            else if (node is FloatNode FN)
-                tomlValue = new TomlDouble(FN);
             else if (node is DoubleNode DN)
                 tomlValue = new TomlDouble(DN);
             else if (node is DateTimeNode DTN)

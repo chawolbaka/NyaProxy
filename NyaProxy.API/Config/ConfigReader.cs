@@ -74,34 +74,6 @@ namespace NyaProxy.API.Config
                 return false;
             }
         }
-        public virtual FloatNode ReadFloatProperty(string key) => (FloatNode)ReadProperty(key);
-        public virtual bool TryReadFloat(string key, out FloatNode result)
-        {
-            result = null;
-            if (!ContainsKey(key))
-                return false;
-
-            result = ReadProperty(key) as FloatNode;
-            return result != null;
-        }
-
-        public virtual bool TryReadFloat(string key, out float result)
-        {
-            result = default;
-            if (!ContainsKey(key))
-                return false;
-
-            ConfigNode node = ReadProperty(key);
-            if (node is FloatNode)
-            {
-                result = ((FloatNode)node).Value;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
         public virtual DoubleNode ReadDoubleProperty(string key) => (DoubleNode)ReadProperty(key);
         public virtual bool TryReadDouble(string key, out DoubleNode result)
         {
