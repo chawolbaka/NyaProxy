@@ -1,5 +1,6 @@
 using System;
-namespace NyaProxy.API
+
+namespace NyaProxy.API.Config.Nodes
 {
 
     public class BooleanNode : ConfigNode
@@ -10,7 +11,7 @@ namespace NyaProxy.API
         {
             Value = value;
         }
-        
+
         public BooleanNode(bool value, string precedingComment)
         {
             if (!string.IsNullOrWhiteSpace(precedingComment))
@@ -25,7 +26,7 @@ namespace NyaProxy.API
         }
         public BooleanNode(bool value, ConfigComment comment)
         {
-            if (comment!=null)
+            if (comment != null)
                 Comment = comment;
             Value = value;
         }

@@ -1,8 +1,7 @@
-﻿using MinecraftProtocol.DataType;
-using MinecraftProtocol.Utils;
-using NyaProxy.API;
+﻿using System;
 using System.Net;
-using System.IO;
+using NyaProxy.API.Command;
+using MinecraftProtocol.Utils;
 
 namespace Motd
 {
@@ -18,18 +17,18 @@ namespace Motd
         public override int MinimumArgs => 1;
 
         private static readonly IEnumerable<string> _firstTabList = new List<string>() { "reload", "generate" };
-        private Action Reload;
-        
+        private Action _reload;
+
         public ConfigCommand(Action reload)
         {
-            Reload = reload;
+            _reload = reload;
         }
 
         public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             switch (args.Span[0])
             {
-                case "reload": Reload(); break;
+                case "reload": _reload(); break;
                 case "generate":
                     if (args.Length < 2)
                         throw new CommandLeastRequiredException("generate", 1); //因为不是根命令所以这边需要+1

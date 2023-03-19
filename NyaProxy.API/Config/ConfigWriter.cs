@@ -1,6 +1,7 @@
 ﻿using System;
+using NyaProxy.API.Config.Nodes;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Config
 {
     public abstract partial class ConfigWriter
     {

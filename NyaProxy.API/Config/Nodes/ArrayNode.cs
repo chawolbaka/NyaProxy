@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Config.Nodes
 {
     public class ArrayNode : ConfigNode, IList<ConfigNode>
     {
@@ -17,7 +17,7 @@ namespace NyaProxy.API
         {
             Value = new List<ConfigNode>();
         }
-        
+
         public ArrayNode(IEnumerable<ConfigNode> nodes)
         {
             Value = new List<ConfigNode>(nodes);
@@ -36,14 +36,14 @@ namespace NyaProxy.API
         public bool Remove(ConfigNode item) => Value.Remove(item);
 
         public void RemoveAt(int index) => Value.RemoveAt(index);
-        
+
         public void Clear() => Value.Clear();
 
-        public void CopyTo(ConfigNode[] array, int arrayIndex) => Value.CopyTo(array, arrayIndex);        
-        
+        public void CopyTo(ConfigNode[] array, int arrayIndex) => Value.CopyTo(array, arrayIndex);
+
         public IEnumerator<ConfigNode> GetEnumerator() => Value.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => Value.GetEnumerator();
-        
+
     }
 }

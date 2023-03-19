@@ -1,4 +1,6 @@
-﻿namespace NyaProxy.API
+﻿using NyaProxy.API.Config.Nodes;
+
+namespace NyaProxy.API.Config
 {
     public class ConfigProperty
     {

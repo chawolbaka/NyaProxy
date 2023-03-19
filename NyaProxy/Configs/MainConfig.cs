@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using NyaProxy.API;
+using NyaProxy.API.Config;
+using NyaProxy.API.Config.Nodes;
 
 namespace NyaProxy.Configs
 {

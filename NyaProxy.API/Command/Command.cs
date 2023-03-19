@@ -5,18 +5,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Command
 {
     public abstract class Command : IEquatable<Command>
     {
         public abstract string Name { get; }
-        
+
         public abstract string Help { get; }
-        
+
         public abstract Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper);
-        
+
         public abstract IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args);
-        
+
         public virtual int MinimumArgs => 0;
 
         public readonly Dictionary<string, Command> Children = new Dictionary<string, Command>();
@@ -47,7 +47,7 @@ namespace NyaProxy.API
         public virtual void RegisterChild(Command command)
         {
             command._parent = this;
-            if(Children.ContainsKey(command.Name))
+            if (Children.ContainsKey(command.Name))
                 throw new CommandRegisteredException(command.Name);
 
             Children.Add(command.Name, command);
@@ -84,7 +84,7 @@ namespace NyaProxy.API
                 return Children.Keys;
             else if (Children.ContainsKey(args[0]))
                 return Children[args[0]].GetTabCompletions(args.Slice(1));
-            else 
+            else
                 return Enumerable.Empty<string>();
         }
     }

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NyaProxy.API.Config;
 using NyaProxy.API;
+using NyaProxy.API.Command;
 
 namespace NyaProxy.Plugin
 {

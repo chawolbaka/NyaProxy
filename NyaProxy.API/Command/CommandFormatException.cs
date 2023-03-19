@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Command
 {
     public class CommandFormatException : CommandException
     {

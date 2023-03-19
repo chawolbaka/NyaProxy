@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NyaProxy.API;
+using NyaProxy.API.Command;
 using NyaProxy.Extension;
 
 namespace NyaProxy

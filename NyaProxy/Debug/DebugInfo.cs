@@ -11,6 +11,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using NyaProxy.Bridges;
+using NyaProxy.API.Command;
 
 namespace NyaProxy.Debug
 {

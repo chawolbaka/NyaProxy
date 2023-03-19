@@ -1,37 +1,39 @@
 using System;
-namespace NyaProxy.API
-{
-    public class StringNode : ConfigNode
-    {
-        public virtual string Value { get; set; }
 
-        public StringNode(string value)
+namespace NyaProxy.API.Config.Nodes
+{
+
+    public class FloatNode : ConfigNode
+    {
+        public virtual float Value { get; set; }
+
+        public FloatNode(float value)
         {
             Value = value;
         }
-        
-        public StringNode(string value, string precedingComment)
+
+        public FloatNode(float value, string precedingComment)
         {
             if (!string.IsNullOrWhiteSpace(precedingComment))
                 Comment = new ConfigComment(precedingComment);
             Value = value;
         }
-        public StringNode(string value, string precedingComment, string inlineComment)
+        public FloatNode(float value, string precedingComment, string inlineComment)
         {
             if (!string.IsNullOrWhiteSpace(precedingComment) && string.IsNullOrWhiteSpace(inlineComment))
                 Comment = new ConfigComment(precedingComment, inlineComment);
             Value = value;
         }
-        public StringNode(string value, ConfigComment comment)
+        public FloatNode(float value, ConfigComment comment)
         {
-            if (comment!=null)
+            if (comment != null)
                 Comment = comment;
             Value = value;
         }
 
-        public static implicit operator string(StringNode node) => node.Value;
+        public static implicit operator float(FloatNode node) => node.Value;
 
-        public static implicit operator StringNode(string value) => new StringNode(value);
+        public static implicit operator FloatNode(float value) => new FloatNode(value);
 
         public override string ToString()
         {

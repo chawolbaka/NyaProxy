@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NyaProxy.API.Config;
 
 namespace NyaProxy.API
 {
     public abstract class NyaPlugin
     {
         /// <summary>
-        /// 当前Api版本
+        /// 当前Api版本(在出现较为正式的版本前API版本不会改动)
         /// </summary>
         public static readonly Version ApiVersion = new Version(1, 0, 0, 0);
 

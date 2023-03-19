@@ -1,38 +1,39 @@
 using System;
-namespace NyaProxy.API
+
+namespace NyaProxy.API.Config.Nodes
 {
 
-    public class FloatNode : ConfigNode
+    public class DateTimeNode : ConfigNode
     {
-        public virtual float Value { get; set; }
+        public virtual DateTime Value { get; set; }
 
-        public FloatNode(float value)
+        public DateTimeNode(DateTime value)
         {
             Value = value;
         }
-        
-        public FloatNode(float value, string precedingComment)
+
+        public DateTimeNode(DateTime value, string precedingComment)
         {
             if (!string.IsNullOrWhiteSpace(precedingComment))
                 Comment = new ConfigComment(precedingComment);
             Value = value;
         }
-        public FloatNode(float value, string precedingComment, string inlineComment)
+        public DateTimeNode(DateTime value, string precedingComment, string inlineComment)
         {
             if (!string.IsNullOrWhiteSpace(precedingComment) && string.IsNullOrWhiteSpace(inlineComment))
                 Comment = new ConfigComment(precedingComment, inlineComment);
             Value = value;
         }
-        public FloatNode(float value, ConfigComment comment)
+        public DateTimeNode(DateTime value, ConfigComment comment)
         {
-            if (comment!=null)
+            if (comment != null)
                 Comment = comment;
             Value = value;
         }
 
-        public static implicit operator float(FloatNode node) => node.Value;
+        public static implicit operator DateTime(DateTimeNode node) => node.Value;
 
-        public static implicit operator FloatNode(float value) => new FloatNode(value);
+        public static implicit operator DateTimeNode(DateTime value) => new DateTimeNode(value);
 
         public override string ToString()
         {

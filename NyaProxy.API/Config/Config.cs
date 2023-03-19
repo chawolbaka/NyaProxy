@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Config
 {
-    public abstract class Config:IEquatable<Config>
+    public abstract class Config : IEquatable<Config>
     {
         //UniqueId会直接作为key，如果使用属性有变动的可能性，所以这边使用readonly来保证初始化后就不可变。
         public readonly string UniqueId;

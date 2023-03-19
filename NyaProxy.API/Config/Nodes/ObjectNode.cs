@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Config.Nodes
 {
-    public class ObjectNode: ConfigNode, IDictionary<string, ConfigNode>
+    public class ObjectNode : ConfigNode, IDictionary<string, ConfigNode>
     {
         public ConfigNode this[string key]
         {
@@ -38,7 +38,7 @@ namespace NyaProxy.API
         public IEnumerator<KeyValuePair<string, ConfigNode>> GetEnumerator() => Nodes.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => Nodes.GetEnumerator();
-        
+
         ICollection<string> IDictionary<string, ConfigNode>.Keys => Nodes.Keys;
 
         ICollection<ConfigNode> IDictionary<string, ConfigNode>.Values => Nodes.Values;
@@ -52,6 +52,6 @@ namespace NyaProxy.API
         void ICollection<KeyValuePair<string, ConfigNode>>.CopyTo(KeyValuePair<string, ConfigNode>[] array, int arrayIndex) => ((ICollection<KeyValuePair<string, ConfigNode>>)Nodes).CopyTo(array, arrayIndex);
 
         bool ICollection<KeyValuePair<string, ConfigNode>>.Remove(KeyValuePair<string, ConfigNode> item) => ((ICollection<KeyValuePair<string, ConfigNode>>)Nodes).Remove(item);
-        
+
     }
 }

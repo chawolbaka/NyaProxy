@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Config
 {
     public class ConfigFileAttribute : Attribute
     {

@@ -1,38 +1,38 @@
 using System;
-namespace NyaProxy.API
+
+namespace NyaProxy.API.Config.Nodes
 {
-
-    public class DoubleNode : ConfigNode
+    public class StringNode : ConfigNode
     {
-        public virtual double Value { get; set; }
+        public virtual string Value { get; set; }
 
-        public DoubleNode(double value)
+        public StringNode(string value)
         {
             Value = value;
         }
-        
-        public DoubleNode(double value, string precedingComment)
+
+        public StringNode(string value, string precedingComment)
         {
             if (!string.IsNullOrWhiteSpace(precedingComment))
                 Comment = new ConfigComment(precedingComment);
             Value = value;
         }
-        public DoubleNode(double value, string precedingComment, string inlineComment)
+        public StringNode(string value, string precedingComment, string inlineComment)
         {
             if (!string.IsNullOrWhiteSpace(precedingComment) && string.IsNullOrWhiteSpace(inlineComment))
                 Comment = new ConfigComment(precedingComment, inlineComment);
             Value = value;
         }
-        public DoubleNode(double value, ConfigComment comment)
+        public StringNode(string value, ConfigComment comment)
         {
-            if (comment!=null)
+            if (comment != null)
                 Comment = comment;
             Value = value;
         }
 
-        public static implicit operator double(DoubleNode node) => node.Value;
+        public static implicit operator string(StringNode node) => node.Value;
 
-        public static implicit operator DoubleNode(double value) => new DoubleNode(value);
+        public static implicit operator StringNode(string value) => new StringNode(value);
 
         public override string ToString()
         {

@@ -1,14 +1,17 @@
-﻿using MinecraftProtocol.Chat;
+﻿using System;
+using MinecraftProtocol.Chat;
 using MinecraftProtocol.Compatible;
 using MinecraftProtocol.DataType;
 using MinecraftProtocol.DataType.Forge;
-using NyaProxy.API;
+using NyaProxy.API.Config;
+using NyaProxy.API.Config.Nodes;
 
 namespace Motd
 {
     public class MotdConfig : Config, IManualConfig, IDefaultConfig
     {
         public string Host { get; set; }
+
         public PingReply PingReply { get; set; }
 
         private static int Index;

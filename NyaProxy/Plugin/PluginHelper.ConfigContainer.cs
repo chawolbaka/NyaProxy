@@ -4,13 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using NyaProxy.API;
 using NyaProxy.Configs;
 using Tomlet;
 using Tomlet.Models;
 using System.Text;
-using System.Xml;
-using Microsoft.Win32;
+using NyaProxy.API.Config;
+using NyaProxy.API.Command;
 
 namespace NyaProxy.Plugin
 {

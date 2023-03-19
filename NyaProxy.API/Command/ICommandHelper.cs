@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Command
 {
     public interface ICommandHelper
     {

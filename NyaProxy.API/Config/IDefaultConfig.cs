@@ -1,4 +1,4 @@
-﻿namespace NyaProxy.API
+﻿namespace NyaProxy.API.Config
 {
     /// <summary>
     /// 如果实现该接口，那么在文件不存在时会在调用<see cref="SetDefault"/>后生成一份默认的配置文件

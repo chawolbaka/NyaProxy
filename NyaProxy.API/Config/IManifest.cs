@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Config
 {
     public interface IManifest
     {

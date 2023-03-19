@@ -1,4 +1,4 @@
-﻿namespace NyaProxy.API
+﻿namespace NyaProxy.API.Config
 {
     public interface IManualConfig
     {

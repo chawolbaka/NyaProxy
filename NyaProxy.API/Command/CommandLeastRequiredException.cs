@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Command
 {
     public class CommandLeastRequiredException : CommandException
     {

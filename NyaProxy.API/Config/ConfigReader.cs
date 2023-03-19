@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using NyaProxy.API.Config.Nodes;
 
-namespace NyaProxy.API
+namespace NyaProxy.API.Config
 {
     public abstract partial class ConfigReader : IEnumerable<ConfigProperty>
     {

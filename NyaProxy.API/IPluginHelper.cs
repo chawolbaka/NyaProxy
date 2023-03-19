@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using NyaProxy.API.Config;
+using NyaProxy.API.Command;
 using NyaProxy.API.Channle;
 
 namespace NyaProxy.API

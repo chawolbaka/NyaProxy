@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using NyaProxy.API;
+using NyaProxy.API.Command;
 using Firewall.Rules;
 using Firewall.Tables;
 using MinecraftProtocol.DataType;
@@ -127,7 +128,7 @@ namespace Firewall
 
         private void PacketFilter(Table<PacketRule> table, IPacketSendEventArgs e)
         {
-            foreach (var rule in Firewall.Chains.Login.FilterTable)
+            foreach (var rule in table)
             {
                 if (HasNotMatchPacketRule(rule, e))
                     continue;
