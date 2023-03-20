@@ -9,20 +9,22 @@ namespace NyaProxy.API.Command
     public class Option
     {
         public string Name { get; set; }
-        
-        internal HashSet<string> Aliases;
-        
-        public Func<Option, ICommandHelper, Task> Handler { get; set; }
+
+        public string Description { get; set; }
 
         public string Value { get; set; }
 
-        public Option(string name, Func<Option, ICommandHelper, Task> handler)
+        public Func<Command, Option, ICommandHelper, Task> Handler { get; set; }
+
+        internal HashSet<string> Aliases;
+
+        public Option(string name, Func<Command, Option, ICommandHelper, Task> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Handler = handler;
         }
 
-        public Option(string name, Func<Option, ICommandHelper, Task> handler, params string[] aliases)
+        public Option(string name, Func<Command, Option, ICommandHelper, Task> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Handler = handler;

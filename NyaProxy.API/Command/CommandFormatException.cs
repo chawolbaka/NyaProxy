@@ -6,19 +6,26 @@ namespace NyaProxy.API.Command
 {
     public class CommandFormatException : CommandException
     {
-        public virtual string ParamName { get; }
+        public Command Command { get; set; }
+        public string ParamName { get; }
 
-        public CommandFormatException(string command) : base(command) { }
-        public CommandFormatException(string command, string paramName) : base(command)
+        public CommandFormatException(Command command) : base(command.Name)
         {
+            Command = command;
+        }
+        public CommandFormatException(Command command, string paramName) : base(command.Name)
+        {
+            Command = command;
             ParamName = paramName;
         }
-        public CommandFormatException(string command, string paramName, string message) : base(command, message)
+        public CommandFormatException(Command command, string paramName, string message) : base(command.Name, message)
         {
+            Command = command;
             ParamName = paramName;
         }
-        public CommandFormatException(string command, string paramName, string message, Exception innerException) : base(command, message, innerException)
+        public CommandFormatException(Command command, string paramName, string message, Exception innerException) : base(command.Name, message, innerException)
         {
+            Command = command;
             ParamName = paramName;
         }
     }

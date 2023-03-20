@@ -4,6 +4,7 @@ namespace NyaProxy.API.Command
 {
     public class CommandNotFoundException : CommandException
     {
+
         public CommandNotFoundException()
         {
         }

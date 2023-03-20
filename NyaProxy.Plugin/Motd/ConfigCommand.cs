@@ -9,18 +9,13 @@ namespace Motd
     {
         public override string Name => "config";
 
-        public override string Help => @"Usage: motd config [optine]
-    reload <host>
-    generate  [dest] <host>
-";
-
         private string _host;
         private string _address;
-        public ConfigCommand(Action reload)
+        public ConfigCommand(Action reload) : base()
         {
-            AddArgument(new Argument("reload", async (arg, helper)  => reload()));
-            AddOption(new Option("host", async (option, helper)     => _host = option.Value));
-            AddOption(new Option("generate", async (option, helper) => _address = option.Value));
+            AddArgument(new Argument("reload", async (command, arg, helper)  => reload()));
+            AddOption(new Option("host", async (command, option, helper)     => _host = option.Value));
+            AddOption(new Option("generate", async (command, option, helper) => _address = option.Value));
         }
 
         public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)

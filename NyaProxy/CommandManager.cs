@@ -55,19 +55,20 @@ namespace NyaProxy
             }
             catch (MissingArgumentException mcae)
             {
-                NyaProxy.Logger.Unpreformat(i18n.Error.MissingArgument.Replace("{CommandName}", mcae.Command, "{Argument}", mcae.Argument));
+                NyaProxy.Logger.Unpreformat(i18n.Error.MissingArgument.Replace("{CommandName}", mcae.CommandName, "{Argument}", mcae.Argument));
             }
             catch (UnrecognizedArgumentException ucae)
             {
-                NyaProxy.Logger.Unpreformat(i18n.Error.UnrecognizedCommandArgument.Replace("{CommandName}", ucae.Command, "{Argument}", ucae.Argument));
+                NyaProxy.Logger.Unpreformat(i18n.Error.UnrecognizedCommandArgument.Replace("{CommandName}", ucae.CommandName, "{Argument}", ucae.Argument));
             }
             catch (CommandLeastRequiredException clre)
             {
                 NyaProxy.Logger.Unpreformat(i18n.Error.CommandLeastRequired.Replace("{CommandName}", clre.Command, "{MinimumArgs}", clre.MinimumArgs));
+                NyaProxy.Logger.Unpreformat(clre.Command.Help);
             }
             catch (CommandNotFoundException cnfe)
             {
-                NyaProxy.Logger.Unpreformat(i18n.Error.CommandNotFound.Replace("{CommandName}", cnfe.Command));
+                NyaProxy.Logger.Unpreformat(i18n.Error.CommandNotFound.Replace("{CommandName}", cnfe.CommandName));
             }
             return this;
         }

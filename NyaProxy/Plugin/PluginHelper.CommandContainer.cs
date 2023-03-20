@@ -40,7 +40,7 @@ namespace NyaProxy.Plugin
                         }
                         catch (CommandRegisteredException cre)
                         {
-                            NyaProxy.Logger.Error(i18n.Error.CommandRegistered.Replace("{CommandName}", cre.Command));
+                            NyaProxy.Logger.Error(i18n.Error.CommandRegistered.Replace("{CommandName}", cre.CommandName));
                         }
                     }
                 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Threading;
 using System.Collections.ObjectModel;
 
 namespace NyaProxy.API.Command
@@ -12,39 +11,101 @@ namespace NyaProxy.API.Command
     {
         public abstract string Name { get; }
 
-        public abstract string Help { get; }
+        public virtual string Description { get; set; }
 
-        public virtual int MinimumArgs => _arguments.Count > 0 ? 1 : 0;
+        public virtual string Help
+        {
+            get
+            {
+                StringBuilder sb = new StringBuilder("§7");
+                if (!string.IsNullOrWhiteSpace(Description))
+                    sb.Append("Description: ").AppendLine(Description).AppendLine().AppendLine();
+
+                sb.AppendLine("Usage:");
+                sb.Append(' ').Append(Name).Append(' ');
+                if(_arguments.Count>0)
+                {
+                    foreach (var argument in _arguments)
+                    {
+
+                        sb.Append('<').Append(argument.Name).Append("> ");
+                    }
+                }
+                sb.AppendLine("[options]").AppendLine();
+                
+                if (_arguments.Count > 0)
+                {
+                    sb.AppendLine("Arguments:");
+                    foreach (var argument in _arguments)
+                    {
+                        sb.Append("  ").Append(argument.Name);
+                        if (argument.Aliases != null)
+                            sb.Append(", ").Append(string.Join(", ", argument.Aliases));
+
+                        sb.Append("\t\t").AppendLine(argument.Description);
+                    }
+                    sb.AppendLine();
+                }
+
+                if(_options.Count > 0)
+                {
+                    sb.AppendLine("Options:");
+                    foreach (var option in _options)
+                    {
+                        sb.Append("  ").Append(option.Name);
+                        if (option.Aliases != null)
+                            sb.Append(", ").Append(string.Join(", ", option.Aliases));
+
+                        sb.Append(" <value>\t\t").AppendLine(option.Description);
+                    }
+                    sb.AppendLine();
+                }
+                return sb.ToString();
+            }
+        }
+
+        public virtual int MinimumArgs => _aoDictionray.Count > 0 ? 1 : 0;
 
         public Command Parent => _parent;
         private Command _parent;
 
         public ReadOnlyDictionary<string, Command> Children => new ReadOnlyDictionary<string, Command>(_children);
         private Dictionary<string, Command> _children = new Dictionary<string, Command>();
-        private Dictionary<string, object> _arguments = new ();
+        
+        private Dictionary<string, object> _aoDictionray = new();
+        private List<Argument> _arguments = new();
+        private List<Option> _options = new();
+
+        public Command()
+        {
+            AddArgument(new Argument("-h", "Show help and usage information", async (command, arg, helper) => helper.Logger.Unpreformat(command.Help), "--help"));
+        }
 
         public void AddArgument(Argument argument)
         {
-            _arguments.Add(argument.Name, argument);
-            if (argument.Aliases == null)
-                return;
-
-            foreach (var aliase in argument.Aliases)
+            _aoDictionray.Add(argument.Name, argument);
+            if (argument.Aliases != null)
             {
-                _arguments.Add(aliase, argument);
+                foreach (var alias in argument.Aliases)
+                {
+                    _aoDictionray.Add(alias, argument);
+                }
             }
+            _arguments.Add(argument);
         }
 
         public void AddOption(Option option)
         {
-            _arguments.Add(option.Name, option);
-            if (option.Aliases == null)
-                return;
-
-            foreach (var aliase in option.Aliases)
+            _aoDictionray.Add(option.Name, option);
+            if (option.Aliases != null)
             {
-                _arguments.Add(aliase, option);
+                foreach (var alias in option.Aliases)
+                {
+                    _aoDictionray.Add(alias, option);
+                }
             }
+
+            _options.Add(option);
         }
 
         public virtual async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
@@ -52,38 +113,38 @@ namespace NyaProxy.API.Command
             for (int i = 0; i < args.Length; i++)
             {
                 string currentArgument = args.Span[i];
-                if (_arguments.ContainsKey(currentArgument))
+                if (_aoDictionray.ContainsKey(currentArgument))
                 {
-                    if (_arguments[currentArgument] is Argument argument)
+                    if (_aoDictionray[currentArgument] is Argument argument)
                     {
-                        await argument.Handler(argument, helper);
+                        await argument.Handler(this, argument, helper);
                     }
-                    else if (_arguments[currentArgument] is Option option)
+                    else if (_aoDictionray[currentArgument] is Option option)
                     {
                         if (i + 1 >= args.Length)
-                            throw new MissingArgumentException(Name, currentArgument);
+                            throw new MissingArgumentException(this, currentArgument);
 
                         option.Value = args.Span[++i];
-                        await option.Handler(option, helper);
+                        await option.Handler(this, option, helper);
                     }
                 }
                 else
                 {
-                    throw new UnrecognizedArgumentException(Name, currentArgument);
+                    throw new UnrecognizedArgumentException(this, currentArgument);
                 }
             }
         }
 
         public virtual IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
         {
-            if (_arguments.Count == 0 || (args.Length > 0 && _arguments.TryGetValue(args[args.Length - 1], out var x) && x is Option))
+            if (_aoDictionray.Count == 0 || (args.Length > 0 && _aoDictionray.TryGetValue(args[args.Length - 1], out var x) && x is Option))
                 return Enumerable.Empty<string>();
 
             if (args.Length == 0)
-                return _arguments.Keys;
+                return _aoDictionray.Keys;
 
             string[] arguments = args.ToArray();
-            return _arguments.Keys.Where(x => !arguments.Any(a => a == x));
+            return _aoDictionray.Keys.Where(x => !arguments.Any(a => a == x));
         }
 
 
@@ -133,7 +194,7 @@ namespace NyaProxy.API.Command
             if (!_children.ContainsKey(commnad))
                 throw new CommandNotFoundException(commnad);
             else if (_children[commnad].MinimumArgs > args.Length - 1)
-                throw new CommandLeastRequiredException(commnad, _children[commnad].MinimumArgs);
+                throw new CommandLeastRequiredException(_children[commnad], _children[commnad].MinimumArgs);
             else
                 await _children[commnad].ExecuteAsync(args.Slice(1), helper);
         }

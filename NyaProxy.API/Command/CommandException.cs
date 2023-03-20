@@ -7,11 +7,11 @@ namespace NyaProxy.API.Command
 {
     public class CommandException : Exception
     {
-        public string Command { get; set; }
+        public string CommandName { get; set; }
 
         public CommandException() : base() { }
-        public CommandException(string command) : base() { Command = command; }
-        public CommandException(string command, string message) : base(message) { Command = command; }
-        public CommandException(string command, string message, Exception innerException) : base(message, innerException) { Command = command; }
+        public CommandException(string commandName) : base() { CommandName = commandName; }
+        public CommandException(string commandName, string message) : base(message) { CommandName = commandName; }
+        public CommandException(string commandName, string message, Exception innerException) : base(message, innerException) { CommandName = commandName; }
     }
 }
