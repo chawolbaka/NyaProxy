@@ -13,16 +13,16 @@ namespace Motd
         private string _address;
         public ConfigCommand(Action reload) : base()
         {
-            AddArgument(new Argument("reload", async (command, arg, helper)  => reload()));
-            AddOption(new Option("host", async (command, option, helper)     => _host = option.Value));
-            AddOption(new Option("generate", async (command, option, helper) => _address = option.Value));
+            AddArgument(new Argument("reload", (command, arg, helper)  => reload()));
+            AddOption(new Option("host",     (command, option, helper) => _host    = option.Value));
+            AddOption(new Option("generate", (command, option, helper) => _address = option.Value));
         }
 
         public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             _host = null; _address = null;
             await base.ExecuteAsync(args, helper);
-            if(_address!=null)
+            if (_address != null)
             {
                 IPEndPoint endPoint = await NetworkUtils.GetIPEndPointAsync(_address);
                 ServerListPing slp = new ServerListPing(endPoint);

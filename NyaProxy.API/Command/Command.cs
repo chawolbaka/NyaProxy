@@ -117,7 +117,10 @@ namespace NyaProxy.API.Command
                 {
                     if (_aoDictionray[currentArgument] is Argument argument)
                     {
-                        await argument.Handler(this, argument, helper);
+                        if (argument.Handler != null)
+                            argument.Handler(this, argument, helper);
+                        else
+                            await argument.AsyncHandler(this, argument, helper);
                     }
                     else if (_aoDictionray[currentArgument] is Option option)
                     {
@@ -125,7 +128,11 @@ namespace NyaProxy.API.Command
                             throw new MissingArgumentException(this, currentArgument);
 
                         option.Value = args.Span[++i];
-                        await option.Handler(this, option, helper);
+
+                        if (option.Handler != null)
+                            option.Handler(this, option, helper);
+                        else
+                            await option.AsyncHandler(this, option, helper);
                     }
                 }
                 else
