@@ -12,6 +12,8 @@ namespace NyaProxy.API.Command
 
         public override string Help { get; }
 
+        public override int MinimumArgs => 0;
+
         private Func<ReadOnlyMemory<string>, ICommandHelper, Task> _func;
 
         public SimpleCommand(string commandName, Func<ReadOnlyMemory<string>, ICommandHelper, Task> executeAsync) : this(commandName, "", executeAsync) { }

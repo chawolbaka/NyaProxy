@@ -8,6 +8,11 @@ namespace Firewall.Rules
 
         public T Value { get; set; }
 
+        internal RuleItem()
+        {
+
+        }
+
         public RuleItem(T value)
         {
             Value = value ?? throw new ArgumentNullException(nameof(value));

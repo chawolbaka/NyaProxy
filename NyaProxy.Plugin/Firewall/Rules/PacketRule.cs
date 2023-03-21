@@ -8,9 +8,7 @@ namespace Firewall.Rules
 
         public PacketRule() { }
 
-        internal PacketRule(XmlReader reader) : base(reader) { }
-
-        internal protected override object Read(XmlReader reader)
+        protected override object Read(XmlReader reader)
         {
             if (base.Read(reader) == null && reader.Name == nameof(PacketId))
                 return PacketId = new RuleItem<int>(reader, (text) => int.Parse(text));

@@ -5,6 +5,7 @@ using NyaProxy.API.Command;
 using Firewall.Rules;
 using Firewall.Tables;
 using MinecraftProtocol.DataType;
+using Firewall.Chains;
 
 namespace Firewall
 {
@@ -20,6 +21,7 @@ namespace Firewall
             Helper.Events.Transport.PacketSendToClient += OnPacketSendToClient;
             Helper.Events.Transport.PacketSendToServer += OnPacketSendToServer;
             Helper.Command.Register(new SimpleCommand("print", async (args, helper) => helper.Logger.Unpreformat(Firewall.Chains.ToStringTable())));
+            Firewall.Chains.RegisterCommand(Helper.Command);
         }
 
         public override async Task OnDisable()

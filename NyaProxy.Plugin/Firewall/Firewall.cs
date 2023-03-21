@@ -2,6 +2,7 @@
 using System.Text;
 using System.Xml;
 using Firewall.Chains;
+using NyaProxy.API.Command;
 
 namespace Firewall
 {
@@ -49,6 +50,15 @@ namespace Firewall
                         sb.AppendLine(chain.ToString());
                 }
                 return sb.ToString();
+            }
+
+            internal static void RegisterCommand(ICommandContainer commandContainer)
+            {
+                commandContainer.Register(Connect.GetCommand());
+                commandContainer.Register(Handshake.GetCommand());
+                commandContainer.Register(Login.GetCommand());
+                commandContainer.Register(Output.GetCommand());
+                commandContainer.Register(Input.GetCommand());
             }
 
             private static T Load<T>(string workDirectory, Func<XmlReader, T> create) where T : Chain, new()

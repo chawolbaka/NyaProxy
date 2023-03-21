@@ -5,33 +5,14 @@ using System.Text;
 
 namespace Firewall.Chains
 {
-    public class InputChain : Chain
+    public class InputChain : FilterChain<PacketRule>
     {
-        public override bool IsEmpty => FilterTable == null || FilterTable.IsEmpty;
-
-        public Table<PacketRule> FilterTable { get; set; }
-
         public InputChain()
         {
-            FilterTable = new();
         }
 
-        internal InputChain(XmlReader reader)
+        internal InputChain(XmlReader reader) : base(reader)
         {
-            FilterTable = new(reader, (r) => new PacketRule(r), nameof(FilterTable));
-        }
-
-        internal protected override void WriteTables(XmlWriter writer)
-        {
-            FilterTable.Write(writer);
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder(base.ToString());
-            sb.AppendLine($"{nameof(FilterTable)}({FilterTable.Rules.Count})");
-            sb.Append(FilterTable.ToTable());
-            return sb.ToString();
         }
     }
 }

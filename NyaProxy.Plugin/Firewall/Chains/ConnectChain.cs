@@ -2,36 +2,18 @@
 using System.Xml;
 using Firewall.Rules;
 using Firewall.Tables;
+using NyaProxy.API.Command;
 
 namespace Firewall.Chains
 {
-    public class ConnectChain : Chain
+    public class ConnectChain : FilterChain<Rule>
     {
-        public override bool IsEmpty => FilterTable == null || FilterTable.IsEmpty;
-
-        public Table<Rule> FilterTable { get; set; }
-
         public ConnectChain()
         {
-            FilterTable = new();
         }
 
-        internal ConnectChain(XmlReader reader)
+        internal ConnectChain(XmlReader reader) : base(reader)
         {
-            FilterTable = new(reader, (r) => new Rule(r), nameof(FilterTable));
-        }
-
-        internal protected override void WriteTables(XmlWriter writer)
-        {
-            FilterTable.Write(writer);
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder(base.ToString());
-            sb.AppendLine($"{nameof(FilterTable)}({FilterTable.Rules.Count})");
-            sb.Append(FilterTable.ToTable());
-            return sb.ToString();
         }
     }
 }

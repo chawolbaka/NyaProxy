@@ -11,9 +11,7 @@ namespace Firewall.Rules
 
         public LoginRule() { }
 
-        internal LoginRule(XmlReader reader) : base(reader) { }
-
-        protected internal override object Read(XmlReader reader)
+        protected override object Read(XmlReader reader)
         {
             if (base.Read(reader) == null)
             {

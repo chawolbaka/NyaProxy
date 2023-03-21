@@ -20,8 +20,8 @@ namespace Firewall.Rules
         public string Description { get; set; }
 
         public Rule() { }
-
-        internal Rule(XmlReader reader)
+       
+        internal T Read<T>(XmlReader reader) where T: Rule
         {
             do
             {
@@ -41,11 +41,12 @@ namespace Firewall.Rules
                 }
 
                 if (reader.NodeType == XmlNodeType.EndElement && reader.Name == GetType().Name)
-                    return;
+                    return (T)this;
             } while (reader.Read());
+            return (T)this;
         }
         
-        internal protected virtual object Read(XmlReader reader)
+        protected virtual object Read(XmlReader reader)
         {
             if (reader.Name == nameof(Host))
                 return Host = new RuleItem<string>(reader, (text) => text);

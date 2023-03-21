@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Text;
 using System.Xml;
 
@@ -13,6 +14,11 @@ namespace Firewall.Rules
         public IPAddress Mask { get; set; }
 
         public PortRuleItem Port { get; set; }
+
+        internal BaseNetworkRuleItem()
+        {
+
+        }
 
         public BaseNetworkRuleItem(RuleItem<IPAddress> ip)
         {
@@ -34,6 +40,29 @@ namespace Firewall.Rules
             Port = port ?? throw new ArgumentNullException(nameof(port));
         }
 
+
+        public static BaseNetworkRuleItem Parse(string ip)
+        {
+            if (string.IsNullOrWhiteSpace(ip))
+                throw new ArgumentNullException(nameof(ip));
+
+            BaseNetworkRuleItem bnri = new BaseNetworkRuleItem();
+            bnri.IP = new RuleItem<IPAddress>();
+            if (ip[0] == '!' || ip[0] == '！')
+                bnri.IP.Invert = true;
+            int index = ip.IndexOf('/');
+
+            if (index > 0)
+                bnri.Mask = IPAddress.Parse(ip.Substring(index + 1));
+
+            ReadOnlySpan<char> ipAddress = ip.AsSpan();
+            if (bnri.IP.Invert)
+                ipAddress = ipAddress.Slice(1);
+            if (index > 0)
+                ipAddress = ipAddress.Slice(0, ipAddress.Length - index);
+            bnri.IP.Value = IPAddress.Parse(ipAddress);
+            return bnri;
+        }
         internal BaseNetworkRuleItem(XmlReader reader)
         {
             if (reader.HasAttributes)
