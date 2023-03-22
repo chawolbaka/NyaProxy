@@ -1,8 +1,10 @@
 ﻿using System.Xml;
+using NyaGenerator.Equatable;
 
 namespace Firewall.Rules
 {
-    public class PacketRule : Rule
+    [Equatable]
+    public partial class PacketRule : Rule
     {
         public RuleItem<int> PacketId { get; set; }
 

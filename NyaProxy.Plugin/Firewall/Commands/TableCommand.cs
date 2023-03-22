@@ -13,6 +13,7 @@ namespace Firewall.Commands
             Name = name;
             RegisterChild(new AddCommand<T>(table));
             RegisterChild(new InsertCommand<T>(table));
+            RegisterChild(new DeleteCommand<T>(table));
         }
 
         public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)

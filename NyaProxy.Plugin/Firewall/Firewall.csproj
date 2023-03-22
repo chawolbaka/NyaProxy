@@ -1,13 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
   </PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\NyaProxy.API\NyaProxy.API.csproj" />
 		<PackageReference Include="MinecraftProtocol" Version="1.0.0" />
+		<ProjectReference Include="..\..\NyaGenerator\NyaGenerator.Equatable\NyaGenerator.Equatable.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 	<ItemGroup>
 	  <None Update="Manifest.json">

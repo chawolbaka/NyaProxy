@@ -1,8 +1,10 @@
 ﻿using System.Xml;
+using NyaGenerator.Equatable;
 
 namespace Firewall.Rules
 {
-    public class RuleItem<T>
+    [Equatable]
+    public partial class RuleItem<T>
     {
         public bool Invert { get; set; }
 
@@ -10,7 +12,6 @@ namespace Firewall.Rules
 
         internal RuleItem()
         {
-
         }
 
         public RuleItem(T value)
@@ -55,20 +56,12 @@ namespace Firewall.Rules
                 return Invert;
         }
 
-        public override bool Equals(object? obj)
-        {
-            return Value.Equals(obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
 
         public override string ToString()
         {
-            return Invert ? "!" : "" + Value.ToString();
+            return Invert ? "!" : "" + Value!.ToString();
         }
+
 
         public static implicit operator RuleItem<T>(T value) => new RuleItem<T>(value);
     }

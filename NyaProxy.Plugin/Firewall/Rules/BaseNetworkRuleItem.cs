@@ -2,11 +2,14 @@
 using System.Net;
 using System.Text;
 using System.Xml;
+using NyaGenerator.Equatable;
 
 namespace Firewall.Rules
 {
-    public class BaseNetworkRuleItem
+    [Equatable]
+    public partial class BaseNetworkRuleItem
     {
+        [IgnoreEquality]
         public bool IsEmpty => IP == null && Mask == null && Port == null;
 
         public RuleItem<IPAddress> IP { get; set; }

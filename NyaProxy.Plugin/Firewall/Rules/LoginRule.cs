@@ -1,9 +1,11 @@
 ﻿using MinecraftProtocol.DataType;
 using System.Xml;
+using NyaGenerator.Equatable;
 
 namespace Firewall.Rules
 {
-    public class LoginRule : PacketRule
+    [Equatable]
+    public partial class LoginRule : PacketRule
     {
         public RuleItem<string> PlayerName { get; set; }
 
@@ -46,5 +48,6 @@ namespace Firewall.Rules
             row.Add(PlayerName);
             return row;
         }
+
     }
 }

@@ -2,11 +2,14 @@
 using System;
 using System.Text;
 using System.Xml;
+using NyaGenerator.Equatable;
 
 namespace Firewall.Rules
 {
-    public class Rule
+    [Equatable]
+    public partial class Rule
     {
+        [IgnoreEquality]
         public bool Disabled { get; set; }
 
         public RuleItem<string> Host { get; set; }

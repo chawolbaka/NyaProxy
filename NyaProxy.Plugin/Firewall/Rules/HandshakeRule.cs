@@ -1,16 +1,18 @@
 ﻿using MinecraftProtocol.Packets.Client;
 using System.Xml;
+using NyaGenerator.Equatable;
 
 namespace Firewall.Rules
 {
-    public class HandshakeRule : PacketRule
+    [Equatable]
+    public partial class HandshakeRule : PacketRule
     {
         public RuleItem<string> ServerAddress { get; set; }
 
         public RuleItem<ushort> ServerPort { get; set; }
 
         public RuleItem<HandshakeState> NextState { get; set; }
-
+        
         public RuleItem<int> ProtocolVersion { get; set; }
 
         public HandshakeRule() { }
@@ -60,5 +62,6 @@ namespace Firewall.Rules
             row.Add(ProtocolVersion);
             return row;
         }
+
     }
 }
