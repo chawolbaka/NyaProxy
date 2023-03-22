@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Threading;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.Utils;
-using MinecraftProtocol.DataType;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
 using NyaProxy.API;
@@ -258,7 +257,7 @@ namespace NyaProxy
                 using Packet FirstPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
                 if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
                 {
-                    HostConfig dest = GetHost(hea.Packet.GetServerAddressOnly());
+                    HostConfig dest = GetHost(hp.GetServerAddressOnly());
                     hea = new HandshakeEventArgs(acceptSocket, hp, dest);
                     Handshaking.Invoke(acceptSocket, hea);
                     if (hea.IsBlock)
@@ -266,8 +265,8 @@ namespace NyaProxy
                         acceptSocket.Close();
                         return;
                     }
-
-
+                    
+                    dest = GetHost(hea.Packet.GetServerAddressOnly());
                     Socket serverSocket = await dest.OpenConnectAsync();
 
                     if (dest.ForwardMode == ForwardMode.Direct)

@@ -45,7 +45,8 @@ namespace NyaGenerator.Equatable
             foreach (var pair in receiver.Pairs)
             {
                 if (pair.Value.Count == 0)
-                    break;
+                    continue;
+
                 string className = pair.Key.Identifier.ValueText;
 
                 if (pair.Key.TypeParameterList != null)

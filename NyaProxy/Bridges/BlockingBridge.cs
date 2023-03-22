@@ -146,14 +146,14 @@ namespace NyaProxy.Bridges
             {
                 Stage = Stage.Login;
                 Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
-                LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, _loginStartPacket, DateTime.Now);
+                LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, lsp, DateTime.Now);
                 NyaProxy.LoginStart.Invoke(this, lsea);
                 if (lsea.IsBlock)
                 {
                     Break();
                     return;
                 }
-                _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : _loginStartPacket;
+                _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : lsp;
                     
                 _targetRule = Host.GetRule(lsp.PlayerName);
                 IsOnlineMode    = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);

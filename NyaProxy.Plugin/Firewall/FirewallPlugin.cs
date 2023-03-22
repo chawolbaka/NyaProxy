@@ -58,8 +58,6 @@ namespace Firewall
                     default: throw new InvalidOperationException();
                 }
             }
-
-            
         }
 
         private void OnHandshaking(object? sender, IHandshakeEventArgs e)
@@ -156,7 +154,7 @@ namespace Firewall
             IPEndPoint destination = (IPEndPoint)e.Destination.RemoteEndPoint!;
 
             if (rule.Disabled)
-                return false;
+                return true;
 
             if (rule.Host != null && !rule.Host.Match(e.Host))
                 return true;
