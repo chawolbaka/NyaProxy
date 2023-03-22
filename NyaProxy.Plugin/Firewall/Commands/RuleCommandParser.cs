@@ -23,6 +23,7 @@ namespace Firewall.Commands
             if (Rule is PacketRule)
             {
                 AddOption(new Option("--packet-id", (command, option, helper) => (Rule as PacketRule)!.PacketId = int.Parse(option.Value)));
+                AddOption(new Option("--protocol-version", (command, option, helper) => (Rule as HandshakeRule)!.ProtocolVersion = int.Parse(option.Value)));
 
                 if (Rule is LoginRule)
                 {
@@ -35,7 +36,6 @@ namespace Firewall.Commands
                     AddOption(new Option("--handshake-address", (command, option, helper) => (Rule as HandshakeRule)!.ServerAddress = option.Value));
                     AddOption(new Option("--handshake-port", (command, option, helper) => (Rule as HandshakeRule)!.ServerPort = ushort.Parse(option.Value)));
                     AddOption(new Option("--handshake-state", (command, option, helper) => (Rule as HandshakeRule)!.NextState = Enum.Parse<HandshakeState>(option.Value)));
-                    AddOption(new Option("--handshake-protocol-version", (command, option, helper) => (Rule as HandshakeRule)!.ProtocolVersion = int.Parse(option.Value)));
                 }
             }
 

@@ -75,6 +75,8 @@ namespace Firewall
 
                 if (rule.Host != null && !rule.Host.Match(host))
                     continue;
+                if (rule.PacketId != null && !rule.PacketId.Match(e.Packet.Id))
+                    continue;
                 if (rule.ServerAddress != null && !rule.ServerAddress.Match(e.Packet.ServerAddress))
                     continue;
                 if (rule.ServerPort != null && !rule.ServerPort.Match(e.Packet.ServerPort))
@@ -160,6 +162,9 @@ namespace Firewall
                 return true;
 
             if (rule.PacketId != null && !rule.PacketId.Match(e.Packet.Id))
+                return true;
+
+            if (rule.ProtocolVersion != null && !rule.ProtocolVersion.Match(e.ProtocolVersion))
                 return true;
 
             if (rule.Source != null && !rule.Source.Match(source.Address,source.Port))

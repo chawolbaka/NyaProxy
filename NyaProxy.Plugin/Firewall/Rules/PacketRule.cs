@@ -8,13 +8,19 @@ namespace Firewall.Rules
     {
         public RuleItem<int> PacketId { get; set; }
 
+        public RuleItem<int> ProtocolVersion { get; set; }
+
         public PacketRule() { }
 
         protected override object ReadFromXml(XmlReader reader)
         {
-            if (base.ReadFromXml(reader) == null && reader.Name == nameof(PacketId))
-                return PacketId = new RuleItem<int>(reader, (text) => int.Parse(text));
-
+            if (base.ReadFromXml(reader) == null)
+            {
+                if (reader.Name == nameof(PacketId))
+                    return PacketId = new RuleItem<int>(reader, (text) => int.Parse(text));
+                else if (reader.Name == nameof(ProtocolVersion))
+                    ProtocolVersion = new RuleItem<int>(reader, (text) => int.Parse(text));
+            }
             return null;
         }
 
@@ -22,12 +28,14 @@ namespace Firewall.Rules
         {
             base.WriteXml(writer);
             PacketId?.WriteXml(writer, nameof(PacketId));
+            ProtocolVersion?.WriteXml(writer, nameof(ProtocolVersion));
         }
 
         internal override List<string> CreateFirstColumns()
         {
             List<string> list = base.CreateFirstColumns();
             list.Add(nameof(PacketId));
+            list.Add(nameof(ProtocolVersion));
             return list;
         }
 
@@ -35,6 +43,7 @@ namespace Firewall.Rules
         {
             List<object> row = base.CreateRow();
             row.Add(PacketId);
+            row.Add(ProtocolVersion);
             return row;
         }
     }
