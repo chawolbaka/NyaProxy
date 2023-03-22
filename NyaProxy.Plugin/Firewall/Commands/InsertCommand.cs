@@ -19,8 +19,12 @@ namespace Firewall.Commands
 
         public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
+            if (args.Length == 0)
+                return;
+
             try
             {
+                _parse.Rule = new T();
                 await _parse.ExecuteAsync(args, helper);
                 Table.Rules.AddFirst(_parse.Rule);
                 helper.Logger.Unpreformat("§aInsert success.");

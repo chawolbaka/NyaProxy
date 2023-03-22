@@ -19,13 +19,17 @@ namespace Firewall.Commands
 
         public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
+            if (args.Length == 0)
+                return;
+
             try
             {
+                _parse.Rule = new T();
                 await _parse.ExecuteAsync(args, helper);
                 if (Table.Rules.Remove(_parse.Rule))
                     helper.Logger.Unpreformat("§aDelete success.");
                 else
-                    helper.Logger.Unpreformat("§aDelete failed.");
+                    helper.Logger.Unpreformat("§cDelete failed.");
             }
             catch (Exception e)
             {
