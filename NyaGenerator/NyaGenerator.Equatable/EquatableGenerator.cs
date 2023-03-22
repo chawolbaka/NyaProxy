@@ -58,9 +58,8 @@ namespace NyaGenerator.Equatable
         {
             HashCode hashCode = new HashCode();
 ");
-                StringBuilder source = new StringBuilder($@"
-using System;
-using NyaGenerator.Equatable;
+                StringBuilder source = new StringBuilder($@"using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace {(pair.Key.Parent as NamespaceDeclarationSyntax).Name}
 {{
@@ -68,8 +67,8 @@ namespace {(pair.Key.Parent as NamespaceDeclarationSyntax).Name}
     public partial class {className} : IEquatable<{className}>
     {{
 
-        public static bool operator ==({className} left, {className} right) => (ReferenceEquals(left, null) && ReferenceEquals(right, null)) || !ReferenceEquals(left, null) && left.Equals(right);
-        public static bool operator !=({className} left, {className} right) => !(left == right);
+        public static bool operator ==([AllowNull]{className} left, [AllowNull]{className} right) => (ReferenceEquals(left, null) && ReferenceEquals(right, null)) || !ReferenceEquals(left, null) && left.Equals(right);
+        public static bool operator !=([AllowNull]{className} left, [AllowNull]{className} right) => !(left == right);
 
         public override bool Equals(object? obj)
         {{
