@@ -10,7 +10,7 @@ namespace Firewall.Commands
 
         public virtual Table<T> Table { get; }
 
-        private RuleCommandParse<T> _parse = new RuleCommandParse<T>();
+        private RuleCommandParser<T> _parser = new RuleCommandParser<T>();
 
         public InsertCommand(Table<T> table)
         {
@@ -24,9 +24,9 @@ namespace Firewall.Commands
 
             try
             {
-                _parse.Rule = new T();
-                await _parse.ExecuteAsync(args, helper);
-                Table.Rules.AddFirst(_parse.Rule);
+                _parser.Rule = new T();
+                await _parser.ExecuteAsync(args, helper);
+                Table.Rules.AddFirst(_parser.Rule);
                 helper.Logger.Unpreformat("§aInsert success.");
             }
             catch (Exception e)
@@ -38,7 +38,7 @@ namespace Firewall.Commands
 
         public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
         {
-            return _parse.GetTabCompletions(args);
+            return _parser.GetTabCompletions(args);
         }
     }
 }

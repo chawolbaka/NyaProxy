@@ -66,6 +66,7 @@ namespace Firewall.Rules
             bnri.IP.Value = IPAddress.Parse(ipAddress);
             return bnri;
         }
+
         internal BaseNetworkRuleItem(XmlReader reader)
         {
             if (reader.HasAttributes)
@@ -86,7 +87,7 @@ namespace Firewall.Rules
 
         }
 
-        public void Write(XmlWriter writer, string key)
+        public void WriteXml(XmlWriter writer, string key)
         {
             writer.WriteStartElement(key);
             if (IP != null)

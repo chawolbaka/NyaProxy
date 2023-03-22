@@ -10,18 +10,18 @@ namespace Firewall.Rules
 
         public PacketRule() { }
 
-        protected override object Read(XmlReader reader)
+        protected override object ReadFromXml(XmlReader reader)
         {
-            if (base.Read(reader) == null && reader.Name == nameof(PacketId))
+            if (base.ReadFromXml(reader) == null && reader.Name == nameof(PacketId))
                 return PacketId = new RuleItem<int>(reader, (text) => int.Parse(text));
 
             return null;
         }
 
-        internal override void Write(XmlWriter writer)
+        internal override void WriteXml(XmlWriter writer)
         {
-            base.Write(writer);
-            PacketId?.Write(writer, nameof(PacketId));
+            base.WriteXml(writer);
+            PacketId?.WriteXml(writer, nameof(PacketId));
         }
 
         internal override List<string> CreateFirstColumns()

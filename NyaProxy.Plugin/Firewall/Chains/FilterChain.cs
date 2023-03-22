@@ -20,7 +20,7 @@ namespace Firewall.Chains
 
         internal FilterChain(XmlReader reader)
         {
-            FilterTable = new(reader, (r) => new T().Read<T>(r), nameof(FilterTable));
+            FilterTable = new(reader, (r) => new T().ReadFromXml<T>(r), nameof(FilterTable));
         }
 
         public override Command GetCommand()
@@ -30,7 +30,7 @@ namespace Firewall.Chains
 
         internal protected override void WriteTables(XmlWriter writer)
         {
-            FilterTable.Write(writer);
+            FilterTable.WriteXml(writer);
         }
 
         public override string ToString()

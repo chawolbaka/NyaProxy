@@ -26,7 +26,7 @@ namespace Firewall
                 return Parallel.ForEachAsync(new Chain[] { Connect, Handshake, Login, Output, Input }, (chain, token) =>
                 {
                     using XmlWriter writer = XmlWriter.Create(Path.Combine(workDirectory, "Chains", chain.GetType().Name + ".xml"), DefaultSettings);
-                    chain.Write(writer);
+                    chain.WriteXml(writer);
                     return ValueTask.CompletedTask;
                 });
             }

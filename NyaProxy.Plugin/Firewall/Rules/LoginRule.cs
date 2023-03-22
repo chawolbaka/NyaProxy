@@ -13,9 +13,9 @@ namespace Firewall.Rules
 
         public LoginRule() { }
 
-        protected override object Read(XmlReader reader)
+        protected override object ReadFromXml(XmlReader reader)
         {
-            if (base.Read(reader) == null)
+            if (base.ReadFromXml(reader) == null)
             {
                 if (reader.Name == nameof(PlayerName))
                     PlayerName = new RuleItem<string>(reader, (text) => text);
@@ -26,11 +26,11 @@ namespace Firewall.Rules
             return null;
         }
 
-        internal override void Write(XmlWriter writer)
+        internal override void WriteXml(XmlWriter writer)
         {
-            base.Write(writer);
-            PlayerName?.Write(writer, nameof(PlayerName));
-            PlayerUUID?.Write(writer, nameof(PlayerUUID));
+            base.WriteXml(writer);
+            PlayerName?.WriteXml(writer, nameof(PlayerName));
+            PlayerUUID?.WriteXml(writer, nameof(PlayerUUID));
         }
 
         internal override List<string> CreateFirstColumns()

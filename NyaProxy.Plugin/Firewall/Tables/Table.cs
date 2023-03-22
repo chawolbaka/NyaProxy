@@ -28,7 +28,7 @@ namespace Firewall.Tables
             } while (reader.Read());
         }
 
-        internal virtual void Write(XmlWriter writer)
+        internal virtual void WriteXml(XmlWriter writer)
         {
             string key = typeof(T).Name;
             foreach (var rule in Rules)
@@ -42,7 +42,7 @@ namespace Firewall.Tables
                 if (!string.IsNullOrWhiteSpace(rule.Description))
                     writer.WriteAttributeString(nameof(rule.Destination), rule.Description);
 
-                rule.Write(writer);
+                rule.WriteXml(writer);
                 writer.WriteEndElement();
             }
         }

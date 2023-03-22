@@ -24,7 +24,7 @@ namespace Firewall.Rules
 
         public Rule() { }
        
-        internal T Read<T>(XmlReader reader) where T: Rule
+        internal T ReadFromXml<T>(XmlReader reader) where T: Rule
         {
             do
             {
@@ -38,7 +38,7 @@ namespace Firewall.Rules
                     }
                     else
                     {
-                        Read(reader);
+                        ReadFromXml(reader);
                     }
 
                 }
@@ -49,7 +49,7 @@ namespace Firewall.Rules
             return (T)this;
         }
         
-        protected virtual object Read(XmlReader reader)
+        protected virtual object ReadFromXml(XmlReader reader)
         {
             if (reader.Name == nameof(Host))
                 return Host = new RuleItem<string>(reader, (text) => text);
@@ -61,14 +61,14 @@ namespace Firewall.Rules
                 return null;
         }
 
-        internal virtual void Write(XmlWriter writer)
+        internal virtual void WriteXml(XmlWriter writer)
         {
-            Host?.Write(writer, nameof(Host));
+            Host?.WriteXml(writer, nameof(Host));
 
             if (Source != null && !Source.IsEmpty)
-                Source?.Write(writer, nameof(Source));
+                Source?.WriteXml(writer, nameof(Source));
             if (Destination != null && !Destination.IsEmpty)
-                Destination?.Write(writer, nameof(Destination));
+                Destination?.WriteXml(writer, nameof(Destination));
         }
 
         internal virtual List<string> CreateFirstColumns()

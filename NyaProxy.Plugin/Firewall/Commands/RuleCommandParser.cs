@@ -6,13 +6,13 @@ using MinecraftProtocol.Packets.Client;
 
 namespace Firewall.Commands
 {
-    internal class RuleCommandParse<T> : Command where T : Rule, new()
+    internal class RuleCommandParser<T> : Command where T : Rule, new()
     {
         public override string Name { get; }
 
         public T Rule { get; set; }
 
-        public RuleCommandParse()
+        public RuleCommandParser()
         {
             Rule = new T();
             AddOption(new Option("-host", (command, option, helper) => Rule.Host = option.Value));

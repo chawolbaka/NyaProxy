@@ -34,7 +34,7 @@ namespace Firewall.Rules
             }
         }
 
-        internal virtual void Write(XmlWriter writer, string key)
+        internal virtual void WriteXml(XmlWriter writer, string key)
         {
             writer.WriteStartElement(key);
             if (Invert)

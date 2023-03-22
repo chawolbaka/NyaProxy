@@ -17,9 +17,9 @@ namespace Firewall.Rules
 
         public HandshakeRule() { }
 
-        protected override object Read(XmlReader reader)
+        protected override object ReadFromXml(XmlReader reader)
         {
-            if (base.Read(reader) == null)
+            if (base.ReadFromXml(reader) == null)
             {
                 if (reader.Name == nameof(ServerAddress))
                     ServerAddress = new RuleItem<string>(reader, (text) => text);
@@ -34,13 +34,13 @@ namespace Firewall.Rules
             return null;
         }
 
-        internal override void Write(XmlWriter writer)
+        internal override void WriteXml(XmlWriter writer)
         {
-            base.Write(writer);
-            ServerAddress?.Write(writer, nameof(ServerAddress));
-            ServerPort?.Write(writer, nameof(ServerPort));
-            NextState?.Write(writer, nameof(NextState));
-            ProtocolVersion?.Write(writer, nameof(ProtocolVersion));
+            base.WriteXml(writer);
+            ServerAddress?.WriteXml(writer, nameof(ServerAddress));
+            ServerPort?.WriteXml(writer, nameof(ServerPort));
+            NextState?.WriteXml(writer, nameof(NextState));
+            ProtocolVersion?.WriteXml(writer, nameof(ProtocolVersion));
         }
 
         internal override List<string> CreateFirstColumns()

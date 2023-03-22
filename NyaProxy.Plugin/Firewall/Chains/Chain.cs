@@ -12,7 +12,7 @@ namespace Firewall.Chains
         public abstract Command GetCommand();
 
         internal protected abstract void WriteTables(XmlWriter writer);
-        internal virtual void Write(XmlWriter writer)
+        internal virtual void WriteXml(XmlWriter writer)
         {
             writer.WriteStartDocument();
             writer.WriteStartElement(GetType().Name);
@@ -20,7 +20,6 @@ namespace Firewall.Chains
             writer.WriteEndElement();
             writer.WriteEndDocument();
         }
-
 
         public override string ToString()
         {   
