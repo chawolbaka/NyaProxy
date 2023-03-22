@@ -6,13 +6,13 @@ using NyaProxy.API.Command;
 
 namespace Firewall.Chains
 {
-    public class OutputChain : FilterChain<PacketRule>
+    public class ServerChain : FilterChain<PacketRule>
     {
-        public OutputChain()
+        public ServerChain()
         {
         }
 
-        internal OutputChain(XmlReader reader) : base(reader)
+        internal ServerChain(XmlReader reader) : base(reader)
         {
         }
     }

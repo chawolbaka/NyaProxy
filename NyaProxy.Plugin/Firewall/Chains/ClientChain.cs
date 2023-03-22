@@ -5,13 +5,13 @@ using System.Text;
 
 namespace Firewall.Chains
 {
-    public class InputChain : FilterChain<PacketRule>
+    public class ClientChain : FilterChain<PacketRule>
     {
-        public InputChain()
+        public ClientChain()
         {
         }
 
-        internal InputChain(XmlReader reader) : base(reader)
+        internal ClientChain(XmlReader reader) : base(reader)
         {
         }
     }

@@ -120,12 +120,12 @@ namespace Firewall
 
         private void OnPacketSendToServer(object? sender, IPacketSendEventArgs e)
         {
-            PacketFilter(Firewall.Chains.Input.FilterTable, e);
+            PacketFilter(Firewall.Chains.Client.FilterTable, e);
         }
 
         private void OnPacketSendToClient(object? sender, IPacketSendEventArgs e)
         {
-            PacketFilter(Firewall.Chains.Output.FilterTable, e);
+            PacketFilter(Firewall.Chains.Server.FilterTable, e);
         }
 
         private void PacketFilter(Table<PacketRule> table, IPacketSendEventArgs e)

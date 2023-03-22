@@ -13,8 +13,8 @@ namespace Firewall
             public static ConnectChain Connect      { get; private set; }
             public static HandshakeChain Handshake  { get; private set; }
             public static LoginChain Login          { get; private set; }
-            public static OutputChain Output        { get; private set; }
-            public static InputChain Input          { get; private set; }
+            public static ServerChain Server        { get; private set; }
+            public static ClientChain Client        { get; private set; }
 
             private static readonly XmlWriterSettings DefaultSettings = new XmlWriterSettings() { Indent = true, Encoding = Encoding.UTF8 };
 
@@ -23,7 +23,7 @@ namespace Firewall
                 if (!Directory.Exists(Path.Combine(workDirectory, "Chains")))
                     Directory.CreateDirectory(Path.Combine(workDirectory, "Chains"));
 
-                return Parallel.ForEachAsync(new Chain[] { Connect, Handshake, Login, Output, Input }, (chain, token) =>
+                return Parallel.ForEachAsync(new Chain[] { Connect, Handshake, Login, Client, Server }, (chain, token) =>
                 {
                     using XmlWriter writer = XmlWriter.Create(Path.Combine(workDirectory, "Chains", chain.GetType().Name + ".xml"), DefaultSettings);
                     chain.WriteXml(writer);
@@ -37,14 +37,14 @@ namespace Firewall
                    Task.Run(() => Connect   = Load(workDirectory, (reader) => new ConnectChain(reader))),
                    Task.Run(() => Handshake = Load(workDirectory, (reader) => new HandshakeChain(reader))),
                    Task.Run(() => Login     = Load(workDirectory, (reader) => new LoginChain(reader))),
-                   Task.Run(() => Output    = Load(workDirectory, (reader) => new OutputChain(reader))),
-                   Task.Run(() => Input     = Load(workDirectory, (reader) => new InputChain(reader))));
+                   Task.Run(() => Server    = Load(workDirectory, (reader) => new ServerChain(reader))),
+                   Task.Run(() => Client     = Load(workDirectory, (reader) => new ClientChain(reader))));
             }
 
             public static string ToStringTable()
             {
                 StringBuilder sb = new StringBuilder();
-                foreach (var chain in new Chain[] { Connect, Handshake, Login, Output, Input })
+                foreach (var chain in new Chain[] { Connect, Handshake, Login, Client, Server })
                 {
                     if(!chain.IsEmpty)
                         sb.AppendLine(chain.ToString());
@@ -57,8 +57,8 @@ namespace Firewall
                 commandContainer.Register(Connect.GetCommand());
                 commandContainer.Register(Handshake.GetCommand());
                 commandContainer.Register(Login.GetCommand());
-                commandContainer.Register(Output.GetCommand());
-                commandContainer.Register(Input.GetCommand());
+                commandContainer.Register(Client.GetCommand());
+                commandContainer.Register(Server.GetCommand());
             }
 
             private static T Load<T>(string workDirectory, Func<XmlReader, T> create) where T : Chain, new()
