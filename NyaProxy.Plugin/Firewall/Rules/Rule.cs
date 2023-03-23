@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Xml;
 using NyaGenerator.Equatable;
+using NyaProxy.API.Config;
 
 namespace Firewall.Rules
 {
@@ -24,7 +25,7 @@ namespace Firewall.Rules
 
         public Rule() 
         {
-            Action = RuleAction.Block;
+            Action = FirewallPlugin.Config.DefaultAction;
         }
        
         internal T ReadFromXml<T>(XmlReader reader) where T: Rule

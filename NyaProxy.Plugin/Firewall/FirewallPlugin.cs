@@ -5,15 +5,20 @@ using NyaProxy.API.Command;
 using Firewall.Rules;
 using Firewall.Tables;
 using MinecraftProtocol.DataType;
-using Firewall.Chains;
 
 namespace Firewall
 {
 
     public class FirewallPlugin : NyaPlugin
     {
+        public static FirewallConfig Config => CurrentInstance.Helper.Config.Get<FirewallConfig>(0);
+        public static FirewallPlugin CurrentInstance;
+
         public override async Task OnEnable()
         {
+            CurrentInstance = this;
+            Helper.Config.Register(typeof(FirewallConfig));
+
             await Firewall.Chains.LoadAsync(Helper.WorkDirectory.FullName);
             Helper.Events.Transport.Connecting  += OnConnecting;
             Helper.Events.Transport.Handshaking += OnHandshaking;
