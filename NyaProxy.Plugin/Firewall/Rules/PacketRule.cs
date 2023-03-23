@@ -10,7 +10,7 @@ namespace Firewall.Rules
 
         public RuleItem<int> ProtocolVersion { get; set; }
 
-        public PacketRule() { }
+        public PacketRule() : base() { }
 
         protected override object ReadFromXml(XmlReader reader)
         {

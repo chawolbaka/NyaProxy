@@ -11,7 +11,7 @@ namespace Firewall.Rules
 
         public RuleItem<UUID> PlayerUUID { get; set; }
 
-        public LoginRule() { }
+        public LoginRule() : base() { }
 
         protected override object ReadFromXml(XmlReader reader)
         {

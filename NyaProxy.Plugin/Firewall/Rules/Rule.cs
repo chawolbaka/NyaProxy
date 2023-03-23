@@ -22,7 +22,10 @@ namespace Firewall.Rules
 
         public string Description { get; set; }
 
-        public Rule() { }
+        public Rule() 
+        {
+            Action = RuleAction.Block;
+        }
        
         internal T ReadFromXml<T>(XmlReader reader) where T: Rule
         {

@@ -12,9 +12,8 @@ namespace Firewall.Rules
         public RuleItem<ushort> ServerPort { get; set; }
 
         public RuleItem<HandshakeState> NextState { get; set; }
-        
 
-        public HandshakeRule() { }
+        public HandshakeRule() : base() { }
 
         protected override object ReadFromXml(XmlReader reader)
         {
