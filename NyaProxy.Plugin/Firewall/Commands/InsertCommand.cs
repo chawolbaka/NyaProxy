@@ -24,8 +24,10 @@ namespace Firewall.Commands
 
             try
             {
-                _parser.Rule = new T();
+                _parser.Rule = null;
                 await _parser.ExecuteAsync(args, helper);
+                if (_parser.Rule == null)
+                    return;
                 Table.Rules.AddFirst(_parser.Rule);
                 helper.Logger.Unpreformat("§aInsert success.");
             }

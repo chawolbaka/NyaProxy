@@ -24,8 +24,11 @@ namespace Firewall.Commands
 
             try
             {
-                _parser.Rule = new T();
+                _parser.Rule = null;
                 await _parser.ExecuteAsync(args, helper);
+                if (_parser.Rule == null)
+                    return;
+
                 if (Table.Rules.Remove(_parser.Rule))
                     helper.Logger.Unpreformat("§aDelete success.");
                 else
