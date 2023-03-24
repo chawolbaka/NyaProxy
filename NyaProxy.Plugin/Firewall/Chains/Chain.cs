@@ -9,6 +9,8 @@ namespace Firewall.Chains
     {
         public abstract bool IsEmpty { get; }
 
+        public abstract string Description { get; }
+
         public abstract Command GetCommand();
 
         internal protected abstract void WriteTables(XmlWriter writer);
