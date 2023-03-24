@@ -11,6 +11,8 @@ namespace Firewall.Chains
     {
         public override bool IsEmpty => FilterTable == null || FilterTable.IsEmpty;
 
+        protected abstract string CommandName { get; }
+
         public Table<T> FilterTable { get; set; }
 
         public FilterChain()
@@ -54,7 +56,7 @@ namespace Firewall.Chains
 
             public ChainCommnad(FilterChain<T> filterChain)
             {
-                Name = filterChain.GetType().Name.ToLower().Replace("chain", "");
+                Name = filterChain.CommandName;
                 Description = filterChain.Description;
                 _filterChain = filterChain;
                 RegisterChild(new TableCommand<T>("filter", _filterChain.FilterTable));

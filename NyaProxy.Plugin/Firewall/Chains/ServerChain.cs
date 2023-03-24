@@ -8,6 +8,8 @@ namespace Firewall.Chains
 {
     public class ServerChain : FilterChain<PacketRule>
     {
+        protected override string CommandName => "server";
+
         public override string Description => "服务端发出的数据包";
 
         public ServerChain()
