@@ -25,7 +25,7 @@ namespace NyaProxy
                     switch (Direction)
                     {
                         case Direction.ToClient:
-                            CompatibleReader.TryReadServerChatMessage(Packet, out _message, out _definedPacket); break;
+                            CompatibleReader.TryReadServerChatMessage(Packet, Bridge.ChatTypes, out _message, out _definedPacket); break;
                         case Direction.ToServer:
                             if (CompatibleReader.TryReadClientChatMessage(Packet, out var message, out var ccmp))
                             {

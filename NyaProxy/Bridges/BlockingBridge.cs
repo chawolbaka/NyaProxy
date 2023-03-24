@@ -18,6 +18,7 @@ using MinecraftProtocol.DataType;
 using System.Text;
 using System.Net;
 using MinecraftProtocol.IO.Extensions;
+using MinecraftProtocol.Chat;
 
 namespace NyaProxy.Bridges
 {
@@ -58,6 +59,10 @@ namespace NyaProxy.Bridges
         /// </summary>
         public virtual bool IsOnlineMode { get; private set; }
 
+        /// <summary>
+        /// 1.19开始出现的东西，如果版本小于1.19该属性将为null
+        /// </summary>
+        public virtual ChatType[] ChatTypes { get; set; }
 
         public virtual CryptoHandler CryptoHandler => _clientSocketListener.CryptoHandler;
 
@@ -80,7 +85,7 @@ namespace NyaProxy.Bridges
 
         public BlockingBridge(HostConfig host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
         {
-            ProtocolVersion = -1;
+            ProtocolVersion = handshakePacket.ProtocolVersion;
             ClientCompressionThreshold = -1;
             ServerCompressionThreshold = -1;
 
@@ -92,11 +97,13 @@ namespace NyaProxy.Bridges
             //监听客户端发送给服务端的数据包
             _clientSocketListener = new PacketListener(Source, !NyaProxy.Config.EnableReceivePool);            
             _clientSocketListener.StopListen += (sender, e) => Break();
+            _clientSocketListener.ProtocolVersion = ProtocolVersion;
             _clientSocketListener.UnhandledException += SimpleExceptionHandle;
 
             //监听服务端发送给客户端的数据包
             _serverSocketListener = new PacketListener(Destination, !NyaProxy.Config.EnableReceivePool);
             _serverSocketListener.StopListen += (sender, e) => Break();
+            _serverSocketListener.ProtocolVersion = ProtocolVersion;
             _serverSocketListener.UnhandledException += SimpleExceptionHandle;
         }
 
@@ -132,8 +139,10 @@ namespace NyaProxy.Bridges
         }
         public virtual void Break(string reason)
         {
-            if (Stage == Stage.Login)
-                NyaProxy.Network.Enqueue(Source, new DisconnectLoginPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
+            if (Player != null)
+                Player.KickAsync(reason);
+            else if (Stage != Stage.Play)
+                NyaProxy.Network.Enqueue(Source, new DisconnectLoginPacket(ChatComponent.Parse(reason), ProtocolVersion).Pack(ClientCompressionThreshold));
             else
                 NyaProxy.Network.Enqueue(Source, new DisconnectPacket(reason, ProtocolVersion).Pack(ClientCompressionThreshold));
             ListenToken.Cancel();
@@ -158,10 +167,12 @@ namespace NyaProxy.Bridges
                 _targetRule = Host.GetRule(lsp.PlayerName);
                 IsOnlineMode    = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);
                 OverCompression = _targetRule.CompressionThreshold != -1;
-                ProtocolVersion = _targetRule.ProtocolVersion > 0 ? _targetRule.ProtocolVersion : _handshakePacket.ProtocolVersion;
-                
-                _clientSocketListener.ProtocolVersion = ProtocolVersion;
-                _serverSocketListener.ProtocolVersion = ProtocolVersion;
+                if (_targetRule.ProtocolVersion > 0)
+                {
+                    ProtocolVersion = _targetRule.ProtocolVersion;
+                    _clientSocketListener.ProtocolVersion = ProtocolVersion;
+                    _serverSocketListener.ProtocolVersion = ProtocolVersion;
+                }
 
                 string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
                 switch (Host.ForwardMode)
@@ -195,8 +206,8 @@ namespace NyaProxy.Bridges
             }
             else
             {
-                Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{EndPoint}", Source._remoteEndPoint(), "{PacketId}", e.Packet.Id));
                 NyaProxy.Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringLoginStart.Replace("{EndPoint}", Source._remoteEndPoint(), "{Packet}", e.Packet));
+                Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{EndPoint}", Source._remoteEndPoint(), "{PacketId}", e.Packet.Id));
             }
         }
 
@@ -260,6 +271,16 @@ namespace NyaProxy.Bridges
                 Setup(this, Source, Destination, Direction.ToServer, _loginStartPacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
         }
 
+        private void WaitForGameJoin(object sender, PacketReceivedEventArgs e) 
+        {
+            if (JoinGamePacket.TryRead(e.Packet, out JoinGamePacket jgp))
+            {
+                _serverSocketListener.PacketReceived -= WaitForGameJoin;
+                jgp.TryGetChatTypes(out ChatType[] chatTypes);
+                ChatTypes = chatTypes;
+            }
+        }
+
         private void BeforeLoginSuccess(object sender, PacketReceivedEventArgs e)
         {
             try
@@ -292,6 +313,9 @@ namespace NyaProxy.Bridges
                         _serverSocketListener.PacketReceived -= BeforeLoginSuccess;
                         _serverSocketListener.PacketReceived += CheckForge;
                         _serverSocketListener.PacketReceived += ServerPacketReceived;
+
+                        if (ProtocolVersion >= ProtocolVersions.V1_19 && ProtocolVersion <= ProtocolVersions.V1_19_3)
+                            _serverSocketListener.PacketReceived += WaitForGameJoin;
                     }
                     else
                     {
