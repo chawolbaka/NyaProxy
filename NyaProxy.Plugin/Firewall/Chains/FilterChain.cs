@@ -18,10 +18,13 @@ namespace Firewall.Chains
             FilterTable = new();
         }
 
-        internal FilterChain(XmlReader reader)
+
+        internal virtual C ReadFromXml<C>(XmlReader reader) where C : FilterChain<T>
         {
             FilterTable = new(reader, (r) => new T().ReadFromXml<T>(r), nameof(FilterTable));
+            return (C)this;
         }
+
 
         public override Command GetCommand()
         {

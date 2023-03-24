@@ -12,9 +12,5 @@ namespace Firewall.Chains
         public ClientChain()
         {
         }
-
-        internal ClientChain(XmlReader reader) : base(reader)
-        {
-        }
     }
 }

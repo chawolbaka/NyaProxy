@@ -1,11 +1,14 @@
-﻿namespace Firewall.Rules
+﻿using NyaGenerator.Equatable;
+
+namespace Firewall.Rules
 {
-    public class PortRange : IEquatable<int>, IEquatable<PortRange>
+    [Equatable]
+    public partial class PortRange : IEquatable<int>
     {
         private static readonly string Delimiter = "-";
 
-        public ushort Start;
-        public ushort End;
+        public ushort Start { get; set; }
+        public ushort End { get; set; }
 
         public PortRange(ushort port)
         {
@@ -15,6 +18,9 @@
 
         public PortRange(ushort start, ushort end)
         {
+            if (end < start)
+                throw new ArgumentOutOfRangeException(nameof(end));
+
             Start = start;
             End = end;
         }
@@ -28,28 +34,13 @@
             if (index == -1)
                 return new PortRange(ushort.Parse(str), ushort.Parse(str));
             else
-                return new PortRange(ushort.Parse(str.AsSpan().Slice(0, index)), ushort.Parse(str.AsSpan().Slice(index + Delimiter.Length)));
+                return new PortRange(ushort.Parse(str.AsSpan(0, index)), ushort.Parse(str.AsSpan(index + Delimiter.Length)));
 
         }
 
         public bool Equals(int port)
         {
             return port >= Start && port <= End;
-        }
-
-        public bool Equals(PortRange? other)
-        {
-            return other != null && other.Start == Start && other.End == End;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj != null && Equals(obj as PortRange);
-        }
-
-        public override int GetHashCode()
-        {
-            return Start & End << 8;
         }
 
         public override string ToString()

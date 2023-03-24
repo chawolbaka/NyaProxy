@@ -56,7 +56,7 @@ namespace Firewall.Rules
             int index = ip.IndexOf('/');
 
             if (index > 0)
-                bnri.Mask = IPAddress.Parse(ip.Substring(index + 1));
+                bnri.Mask = IPAddress.Parse(ip.AsSpan(index + 1));
 
             ReadOnlySpan<char> ipAddress = ip.AsSpan();
             if (bnri.IP.Invert)

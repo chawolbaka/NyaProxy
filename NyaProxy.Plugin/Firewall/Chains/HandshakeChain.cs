@@ -10,9 +10,5 @@ namespace Firewall.Chains
         public HandshakeChain()
         {
         }
-
-        internal HandshakeChain(XmlReader reader) : base(reader)
-        {
-        }
     }
 }

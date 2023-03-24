@@ -12,9 +12,5 @@ namespace Firewall.Chains
         public LoginChain()
         {
         }
-
-        internal LoginChain(XmlReader reader) : base(reader)
-        {
-        }
     }
 }

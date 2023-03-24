@@ -33,12 +33,12 @@ namespace Firewall
 
             public static Task LoadAsync(string workDirectory)
             {
-                return Task.WhenAll(
-                   Task.Run(() => Connect   = Load(workDirectory, (reader) => new ConnectChain(reader))),
-                   Task.Run(() => Handshake = Load(workDirectory, (reader) => new HandshakeChain(reader))),
-                   Task.Run(() => Login     = Load(workDirectory, (reader) => new LoginChain(reader))),
-                   Task.Run(() => Server    = Load(workDirectory, (reader) => new ServerChain(reader))),
-                   Task.Run(() => Client     = Load(workDirectory, (reader) => new ClientChain(reader))));
+                return Task.WhenAll(    
+                   Task.Run(() => Connect    = Load(workDirectory, (reader) => new ConnectChain().ReadFromXml<ConnectChain>(reader))),
+                   Task.Run(() => Handshake  = Load(workDirectory, (reader) => new HandshakeChain().ReadFromXml<HandshakeChain>(reader))),
+                   Task.Run(() => Login      = Load(workDirectory, (reader) => new LoginChain().ReadFromXml<LoginChain>(reader))),
+                   Task.Run(() => Server     = Load(workDirectory, (reader) => new ServerChain().ReadFromXml<ServerChain>(reader))),
+                   Task.Run(() => Client     = Load(workDirectory, (reader) => new ClientChain().ReadFromXml<ClientChain>(reader))));
             }
 
             public static string ToStringTable()
