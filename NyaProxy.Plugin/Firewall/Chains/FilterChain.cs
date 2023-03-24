@@ -54,11 +54,18 @@ namespace Firewall.Chains
 
             public ChainCommnad(FilterChain<T> filterChain)
             {
-                Name = filterChain.GetType().Name;
+                Name = filterChain.GetType().Name.ToLower().Replace("chain", "");
                 Description = filterChain.Description;
                 _filterChain = filterChain;
-                RegisterChild(new TableCommand<T>(nameof(FilterTable), _filterChain.FilterTable));
-                RegisterChild(new SimpleCommand("print", async (args, helper) => helper.Logger.Unpreformat(_filterChain.FilterTable.ToTable())));
+                RegisterChild(new TableCommand<T>("filter", _filterChain.FilterTable));
+                RegisterChild(new SimpleCommand("print", async (args, helper) =>
+                {
+                    string table = _filterChain.FilterTable.ToTable();
+                    if (!string.IsNullOrWhiteSpace(table))
+                        helper.Logger.Unpreformat(table);
+                    else
+                        helper.Logger.Unpreformat("Empty.");
+                }));
             }
 
             public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
