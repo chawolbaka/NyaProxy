@@ -58,6 +58,7 @@ namespace Firewall.Chains
                 Description = filterChain.Description;
                 _filterChain = filterChain;
                 RegisterChild(new TableCommand<T>(nameof(FilterTable), _filterChain.FilterTable));
+                RegisterChild(new SimpleCommand("print", async (args, helper) => helper.Logger.Unpreformat(_filterChain.FilterTable.ToTable())));
             }
 
             public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
