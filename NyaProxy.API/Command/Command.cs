@@ -11,7 +11,7 @@ namespace NyaProxy.API.Command
     {
         public abstract string Name { get; }
 
-        public virtual string Description { get; set; }
+        public virtual string Description { get; }
 
         public virtual string Help
         {
@@ -78,7 +78,7 @@ namespace NyaProxy.API.Command
 
         public Command()
         {
-            AddArgument(new Argument("-h", "Show help and usage information", async (command, arg, helper) => helper.Logger.Unpreformat(command.Help), "--help"));
+            AddArgument(new Argument("-h", "Show help and usage information", (command, arg, helper) => helper.Logger.Unpreformat(command.Help), "--help"));
         }
 
         public void AddArgument(Argument argument)
@@ -110,6 +110,9 @@ namespace NyaProxy.API.Command
 
         public virtual async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
+            if (args.IsEmpty)
+                return;
+
             for (int i = 0; i < args.Length; i++)
             {
                 string currentArgument = args.Span[i];
@@ -132,7 +135,7 @@ namespace NyaProxy.API.Command
                         if (option.Handler != null)
                             option.Handler(this, option, helper);
                         else
-                            await option.AsyncHandler(this, option, helper);
+                            await option.AsyncHandler(this, option, helper);                       
                     }
                 }
                 else

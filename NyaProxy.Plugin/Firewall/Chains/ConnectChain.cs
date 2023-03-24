@@ -8,6 +8,8 @@ namespace Firewall.Chains
 {
     public class ConnectChain : FilterChain<Rule>
     {
+        public override string Description => "客户端发出的TCP握手请求（3次握手已完成）";
+
         public ConnectChain()
         {
         }

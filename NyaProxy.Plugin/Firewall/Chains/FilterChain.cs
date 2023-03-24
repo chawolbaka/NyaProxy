@@ -44,13 +44,17 @@ namespace Firewall.Chains
         private class ChainCommnad : Command
         {
             public override string Name { get; }
-            public FilterChain<T> FilterChain { get; }
+            
+            public override string Description { get; }
+
+            private FilterChain<T> _filterChain { get; }
 
             public ChainCommnad(FilterChain<T> filterChain)
             {
                 Name = filterChain.GetType().Name;
-                FilterChain = filterChain;
-                RegisterChild(new TableCommand<T>(nameof(FilterTable), FilterChain.FilterTable));
+                Description = filterChain.Description;
+                _filterChain = filterChain;
+                RegisterChild(new TableCommand<T>(nameof(FilterTable), _filterChain.FilterTable));
             }
 
             public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
