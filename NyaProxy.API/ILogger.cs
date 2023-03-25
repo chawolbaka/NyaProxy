@@ -1,16 +1,20 @@
 ﻿using System;
+using System.IO;
 
 namespace NyaProxy.API
 {
-    public interface ILogger
+
+    public interface INyaLogger
     {
-        ILogger Info(string message);
-        ILogger Warn(string message);
-        ILogger Trace(string message);
-        ILogger Debug(string message);
-        ILogger Error(string message);
-        ILogger Exception(Exception exception);
-        ILogger Unpreformat(string message);
+        LogFile LogFile { get; set; }
+
+        INyaLogger Info(string message);
+        INyaLogger Warn(string message);
+        INyaLogger Trace(string message);
+        INyaLogger Debug(string message);
+        INyaLogger Error(string message);
+        INyaLogger Exception(Exception exception);
+        INyaLogger Unpreformat(string message);
         
     }
 }

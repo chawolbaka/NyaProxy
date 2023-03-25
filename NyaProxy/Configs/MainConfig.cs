@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using NyaProxy.API;
 using NyaProxy.API.Config;
 using NyaProxy.API.Config.Nodes;
 
@@ -13,6 +14,8 @@ namespace NyaProxy.Configs
         public IPEndPoint[] Bind { get; set; }
         public bool TcpFastOpen { get; set; }
         public int NetworkThread { get; set; }
+
+        LogFile LogFile { get; set; }
 
         public bool EnableReceivePool;
         public int ReceivePoolBufferCount;
@@ -43,23 +46,33 @@ namespace NyaProxy.Configs
                 Bind = new IPEndPoint[] { IPEndPoint.Parse(bind.ToString()) };
             }
 
-            if (!reader.ContainsKey("advanced"))
-                return;
+            if (reader.ContainsKey("log-file"))
+            {
+                ObjectNode logFile = reader.ReadObjectProperty("log-file");
+                NyaProxy.Logger.LogFile = new LogFile() 
+                {
+                    Enable    = (bool)logFile["enable"],
+                    Format    = (string)logFile["format"],
+                    Directory = (string)logFile["directory"]
+                };
+            }
 
-            ObjectNode advanced   = reader.ReadObjectProperty("advanced");
-            NetworkThread           = (int)advanced["network-threads"];
-            TcpFastOpen             = advanced.ContainsKey("tcp-fast-open") ? (bool)advanced["tcp-fast-open"] : false;
+            if (reader.ContainsKey("advanced"))
+            {
+                ObjectNode advanced = reader.ReadObjectProperty("advanced");
+                NetworkThread       = (int)advanced["network-threads"];
+                TcpFastOpen         = advanced.ContainsKey("tcp-fast-open") ? (bool)advanced["tcp-fast-open"] : false;
 
-            if (!advanced.ContainsKey("enable-receive-pool"))
-                return;
+                if (advanced.ContainsKey("enable-receive-pool"))
+                {
+                    EnableReceivePool       = (bool)advanced["enable-receive-pool"];
+                    ReceivePoolBufferCount  = (int)advanced["receive-pool-buffer-count"];
+                    ReceivePoolBufferLength = (int)advanced["receive-pool-buffer-length"];
 
-            EnableReceivePool       = (bool)advanced["enable-receive-pool"];
-            ReceivePoolBufferCount  = (int)advanced["receive-pool-buffer-count"];
-            ReceivePoolBufferLength = (int)advanced["receive-pool-buffer-length"];
-
-            if (ReceivePoolBufferCount <= 1 || ReceivePoolBufferLength <= 64)
-                EnableReceivePool = false;
-
+                    if (ReceivePoolBufferCount <= 1 || ReceivePoolBufferLength <= 64)
+                        EnableReceivePool = false;
+                }
+            }
         }
 
         public void Write(ConfigWriter writer)
@@ -68,6 +81,16 @@ namespace NyaProxy.Configs
                 writer.WriteProperty("bind", new ArrayNode(Bind.Select(b => new StringNode(b.ToString(), i18n.Config.Bind))));
             else
                 writer.WriteProperty("bind", new StringNode(Bind[0].ToString(), i18n.Config.Bind));
+
+            writer.WriteProperty("log-file", new ObjectNode() 
+            {
+                Nodes = new Dictionary<string, ConfigNode>()
+                {
+                    ["enable"]    = new BooleanNode(LogFile.Enable, i18n.Config.EnableReceivePool),
+                    ["format"]    = new StringNode(LogFile.Format, i18n.Config.EnableReceivePool),
+                    ["directory"] = new StringNode(LogFile.Directory, i18n.Config.EnableReceivePool)
+                }
+            });
 
             writer.WriteProperty("advanced", new ObjectNode()
             {
@@ -90,6 +113,7 @@ namespace NyaProxy.Configs
             EnableReceivePool = true;
             ReceivePoolBufferCount = 1024;
             ReceivePoolBufferLength = 65536;
+            LogFile = new LogFile() { Enable = true, Format = "yyyy-MM-dd", Directory = "log" };
         }
     }
 }

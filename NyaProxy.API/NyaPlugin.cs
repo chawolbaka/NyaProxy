@@ -17,14 +17,14 @@ namespace NyaProxy.API
         public IPluginHelper Helper => _helper;
         
 
-        public ILogger Logger => _logger;
+        public INyaLogger Logger => _logger;
 
         private IManifest _manifest;
         private IPluginHelper _helper;
-        private ILogger _logger;
+        private INyaLogger _logger;
 
         //该方法会被反射调用
-        private void Setup(IPluginHelper helper, ILogger logger, IManifest manifest)
+        private void Setup(IPluginHelper helper, INyaLogger logger, IManifest manifest)
         {
             _helper = helper;
             _logger = logger;

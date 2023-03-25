@@ -33,7 +33,7 @@ namespace NyaProxy
         public static IReadOnlyList<Socket> ServerSockets { get; set; }
         
         
-        public static ILogger Logger { get; private set; }
+        public static INyaLogger Logger { get; private set; }
 
         public static readonly CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
         
@@ -52,7 +52,7 @@ namespace NyaProxy
         public static EventContainer<IChatSendEventArgs>     ChatMessageSendToServer = new();
         public static EventContainer<IDisconnectEventArgs>   Disconnected            = new();
 
-        public static async Task Setup(ILogger logger)
+        public static async Task Setup(INyaLogger logger)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Plugin = new(logger);

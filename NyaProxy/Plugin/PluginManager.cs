@@ -22,7 +22,7 @@ namespace NyaProxy.Plugin
         private static MethodInfo SetupPlugin = typeof(NyaPlugin).GetMethod("Setup", BindingFlags.Instance | BindingFlags.NonPublic);
 
         internal Dictionary<string, PluginController> Plugins = new Dictionary<string, PluginController>();
-        internal ILogger Logger;
+        internal INyaLogger Logger;
 
         public int Count => Plugins.Count;
 
@@ -32,7 +32,7 @@ namespace NyaProxy.Plugin
         IEnumerator IEnumerable.GetEnumerator() => Plugins.Values.GetEnumerator();
 
 
-        public PluginManager(ILogger logger)
+        public PluginManager(INyaLogger logger)
         {
             Logger = logger;
         }

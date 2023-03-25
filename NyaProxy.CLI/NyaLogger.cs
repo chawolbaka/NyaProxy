@@ -1,69 +1,59 @@
-﻿using NyaProxy.API;
-using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+using NyaProxy.API;
 
 namespace NyaProxy.CLI
 {
-    public class NyaLogger : ILogger
+
+    public class NyaLogger : INyaLogger
     {
-        public readonly BlockingCollection<string> LogQueues = new BlockingCollection<string>();
-        public string BaseMessage
-        {
-            get
-            {
-                string message = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]";
-                Thread thread = Thread.CurrentThread;
-                if (string.IsNullOrWhiteSpace(thread.Name))
-                    return message + $" [Craft Thread#{thread.ManagedThreadId}] ";
-                else
-                    return message + $" [{thread.Name}] ";
-            }
-        }
+        public readonly BlockingCollection<(string Message, LogType Type)> LogQueues = new();
+
+        public LogFile LogFile { get; set; }
 
         public NyaLogger()
         {
-
+            LogFile = new LogFile();
         }
 
-        public ILogger Debug(string message)
+        public INyaLogger Debug(string message)
         {
-            LogQueues.Add($"§8{BaseMessage}[{nameof(Debug)}]: {message}");
+            LogQueues.Add((message, LogType.Debug));
             return this;
         }
 
-        public ILogger Error(string message)
+        public INyaLogger Error(string message)
         {
-            LogQueues.Add($"§c{BaseMessage}[{nameof(Error)}]: {message}");
+            LogQueues.Add((message, LogType.Error));
             return this;
         }
 
-        public ILogger Exception(Exception exception)
+        public INyaLogger Exception(Exception exception)
         {
-            LogQueues.Add($"§c{BaseMessage}[{nameof(Error)}]: {exception.Message}\n{exception}");
+            LogQueues.Add(($"{exception.Message}\n{exception}", LogType.Error));
             return this;
         }
 
-        public ILogger Info(string message)
+        public INyaLogger Info(string message)
         {
-            LogQueues.Add($"§f{BaseMessage}[{nameof(Info)}]: {message}");
+            LogQueues.Add((message, LogType.Info));
             return this;
         }
 
-        public ILogger Trace(string message)
+        public INyaLogger Trace(string message)
         {
-            LogQueues.Add($"§7{BaseMessage}[{nameof(Debug)}]: {message}");
+            LogQueues.Add((message, LogType.Trace));
             return this;
         }
 
-        public ILogger Warn(string message)
+        public INyaLogger Warn(string message)
         {
-            LogQueues.Add($"§e{BaseMessage}[{nameof(Debug)}]: {message}");
+            LogQueues.Add((message, LogType.Warn));
             return this;
         }
 
-        public ILogger Unpreformat(string message)
+        public INyaLogger Unpreformat(string message)
         {
-            LogQueues.Add(message);
+            LogQueues.Add((message, LogType.Unpreformat));
             return this;
         }
     }

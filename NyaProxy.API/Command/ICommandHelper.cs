@@ -8,6 +8,6 @@ namespace NyaProxy.API.Command
 {
     public interface ICommandHelper
     {
-        public ILogger Logger { get; }
+        public INyaLogger Logger { get; }
     }
 }
