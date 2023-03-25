@@ -14,7 +14,7 @@ namespace NyaProxy.CLI
                 string message = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]";
                 Thread thread = Thread.CurrentThread;
                 if (string.IsNullOrWhiteSpace(thread.Name))
-                    return message + $" Craft Thread#{thread.ManagedThreadId} ";
+                    return message + $" [Craft Thread#{thread.ManagedThreadId}] ";
                 else
                     return message + $" [{thread.Name}] ";
             }
