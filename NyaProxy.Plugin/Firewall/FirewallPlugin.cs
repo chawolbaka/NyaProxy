@@ -5,6 +5,7 @@ using NyaProxy.API.Command;
 using Firewall.Rules;
 using Firewall.Tables;
 using MinecraftProtocol.DataType;
+using NyaProxy.API.Event;
 
 namespace Firewall
 {
@@ -39,7 +40,7 @@ namespace Firewall
             await Firewall.Chains.SaveAsync(Helper.WorkDirectory.FullName);
         }
 
-
+        [EventPriority(EventPriority.Highest)]
         private void OnConnecting(object? sender, IConnectEventArgs e)
         {
             IPEndPoint source = (IPEndPoint)e.AcceptSocket.RemoteEndPoint!;
@@ -65,6 +66,7 @@ namespace Firewall
             }
         }
 
+        [EventPriority(EventPriority.Highest)]
         private void OnHandshaking(object? sender, IHandshakeEventArgs e)
         {
             IPEndPoint source = (IPEndPoint)e.Source.RemoteEndPoint!;
@@ -101,6 +103,7 @@ namespace Firewall
             }
         }
 
+        [EventPriority(EventPriority.Highest)]
         private void OnLoginStart(object? sender, ILoginStartEventArgs e)
         {
             foreach (var rule in Firewall.Chains.Login.FilterTable)
@@ -123,11 +126,13 @@ namespace Firewall
             }
         }
 
+        [EventPriority(EventPriority.Highest)]
         private void OnPacketSendToServer(object? sender, IPacketSendEventArgs e)
         {
             PacketFilter(Firewall.Chains.Client.FilterTable, e);
         }
 
+        [EventPriority(EventPriority.Highest)]
         private void OnPacketSendToClient(object? sender, IPacketSendEventArgs e)
         {
             PacketFilter(Firewall.Chains.Server.FilterTable, e);
