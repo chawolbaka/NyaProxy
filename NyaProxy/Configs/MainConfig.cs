@@ -66,12 +66,13 @@ namespace NyaProxy.Configs
                 if (advanced.ContainsKey("enable-receive-pool"))
                 {
                     EnableReceivePool       = (bool)advanced["enable-receive-pool"];
-                    ReceivePoolBufferCount  = (int)advanced["receive-pool-buffer-count"];
-                    ReceivePoolBufferLength = (int)advanced["receive-pool-buffer-length"];
+                    ReceivePoolBufferCount  = advanced.ContainsKey("receive-pool-buffer-count")  ? (int)advanced["receive-pool-buffer-count"] : 1024;
+                    ReceivePoolBufferLength = advanced.ContainsKey("receive-pool-buffer-length") ? (int)advanced["receive-pool-buffer-length"]: 65536;
 
                     if (ReceivePoolBufferCount <= 1 || ReceivePoolBufferLength <= 64)
                         EnableReceivePool = false;
                 }
+
             }
         }
 
