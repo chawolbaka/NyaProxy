@@ -6,7 +6,7 @@ namespace Firewall.Commands
 {
     public class InsertCommand<T> : Command where T : Rule, new()
     {
-        public override string Name => "Insert";
+        public override string Name => "insert";
 
         public virtual Table<T> Table { get; }
 

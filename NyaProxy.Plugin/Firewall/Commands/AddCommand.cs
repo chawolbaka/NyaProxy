@@ -13,7 +13,7 @@ namespace Firewall.Commands
 
     public class AddCommand<T> : Command where T : Rule, new()
     {
-        public override string Name => "Add";
+        public override string Name => "add";
 
         public virtual Table<T> Table { get; }
 

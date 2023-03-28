@@ -6,7 +6,7 @@ namespace Firewall.Commands
 {
     public class DeleteCommand<T> : Command where T : Rule, new()
     {
-        public override string Name => "Delete";
+        public override string Name => "delete";
 
         public virtual Table<T> Table { get; }
 

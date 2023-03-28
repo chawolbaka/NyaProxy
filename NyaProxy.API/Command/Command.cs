@@ -78,7 +78,7 @@ namespace NyaProxy.API.Command
 
         public Command()
         {
-            AddArgument(new Argument("-h", "Show help and usage information", (command, arg, helper) => helper.Logger.Unpreformat(command.Help), "--help"));
+            AddArgument(new Argument("--help", "Show help and usage information", (command, arg, helper) => helper.Logger.Unpreformat(command.Help)));
         }
 
         public void AddArgument(Argument argument)
