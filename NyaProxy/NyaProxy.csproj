@@ -20,6 +20,7 @@
   </PropertyGroup>
 	
   <ItemGroup>
+    <PackageReference Include="CZGL.SystemInfo" Version="2.2.0" />
     <PackageReference Include="Samboy063.Tomlet" Version="5.1.2" />
   </ItemGroup>
 	

@@ -1,6 +1,9 @@
-﻿using StringTables;
+﻿using CZGL.SystemInfo;
+using StringTables;
 using System;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 
@@ -28,11 +31,14 @@ namespace NyaProxy.Debug
             report.AppendLine($"  Thread Pool Thread: {Thread.CurrentThread.IsThreadPoolThread}");
             report.AppendLine();
 
-            StringTable bridgeTable = DebugHelper.CreateBridgeTable();
-            if (bridgeTable is not null && bridgeTable.Rows.Count > 0)
+            if (NyaProxy.Bridges != null)
             {
-                report.AppendLine($"  Current Connections({bridgeTable.Rows}) :");
-                report.AppendLine(bridgeTable.ToString());
+                StringTable bridgeTable = DebugHelper.CreateBridgeTable();
+                if (bridgeTable is not null && bridgeTable.Rows.Count > 0)
+                {
+                    report.AppendLine($"  Current Connections({bridgeTable.Rows}) :");
+                    report.AppendLine(bridgeTable.ToString());
+                }
             }
 
             if (NyaProxy.Plugin is not null && NyaProxy.Plugin.Count > 0)
@@ -48,6 +54,28 @@ namespace NyaProxy.Debug
             report.AppendLine($"  DONET Version: {Environment.Version}");
             if (Environment.GetCommandLineArgs().Length > 1)
                 report.AppendLine($"  Command Line Args: {string.Join(' ', Environment.GetCommandLineArgs().AsSpan().Slice(1).ToArray())}");
+            report.AppendLine($"Memory: {GC.GetTotalAllocatedBytes()} bytes allocated");
+
+            MemoryValue memory = OperatingSystem.IsWindows() ? WindowsMemory.GetMemory() : LinuxMemory.GetMemory();
+            report.AppendLine($"Physical memory max (MB): {memory.AvailablePhysicalMemory / 1024.0}");
+            report.AppendLine($"Physical memory used (MB): {memory.UsedPhysicalMemory / 1024.0}");
+            report.AppendLine($"Virtual memory max (MB): {memory.AvailableVirtualMemory / 1024.0}");
+            report.AppendLine($"Virtual memory used (MB): {memory.UsedVirtualMemory / 1024.0}");
+            NetworkInfo[] networkInfos = NetworkInfo.GetNetworkInfos();
+            for (int i = 0; i < networkInfos.Length; i++)
+            {
+                report.AppendLine($"Network card #{i} Type: {networkInfos[i].NetworkType}");
+                report.AppendLine($"Network card #{i} Name: {networkInfos[i].Name}");
+                report.AppendLine($"Network card #{i} Status: {networkInfos[i].Status}");
+                report.AppendLine($"Network card #{i} Speed: {networkInfos[i].Speed} bytes");
+                report.AppendLine($"Network card #{i} Gateway Addresses: {networkInfos[i].GatewayAddresses.GetAddressString()}");
+                report.AppendLine($"Network card #{i} Unicast Addresses: {networkInfos[i].UnicastAddresses.GetAddressString()}");                
+                report.AppendLine($"Network card #{i} Dns Addresses: {networkInfos[i].DnsAddresses.GetAddressString()}");
+
+                report.AppendLine();
+
+            }
+
 
             if (writeConsole)
             {
@@ -69,11 +97,22 @@ namespace NyaProxy.Debug
 
             if (exit)
             {
+                NyaProxy.GlobalQueueToken.Cancel();
+                Thread.Sleep(2000);
 #if DEBUG
                 Console.ReadKey();
 #endif
                 Environment.Exit(-233);
             }
+        }
+        private static string GetAddressString(this IPAddress[] ips)
+        {
+            string result = string.Join(", ", ips.Select(a => a.ToString().Contains(':') ? $"[{a}]" : a.ToString()));
+
+            if (string.IsNullOrEmpty(result))
+                return "Empty";
+            else
+                return result;
         }
     }
 }
