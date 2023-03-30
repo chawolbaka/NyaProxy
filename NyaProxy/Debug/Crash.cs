@@ -9,6 +9,7 @@ using System.Threading;
 
 namespace NyaProxy.Debug
 {
+
     public static class Crash
     {
 
@@ -30,6 +31,36 @@ namespace NyaProxy.Debug
             report.AppendLine($"  Background Thread: {Thread.CurrentThread.IsBackground}");
             report.AppendLine($"  Thread Pool Thread: {Thread.CurrentThread.IsThreadPoolThread}");
             report.AppendLine();
+            report.AppendLine("-- System Details --");
+            report.AppendLine("Details:");
+            report.AppendLine($"  {nameof(NyaProxy)} Version: {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
+            report.AppendLine($"  Operating System: {Environment.OSVersion} ({(IntPtr.Size == 4 ? "32" : "64")})");
+            report.AppendLine($"  DONET Version: {Environment.Version}");
+            if (Environment.GetCommandLineArgs().Length > 1)
+                report.AppendLine($"  Command Line Args: {string.Join(' ', Environment.GetCommandLineArgs().AsSpan().Slice(1).ToArray())}");
+            report.AppendLine($"  Memory: {GC.GetTotalAllocatedBytes()} bytes allocated");
+
+            MemoryValue memory = OperatingSystem.IsWindows() ? WindowsMemory.GetMemory() : LinuxMemory.GetMemory();
+            report.AppendLine($"  Physical memory max (MB): {memory.AvailablePhysicalMemory / 1024.0}");
+            report.AppendLine($"  Physical memory used (MB): {memory.UsedPhysicalMemory / 1024.0}");
+            report.AppendLine($"  Virtual memory max (MB): {memory.AvailableVirtualMemory / 1024.0}");
+            report.AppendLine($"  Virtual memory used (MB): {memory.UsedVirtualMemory / 1024.0}");
+            NetworkInfo[] networkInfos = NetworkInfo.GetNetworkInfos();
+            for (int i = 0; i < networkInfos.Length; i++)
+            {
+                report.AppendLine($"  Network card #{i} Type: {networkInfos[i].NetworkType}");
+                report.AppendLine($"  Network card #{i} Name: {networkInfos[i].Name}");
+                report.AppendLine($"  Network card #{i} Status: {networkInfos[i].Status}");
+                report.AppendLine($"  Network card #{i} Speed: {networkInfos[i].Speed} bytes");
+                report.AppendLine($"  Network card #{i} Gateway Addresses: {networkInfos[i].GatewayAddresses.GetAddressString()}");
+                report.AppendLine($"  Network card #{i} Unicast Addresses: {networkInfos[i].UnicastAddresses.GetAddressString()}");                
+                report.AppendLine($"  Network card #{i} Dns Addresses: {networkInfos[i].DnsAddresses.GetAddressString()}");
+
+                report.AppendLine();
+
+            }
+
+
 
             if (NyaProxy.Bridges != null)
             {
@@ -47,34 +78,6 @@ namespace NyaProxy.Debug
                 report.AppendLine(DebugHelper.CreatePluginTable().ToString());
             }
 
-            report.AppendLine("-- System Details --");
-            report.AppendLine("Details:");
-            report.AppendLine($"  {nameof(NyaProxy)} Version: {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}");
-            report.AppendLine($"  Operating System: {Environment.OSVersion} ({(IntPtr.Size == 4 ? "32" : "64")})");
-            report.AppendLine($"  DONET Version: {Environment.Version}");
-            if (Environment.GetCommandLineArgs().Length > 1)
-                report.AppendLine($"  Command Line Args: {string.Join(' ', Environment.GetCommandLineArgs().AsSpan().Slice(1).ToArray())}");
-            report.AppendLine($"Memory: {GC.GetTotalAllocatedBytes()} bytes allocated");
-
-            MemoryValue memory = OperatingSystem.IsWindows() ? WindowsMemory.GetMemory() : LinuxMemory.GetMemory();
-            report.AppendLine($"Physical memory max (MB): {memory.AvailablePhysicalMemory / 1024.0}");
-            report.AppendLine($"Physical memory used (MB): {memory.UsedPhysicalMemory / 1024.0}");
-            report.AppendLine($"Virtual memory max (MB): {memory.AvailableVirtualMemory / 1024.0}");
-            report.AppendLine($"Virtual memory used (MB): {memory.UsedVirtualMemory / 1024.0}");
-            NetworkInfo[] networkInfos = NetworkInfo.GetNetworkInfos();
-            for (int i = 0; i < networkInfos.Length; i++)
-            {
-                report.AppendLine($"Network card #{i} Type: {networkInfos[i].NetworkType}");
-                report.AppendLine($"Network card #{i} Name: {networkInfos[i].Name}");
-                report.AppendLine($"Network card #{i} Status: {networkInfos[i].Status}");
-                report.AppendLine($"Network card #{i} Speed: {networkInfos[i].Speed} bytes");
-                report.AppendLine($"Network card #{i} Gateway Addresses: {networkInfos[i].GatewayAddresses.GetAddressString()}");
-                report.AppendLine($"Network card #{i} Unicast Addresses: {networkInfos[i].UnicastAddresses.GetAddressString()}");                
-                report.AppendLine($"Network card #{i} Dns Addresses: {networkInfos[i].DnsAddresses.GetAddressString()}");
-
-                report.AppendLine();
-
-            }
 
 
             if (writeConsole)
