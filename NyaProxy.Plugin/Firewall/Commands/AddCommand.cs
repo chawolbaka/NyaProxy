@@ -17,7 +17,7 @@ namespace Firewall.Commands
 
         public virtual Table<T> Table { get; }
 
-        private RuleCommandParser<T> _parser = new RuleCommandParser<T>();
+        private RuleCommandParser<T> _parser = new RuleCommandParser<T>("add");
 
         public AddCommand(Table<T> table)
         {
@@ -40,6 +40,9 @@ namespace Firewall.Commands
             }
             catch (Exception e)
             {
+                if (e is CommandException)
+                    throw;
+
                 helper.Logger.Exception(e);
                 helper.Logger.Unpreformat("§cAdd failed.");
             }
