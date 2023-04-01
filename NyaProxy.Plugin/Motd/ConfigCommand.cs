@@ -13,9 +13,9 @@ namespace Motd
         private string _address;
         public ConfigCommand(Action reload) : base()
         {
-            AddOption(new Option("reload",      (command, option, args, helper) => reload()));
-            AddOption(new Option("host",     1, (command, option, args, helper) => _host    = args.Span[0]));
-            AddOption(new Option("generate", 1, (command, option, args, helper) => _address = args.Span[0]));
+            AddOption(new Option("reload",      (command, e) => reload()));
+            AddOption(new Option("host",     1, (command, e) => _host    = e.Arguments.Span[0]));
+            AddOption(new Option("generate", 1, (command, e) => _address = e.Arguments.Span[0]));
         }
 
         public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)

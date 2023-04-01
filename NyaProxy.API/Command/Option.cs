@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace NyaProxy.API.Command
 {
-
     public class Option
     {
         public string Name { get; set; }
@@ -15,33 +14,33 @@ namespace NyaProxy.API.Command
 
         public int MinimumArgs { get; set; }
 
-        internal Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> Handler { get; set; }
+        internal Action<Command, CommandOptionEventArgs> Handler { get; set; }
 
-        internal Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> AsyncHandler { get; set; }
+        internal Func<Command, CommandOptionEventArgs, Task> AsyncHandler { get; set; }
 
         internal HashSet<string> Aliases;
 
-        public Option(string name, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler)
+        public Option(string name, Action<Command, CommandOptionEventArgs> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Handler = handler;
         }
 
-        public Option(string name, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler, params string[] aliases)
+        public Option(string name, Action<Command, CommandOptionEventArgs> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Handler = handler;
             Aliases = new HashSet<string>(aliases);
         }
 
-        public Option(string name, int minimumArgs, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler)
+        public Option(string name, int minimumArgs, Action<Command, CommandOptionEventArgs> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             MinimumArgs = minimumArgs;
             Handler = handler;
         }
 
-        public Option(string name, int minimumArgs, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler, params string[] aliases)
+        public Option(string name, int minimumArgs, Action<Command, CommandOptionEventArgs> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             MinimumArgs = minimumArgs;
@@ -49,14 +48,14 @@ namespace NyaProxy.API.Command
             Aliases = new HashSet<string>(aliases);
         }
 
-        public Option(string name, string description, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler)
+        public Option(string name, string description, Action<Command, CommandOptionEventArgs> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));
             Handler = handler;
         }
 
-        public Option(string name, string description, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler, params string[] aliases)
+        public Option(string name, string description, Action<Command, CommandOptionEventArgs> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));
@@ -64,7 +63,7 @@ namespace NyaProxy.API.Command
             Aliases = new HashSet<string>(aliases);
         }
 
-        public Option(string name, string description, int minimumArgs, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler)
+        public Option(string name, string description, int minimumArgs, Action<Command, CommandOptionEventArgs> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));
@@ -72,7 +71,7 @@ namespace NyaProxy.API.Command
             Handler = handler;
         }
 
-        public Option(string name, string description, int minimumArgs, Action<Command, Option, ReadOnlyMemory<string>, ICommandHelper> handler, params string[] aliases)
+        public Option(string name, string description, int minimumArgs, Action<Command, CommandOptionEventArgs> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));
@@ -84,27 +83,27 @@ namespace NyaProxy.API.Command
 
 
 
-        public Option(string name, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler)
+        public Option(string name, Func<Command, CommandOptionEventArgs, Task> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             AsyncHandler = handler;
         }
 
-        public Option(string name, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler, params string[] aliases)
+        public Option(string name, Func<Command, CommandOptionEventArgs, Task> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             AsyncHandler = handler;
             Aliases = new HashSet<string>(aliases);
         }
 
-        public Option(string name, int minimumArgs, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler)
+        public Option(string name, int minimumArgs, Func<Command, CommandOptionEventArgs, Task> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             MinimumArgs = minimumArgs;
             AsyncHandler = handler;
         }
 
-        public Option(string name, int minimumArgs, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler, params string[] aliases)
+        public Option(string name, int minimumArgs, Func<Command, CommandOptionEventArgs, Task> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             MinimumArgs = minimumArgs;
@@ -112,14 +111,14 @@ namespace NyaProxy.API.Command
             Aliases = new HashSet<string>(aliases);
         }
 
-        public Option(string name, string description, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler)
+        public Option(string name, string description, Func<Command, CommandOptionEventArgs, Task> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));
             AsyncHandler = handler;
         }
 
-        public Option(string name, string description, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler, params string[] aliases)
+        public Option(string name, string description, Func<Command, CommandOptionEventArgs, Task> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));
@@ -127,7 +126,7 @@ namespace NyaProxy.API.Command
             Aliases = new HashSet<string>(aliases);
         }
 
-        public Option(string name, string description, int minimumArgs, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler)
+        public Option(string name, string description, int minimumArgs, Func<Command, CommandOptionEventArgs, Task> handler)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));
@@ -135,7 +134,7 @@ namespace NyaProxy.API.Command
             AsyncHandler = handler;
         }
 
-        public Option(string name, string description, int minimumArgs, Func<Command, Option, ReadOnlyMemory<string>, ICommandHelper, Task> handler, params string[] aliases)
+        public Option(string name, string description, int minimumArgs, Func<Command, CommandOptionEventArgs, Task> handler, params string[] aliases)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Description = description ?? throw new ArgumentNullException(nameof(description));

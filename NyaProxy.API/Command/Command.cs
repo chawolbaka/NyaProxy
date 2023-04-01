@@ -54,7 +54,7 @@ namespace NyaProxy.API.Command
         
         public Command()
         {
-            AddOption(new Option("--help", "Show help and usage information", (command, option, args, helper) => helper.Logger.Unpreformat(command.Help)));
+            AddOption(new Option("--help", "Show help and usage information", (command, e) => e.Helper.Logger.Unpreformat(command.Help)));
         }
 
         public void AddOption(Option option)
@@ -83,17 +83,17 @@ namespace NyaProxy.API.Command
                     if (i + option.MinimumArgs >= args.Length)
                         throw new MissingArgumentException(this, currentArgument);
 
-                    ReadOnlyMemory<string> arguments = null;
+                    CommandOptionEventArgs oea = new CommandOptionEventArgs(option, helper);
                     if (option.MinimumArgs > 0)
                     {
-                        arguments = args.Slice(i+1, option.MinimumArgs);
+                        oea.Arguments = args.Slice(i + 1, option.MinimumArgs);
                         i += option.MinimumArgs;
                     }
 
                     if (option.Handler != null)
-                        option.Handler(this, option, arguments, helper);
+                        option.Handler(this, oea);
                     else if (option.AsyncHandler != null)
-                        await option.AsyncHandler(this, option, arguments, helper);
+                        await option.AsyncHandler(this, oea);
                 }
                 else
                 {
