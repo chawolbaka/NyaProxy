@@ -12,6 +12,7 @@ using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
+using NyaProxy.API.Event;
 using NyaProxy.Extension;
 using System.Collections.Concurrent;
 using NyaProxy.Debug;
@@ -20,7 +21,6 @@ using NyaProxy.Plugin;
 using NyaProxy.Bridges;
 using NyaProxy.Channles;
 using System.Linq;
-
 
 namespace NyaProxy
 {

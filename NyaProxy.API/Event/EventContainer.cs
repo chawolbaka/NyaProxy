@@ -2,18 +2,17 @@
 using System.Linq;
 using System.Collections.Generic;
 using MinecraftProtocol.Utils;
-using NyaProxy.API.Event;
 
-namespace NyaProxy
+namespace NyaProxy.API.Event
 {
     public class EventContainer<TEventArgs>
     {
-       public List<List<EventHandler<TEventArgs>>> Events { get; set; }
+        public List<List<EventHandler<TEventArgs>>> Events { get; set; }
 
         public EventContainer()
         {
-            Events = new ();
-            int max = ((int[])Enum.GetValues(typeof(EventPriority))).Max(x => x);
+            Events = new();
+            int max = ((int[])System.Enum.GetValues(typeof(EventPriority))).Max(x => x);
             for (int i = 0; i < max; i++)
             {
                 Events.Add(new List<EventHandler<TEventArgs>>());
