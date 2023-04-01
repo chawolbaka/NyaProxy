@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Text;
 using System.Xml;
-using Firewall.Chains;
+using NyaFirewall.Chains;
 using NyaProxy.API.Command;
 
-namespace Firewall
+namespace NyaFirewall
 {
     public static class Firewall
     {

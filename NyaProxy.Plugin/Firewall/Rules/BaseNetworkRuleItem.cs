@@ -4,7 +4,7 @@ using System.Text;
 using System.Xml;
 using NyaGenerator.Equatable;
 
-namespace Firewall.Rules
+namespace NyaFirewall.Rules
 {
     [Equatable]
     public partial class BaseNetworkRuleItem

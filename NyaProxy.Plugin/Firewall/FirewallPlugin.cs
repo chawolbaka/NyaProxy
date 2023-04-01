@@ -2,12 +2,12 @@
 using System.Net.Sockets;
 using NyaProxy.API;
 using NyaProxy.API.Command;
-using Firewall.Rules;
-using Firewall.Tables;
+using NyaFirewall.Rules;
+using NyaFirewall.Tables;
 using MinecraftProtocol.DataType;
 using NyaProxy.API.Event;
 
-namespace Firewall
+namespace NyaFirewall
 {
 
     public class FirewallPlugin : NyaPlugin

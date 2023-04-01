@@ -1,11 +1,11 @@
 ﻿using System;
-using Firewall.Rules;
+using NyaFirewall.Rules;
 using NyaProxy.API.Command;
 using MinecraftProtocol.DataType;
 using MinecraftProtocol.Packets.Client;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Firewall.Commands
+namespace NyaFirewall.Commands
 {
     internal class RuleCommandParser<T> : Command where T : Rule, new()
     {

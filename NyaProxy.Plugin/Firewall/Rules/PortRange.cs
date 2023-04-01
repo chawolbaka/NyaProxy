@@ -1,6 +1,6 @@
 ﻿using NyaGenerator.Equatable;
 
-namespace Firewall.Rules
+namespace NyaFirewall.Rules
 {
     [Equatable]
     public partial class PortRange : IEquatable<int>

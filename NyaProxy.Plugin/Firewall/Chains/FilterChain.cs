@@ -1,11 +1,11 @@
 ﻿using System.Xml;
-using Firewall.Tables;
-using Firewall.Rules;
+using NyaFirewall.Tables;
+using NyaFirewall.Rules;
 using System.Text;
 using NyaProxy.API.Command;
-using Firewall.Commands;
+using NyaFirewall.Commands;
 
-namespace Firewall.Chains
+namespace NyaFirewall.Chains
 {
     public abstract class FilterChain<T> : Chain where T : Rule, new()
     {

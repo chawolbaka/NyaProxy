@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using System.Xml;
-using Firewall.Rules;
-using Firewall.Tables;
+using NyaFirewall.Rules;
+using NyaFirewall.Tables;
 
-namespace Firewall.Chains
+namespace NyaFirewall.Chains
 {
     public class LoginChain : FilterChain<LoginRule>
     {

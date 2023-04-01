@@ -1,10 +1,10 @@
 ﻿using System.Text;
 using System.Xml;
-using Firewall.Rules;
-using Firewall.Tables;
+using NyaFirewall.Rules;
+using NyaFirewall.Tables;
 using NyaProxy.API.Command;
 
-namespace Firewall.Chains
+namespace NyaFirewall.Chains
 {
     public class ServerChain : FilterChain<PacketRule>
     {

@@ -1,9 +1,9 @@
 ﻿using System.Xml;
-using Firewall.Tables;
-using Firewall.Rules;
+using NyaFirewall.Tables;
+using NyaFirewall.Rules;
 using System.Text;
 
-namespace Firewall.Chains
+namespace NyaFirewall.Chains
 {
     public class ClientChain : FilterChain<PacketRule>
     {

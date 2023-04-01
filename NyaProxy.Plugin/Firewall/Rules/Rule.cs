@@ -5,7 +5,7 @@ using System.Xml;
 using NyaGenerator.Equatable;
 using NyaProxy.API.Config;
 
-namespace Firewall.Rules
+namespace NyaFirewall.Rules
 {
     [Equatable]
     public partial class Rule

@@ -1,9 +1,9 @@
-﻿using Firewall.Rules;
+﻿using NyaFirewall.Rules;
 using StringTables;
 using System.Collections;
 using System.Xml;
 
-namespace Firewall.Tables
+namespace NyaFirewall.Tables
 {
     public class Table<T> : IEnumerable<T> where T : Rule, new()
     {

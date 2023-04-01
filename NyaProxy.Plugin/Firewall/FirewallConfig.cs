@@ -1,4 +1,4 @@
-﻿using Firewall.Rules;
+﻿using NyaFirewall.Rules;
 using NyaProxy.API.Config;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Firewall
+namespace NyaFirewall
 {
     [ConfigFile("config")]
     public class FirewallConfig : Config, IManualConfig, IDefaultConfig

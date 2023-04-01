@@ -1,6 +1,6 @@
-﻿using Firewall.Chains;
-using Firewall.Rules;
-using Firewall.Tables;
+﻿using NyaFirewall.Chains;
+using NyaFirewall.Rules;
+using NyaFirewall.Tables;
 using NyaProxy.API.Command;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Firewall.Commands
+namespace NyaFirewall.Commands
 {
 
     public class AddCommand<T> : Command where T : Rule, new()

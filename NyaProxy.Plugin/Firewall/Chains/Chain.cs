@@ -1,9 +1,9 @@
-﻿using Firewall.Tables;
+﻿using NyaFirewall.Tables;
 using NyaProxy.API.Command;
 using System;
 using System.Xml;
 
-namespace Firewall.Chains
+namespace NyaFirewall.Chains
 {
     public abstract class Chain
     {

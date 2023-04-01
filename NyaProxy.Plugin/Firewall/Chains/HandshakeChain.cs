@@ -1,7 +1,7 @@
 ﻿using System.Xml;
-using Firewall.Rules;
+using NyaFirewall.Rules;
 
-namespace Firewall.Chains
+namespace NyaFirewall.Chains
 {
     public class HandshakeChain : FilterChain<HandshakeRule>
     {

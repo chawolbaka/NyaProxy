@@ -1,8 +1,8 @@
-﻿using Firewall.Rules;
-using Firewall.Tables;
+﻿using NyaFirewall.Rules;
+using NyaFirewall.Tables;
 using NyaProxy.API.Command;
 
-namespace Firewall.Commands
+namespace NyaFirewall.Commands
 {
     public class InsertCommand<T> : Command where T : Rule, new()
     {

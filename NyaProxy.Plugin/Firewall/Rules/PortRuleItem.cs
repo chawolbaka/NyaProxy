@@ -1,4 +1,4 @@
-﻿namespace Firewall.Rules
+﻿namespace NyaFirewall.Rules
 {
     public class PortRuleItem : RuleItem<PortRange>
     {
