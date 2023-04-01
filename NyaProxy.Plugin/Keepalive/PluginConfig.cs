@@ -1,10 +1,9 @@
 ﻿using System;
 using NyaProxy.API.Config;
 
-
 namespace Keepalive
 {
-    [ConfigFile("config.toml")]
+    [ConfigFile("config")]
     public class PluginConfig : Config, IDefaultConfig, IManualConfig
     {
         public virtual long Timeout { get; set; }
