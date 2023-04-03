@@ -148,21 +148,5 @@ namespace NyaProxy.Bridges
                 NyaProxy.Logger.Exception(e);
             }
         }
-
-        private class SendEventArgs
-        {
-            public Socket Socket;
-            public Memory<byte> Data;
-            public Action Callback;
-
-            public SendEventArgs() { }
-            public SendEventArgs Setup(Socket socket, Memory<byte> data, Action callback)
-            {
-                Socket = socket;
-                Data = data;
-                Callback = callback;
-                return this;
-            }
-        }
     }
 }
