@@ -295,7 +295,7 @@ namespace NyaProxy
                 if (e.CheckException<DisconnectException>(out string disconnectMessage))
                 {
                     if (hea != null && hea.Packet.NextState == HandshakeState.Login)
-                        acceptSocket.DisconnectOnLogin(i18n.Disconnect.ConnectFailed);
+                        acceptSocket.DisconnectOnLogin(disconnectMessage);
                     else
                         acceptSocket.Close();
                     hea?.Packet?.Dispose();
