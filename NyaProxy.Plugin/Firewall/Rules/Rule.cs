@@ -4,6 +4,7 @@ using System.Text;
 using System.Xml;
 using NyaGenerator.Equatable;
 using NyaProxy.API.Config;
+using System.Data;
 
 namespace NyaFirewall.Rules
 {
@@ -12,6 +13,12 @@ namespace NyaFirewall.Rules
     {
         [IgnoreEquality]
         public bool Disabled { get; set; }
+        
+        [IgnoreEquality]
+        public bool IsEffective => !(EffectiveTime > 0 && (DateTime.Now - _createTime).TotalMilliseconds > EffectiveTime);
+
+        [IgnoreEquality]
+        public int EffectiveTime { get; set; }
 
         public RuleItem<string> Host { get; set; }
 
@@ -23,9 +30,12 @@ namespace NyaFirewall.Rules
 
         public string Description { get; set; }
 
+        private readonly DateTime _createTime = DateTime.Now;
+
         public Rule() 
         {
             Action = FirewallPlugin.Config.DefaultAction;
+            EffectiveTime = int.MaxValue; //默认都是临时规则，每次重启后失效
         }
        
         internal T ReadFromXml<T>(XmlReader reader) where T: Rule
@@ -50,6 +60,7 @@ namespace NyaFirewall.Rules
                 if (reader.NodeType == XmlNodeType.EndElement && reader.Name == GetType().Name)
                     return (T)this;
             } while (reader.Read());
+
             return (T)this;
         }
         
@@ -67,6 +78,7 @@ namespace NyaFirewall.Rules
 
         internal virtual void WriteXml(XmlWriter writer)
         {
+           
             Host?.WriteXml(writer, nameof(Host));
 
             if (Source != null && !Source.IsEmpty)

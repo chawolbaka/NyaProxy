@@ -33,6 +33,9 @@ namespace NyaFirewall.Tables
             string key = typeof(T).Name;
             foreach (var rule in Rules)
             {
+                if (rule.EffectiveTime > 0)
+                    continue;
+
                 writer.WriteStartElement(key);
                 if (rule.Disabled)
                     writer.WriteAttributeString(nameof(rule.Disabled), rule.Disabled.ToString());
@@ -51,10 +54,12 @@ namespace NyaFirewall.Tables
         {
             if (Rules.Count == 0)
                 return string.Empty;
+
             StringTable table = new StringTable(Rules.First.Value.CreateFirstColumns());
             foreach (var rule in Rules)
             {
-                table.AddRow(rule.CreateRow().Select(x => x == null ? "Any" : x.ToString()).ToArray());
+                if (!rule.Disabled && rule.IsEffective)
+                    table.AddRow(rule.CreateRow().Select(x => x == null ? "Any" : x.ToString()).ToArray());
             }
             return table.ToMinimalString();
         }

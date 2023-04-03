@@ -50,7 +50,7 @@ namespace NyaFirewall
 
             foreach (var rule in Firewall.Chains.Connect.FilterTable)
             {
-                if (rule.Disabled)
+                if (rule.Disabled || !rule.IsEffective)
                     continue;
 
                 if (rule.Source != null && !rule.Source.Match(source.Address, source.Port))
@@ -74,7 +74,7 @@ namespace NyaFirewall
 
             foreach (var rule in Firewall.Chains.Handshake.FilterTable)
             {
-                if (rule.Disabled)
+                if (rule.Disabled || !rule.IsEffective)
                     continue;
 
                 if (rule.Source != null && !rule.Source.Match(source.Address, source.Port))
@@ -165,7 +165,7 @@ namespace NyaFirewall
             IPEndPoint source = (IPEndPoint)e.Source.RemoteEndPoint!;
             IPEndPoint destination = (IPEndPoint)e.Destination.RemoteEndPoint!;
 
-            if (rule.Disabled)
+            if (rule.Disabled || !rule.IsEffective)
                 return true;
 
             if (rule.Host != null && !rule.Host.Match(e.Host))
