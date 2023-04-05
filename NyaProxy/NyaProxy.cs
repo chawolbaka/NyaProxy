@@ -302,9 +302,15 @@ namespace NyaProxy
                     Logger.Debug(disconnectMessage);
                 }
                 else if(e.CheckException<SocketException>(out string message))
-                    Logger.Error(message);    
+                {
+                    if (hea != null && hea.Packet.NextState == HandshakeState.Login)
+                        acceptSocket.DisconnectOnLogin(message);
+                    Logger.Debug(message);
+                }
                 else
+                {
                     Logger.Exception(e);
+                }
             }
         }
 
