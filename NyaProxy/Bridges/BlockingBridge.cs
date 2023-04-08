@@ -67,7 +67,9 @@ namespace NyaProxy.Bridges
         public virtual CryptoHandler CryptoHandler => _clientSocketListener.CryptoHandler;
 
         public Stage Stage { get; private set; }
-        
+
+        protected override string BreakMessage => Player != null ? $"§e{Player.Name} left the game" : base.BreakMessage;
+
         private IHostTargetRule _targetRule;
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
@@ -136,6 +138,7 @@ namespace NyaProxy.Bridges
             _handshakePacket = null; 
             _loginStartPacket = null;
         }
+
         public virtual void Break(string reason)
         {
             if (Player != null)
@@ -162,7 +165,8 @@ namespace NyaProxy.Bridges
                     Break();
                     return;
                 }
-                
+                NyaProxy.Logger.Info($"{lsp.PlayerName}[{Source._remoteEndPoint()}] logged in with host {Host.Name}[{Destination._remoteEndPoint()}]");
+
                 _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : lsp;
                     
                 _targetRule     = Host.GetRule(lsp.PlayerName);

@@ -22,17 +22,14 @@ namespace NyaProxy.Bridges
         private static long _sequence = 1000; //从0开始的话StringTable那边看着有点太短，这边设置成1000仅仅是为了看着舒服点。
 
         public long SessionId { get; }
-
-        public string HandshakeAddress { get; }
-
-        public Socket Source { get; set; }
-
-        public Socket Destination { get; set; }
-
-        protected CancellationTokenSource ListenToken = new CancellationTokenSource();
-
         public HostConfig Host { get; }
-        
+        public string HandshakeAddress { get; }
+        public Socket Source { get; set; }
+        public Socket Destination { get; set; }
+    
+        protected CancellationTokenSource ListenToken = new CancellationTokenSource();
+        protected virtual string BreakMessage => $"{GetType().Name} breaked ({Source._remoteEndPoint()}<->{Destination._remoteEndPoint()})";
+
         private SpinLock _breakLock = new SpinLock();
         private bool _isBreaked;
 
@@ -87,7 +84,7 @@ namespace NyaProxy.Bridges
                     Destination.Close();
                 }
                 NyaProxy.Disconnected.Invoke(this, new DisconnectEventArgs(Host.Name));
-                NyaProxy.Logger.Info($"{GetType().Name} breaked ({Source._remoteEndPoint()}<->{Destination._remoteEndPoint()})");
+                NyaProxy.Logger.Info(BreakMessage);
             }
             catch (SocketException) { }
             catch (ObjectDisposedException) { }

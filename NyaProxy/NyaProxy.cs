@@ -269,6 +269,9 @@ namespace NyaProxy
                     if (!NetworkUtils.CheckConnect(serverSocket))
                         throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 
+                    if (hp.NextState == HandshakeState.GetStatus)
+                        Logger.Info($"{acceptSocket._remoteEndPoint()} Try to ping {dest.Name}[{serverSocket._remoteEndPoint()}]");
+
                     if (dest.ForwardMode == ForwardMode.Direct)
                     {
                         Network.Enqueue(serverSocket, hp.Pack(-1), () =>
