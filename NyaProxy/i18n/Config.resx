@@ -132,6 +132,9 @@
   <data name="ConnectionTimeout" xml:space="preserve">
     <value />
   </data>
+  <data name="EnableBlockingQueue" xml:space="preserve">
+    <value />
+  </data>
   <data name="EnableReceivePool" xml:space="preserve">
     <value />
   </data>

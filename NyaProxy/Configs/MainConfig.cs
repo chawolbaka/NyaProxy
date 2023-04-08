@@ -17,6 +17,8 @@ namespace NyaProxy.Configs
 
         LogFile LogFile { get; set; }
 
+
+        public bool EnableBlockingQueue;
         public bool EnableReceivePool;
         public int ReceivePoolBufferCount;
         public int ReceivePoolBufferLength;
@@ -62,6 +64,7 @@ namespace NyaProxy.Configs
                 ObjectNode advanced = reader.ReadObjectProperty("advanced");
                 NetworkThread       = (int)advanced["network-threads"];
                 TcpFastOpen         = advanced.ContainsKey("tcp-fast-open") ? (bool)advanced["tcp-fast-open"] : false;
+                EnableBlockingQueue = advanced.ContainsKey("enable-blocking-queue") ? (bool)advanced["enable-blocking-queue"] : true;
 
                 if (advanced.ContainsKey("enable-receive-pool"))
                 {
@@ -99,11 +102,12 @@ namespace NyaProxy.Configs
                 {
                     ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread),
                     ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen,  i18n.Config.TcpFastOpen),
-                    ["enable-receive-pool"] = new BooleanNode(EnableReceivePool, i18n.Config.EnableReceivePool),
+                    ["enable-blocking-queue"] = new BooleanNode(EnableBlockingQueue, i18n.Config.EnableBlockingQueue),
+                    ["enable-receive-pool"]   = new BooleanNode(EnableReceivePool,   i18n.Config.EnableReceivePool),
                     ["receive-pool-buffer-count"]  = new NumberNode(ReceivePoolBufferCount,  i18n.Config.ReceivePoolBufferCount),
                     ["receive-pool-buffer-length"] = new NumberNode(ReceivePoolBufferLength, i18n.Config.ReceivePoolBufferLength)
                 }
-            });
+            });;
         }
 
         public void SetDefault()
@@ -111,6 +115,7 @@ namespace NyaProxy.Configs
             Bind = new IPEndPoint[] { new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 25565) };
             TcpFastOpen = false;
             NetworkThread = Environment.ProcessorCount;
+            EnableBlockingQueue = true;
             EnableReceivePool = true;
             ReceivePoolBufferCount = 1024;
             ReceivePoolBufferLength = 65536;

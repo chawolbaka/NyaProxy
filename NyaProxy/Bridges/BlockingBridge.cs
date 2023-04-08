@@ -66,17 +66,16 @@ namespace NyaProxy.Bridges
 
         public virtual CryptoHandler CryptoHandler => _clientSocketListener.CryptoHandler;
 
-        private RSA _rsaService;
-        private readonly string _serverId = ""; //1.7开始默认是空的
-        private byte[] _verifyToken;
-
-       
         public Stage Stage { get; private set; }
         
         private IHostTargetRule _targetRule;
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
-        
+
+        private RSA _rsaService;
+        private readonly string _serverId = ""; //1.7开始默认是空的
+        private byte[] _verifyToken;
+
         private int _forgeCheckCount;
         private int _queueIndex;
 
@@ -117,7 +116,7 @@ namespace NyaProxy.Bridges
             }
             else if(_handshakePacket.NextState == HandshakeState.GetStatus)
             {
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, _handshakePacket.AsCompatible(-1, -1), DateTime.Now));
+                Enqueue(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, _handshakePacket.AsCompatible(-1, -1), DateTime.Now));
                 _clientSocketListener.PacketReceived += (s, e) => { if (e.Packet == PacketType.Status.Client.Request) Stage = Stage.Status; };
                 _clientSocketListener.PacketReceived += ClientPacketReceived;
                 _serverSocketListener.PacketReceived += ServerPacketReceived;
@@ -151,6 +150,7 @@ namespace NyaProxy.Bridges
         private void BeforeLoginStart(object sender, PacketReceivedEventArgs e)
         {
             _clientSocketListener.PacketReceived -= BeforeLoginStart;
+
             if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
             {
                 Stage = Stage.Login;
@@ -162,9 +162,10 @@ namespace NyaProxy.Bridges
                     Break();
                     return;
                 }
+                
                 _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : lsp;
                     
-                _targetRule = Host.GetRule(lsp.PlayerName);
+                _targetRule     = Host.GetRule(lsp.PlayerName);
                 IsOnlineMode    = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);
                 OverCompression = _targetRule.CompressionThreshold != -1;
                 if (_targetRule.ProtocolVersion > 0)
@@ -265,9 +266,9 @@ namespace NyaProxy.Bridges
                 NyaProxy.Network.Enqueue(Source, CryptoHandler.TryEncrypt(packet.Pack(-1)), packet);
             }
 
-            ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().
+            Enqueue(PacketEventArgsPool.Rent().
                 Setup(this, Source, Destination, Direction.ToServer, _handshakePacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
-            ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().
+            Enqueue(PacketEventArgsPool.Rent().
                 Setup(this, Source, Destination, Direction.ToServer, _loginStartPacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
         }
 
@@ -313,7 +314,6 @@ namespace NyaProxy.Bridges
                         _serverSocketListener.PacketReceived -= BeforeLoginSuccess;
                         _serverSocketListener.PacketReceived += CheckForge;
                         _serverSocketListener.PacketReceived += ServerPacketReceived;
-
                         if (ProtocolVersion >= ProtocolVersions.V1_19 && ProtocolVersion <= ProtocolVersions.V1_19_3)
                             _serverSocketListener.PacketReceived += WaitForGameJoin;
                     }
@@ -322,7 +322,6 @@ namespace NyaProxy.Bridges
                         Break();
                     }
                 }
-
                 ServerPacketReceived(sender, e);
             }
             catch (Exception ex)
@@ -360,7 +359,7 @@ namespace NyaProxy.Bridges
             {
                 e.Cancel(); //阻止数据包被继续传递
 
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
+                Enqueue(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
                 ListenToken.Cancel();
             }
         }
@@ -371,11 +370,11 @@ namespace NyaProxy.Bridges
                 e.Packet.CompressionThreshold = ServerCompressionThreshold;
 
             if (Stage == Stage.Play && e.Packet == PacketType.Play.Client.ChatMessage)
-                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
+                Enqueue(ChatEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
             else if (Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Client.PluginChannel)
-                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
+                Enqueue(PluginChannleEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
             else
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
+                Enqueue(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
         }
 
         private void ServerPacketReceived(object sender, PacketReceivedEventArgs e)
@@ -388,11 +387,19 @@ namespace NyaProxy.Bridges
                 || e.Packet == PacketType.Play.Server.SystemChatMessage
                 || e.Packet == PacketType.Play.Server.PlayerChatMessage
                 || e.Packet == PacketType.Play.Server.DisguisedChatMessage)
-                ReceiveQueues[_queueIndex].Add(ChatEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
+                Enqueue(ChatEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
             else if (Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Server.PluginChannel)
-                ReceiveQueues[_queueIndex].Add(PluginChannleEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
+                Enqueue(PluginChannleEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
             else
-                ReceiveQueues[_queueIndex].Add(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
+                Enqueue(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
+        }
+
+        private void Enqueue(PacketSendEventArgs psea)
+        {
+            if (EnableBlockingQueue)
+                ReceiveBlockingQueues[_queueIndex].Add(psea);
+            else
+                ReceiveQueues[_queueIndex].Enqueue(psea);
         }
     }
 }

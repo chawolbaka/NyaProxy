@@ -15,7 +15,10 @@ namespace NyaProxy.Bridges
 {
     public abstract class Bridge : IBridge
     {
-        internal static long Sequence => Interlocked.Read(ref _sequence);
+        internal static long Count => Interlocked.Read(ref _count);
+        private static long _count = 0;
+
+        internal static long CurrentSequence => Interlocked.Read(ref _sequence);
         private static long _sequence = 1000; //从0开始的话StringTable那边看着有点太短，这边设置成1000仅仅是为了看着舒服点。
 
         public long SessionId { get; }
@@ -43,6 +46,8 @@ namespace NyaProxy.Bridges
 
             ListenToken.Token.Register(Break);
             NyaProxy.Bridges[host.Name]?.TryAdd(SessionId, this);
+
+            _count = Interlocked.Increment(ref _count);
         }
 
         public abstract IBridge Build();
@@ -56,6 +61,7 @@ namespace NyaProxy.Bridges
                 if (_isBreaked)
                     return;
 
+                _count = Interlocked.Decrement(ref _count);
                 _isBreaked = true;
             }
             finally
@@ -63,10 +69,10 @@ namespace NyaProxy.Bridges
                 if (lockTaken)
                     _breakLock.Exit();
             }
-            
 
             try
             {
+                
                 if (!NyaProxy.Bridges[Host.Name].ContainsKey(SessionId))
                     return;
                 ListenToken?.Cancel();

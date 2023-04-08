@@ -31,17 +31,12 @@ namespace NyaProxy
         public static PluginManager Plugin { get; private set; }
         public static ConcurrentDictionary<string, ConcurrentDictionary<long, Bridge>> Bridges { get; private set; }
         public static IReadOnlyList<Socket> ServerSockets { get; set; }
-        
-        
         public static INyaLogger Logger { get; private set; }
-
+        public static NetworkHelper Network;
         public static readonly CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
-        
         public static readonly MainConfig Config = new MainConfig();
         public static readonly Dictionary<string, HostConfig> Hosts = new Dictionary<string, HostConfig>();
-        public static readonly NetworkHelper Network = new NetworkHelper(GlobalQueueToken.Token);
 
-        
         public static EventContainer<IConnectEventArgs>      Connecting              = new();
         public static EventContainer<IHandshakeEventArgs>    Handshaking             = new();
         public static EventContainer<ILoginStartEventArgs>   LoginStart              = new();
@@ -60,12 +55,14 @@ namespace NyaProxy
             Channles = new();
             CommandManager = new();
 
+
             Thread.CurrentThread.Name = nameof(NyaProxy);
             TaskScheduler.UnobservedTaskException += (sender, e) => Crash.Report(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
             ReloadConfig();
             ReloadHosts();
 
+            Network = new NetworkHelper(Config.EnableBlockingQueue, GlobalQueueToken.Token);
             if (Config.EnableReceivePool)
                 NetworkListener.SetPoolSize(Config.ReceivePoolBufferLength, Config.ReceivePoolBufferCount);
 
@@ -257,6 +254,7 @@ namespace NyaProxy
                 using Packet FirstPacket = await ProtocolUtils.ReceivePacketAsync(acceptSocket);
                 if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
                 {
+
                     HostConfig dest = GetHost(hp.GetServerAddressOnly());
                     hea = new HandshakeEventArgs(acceptSocket, hp, dest);
                     Handshaking.Invoke(acceptSocket, hea);
@@ -268,6 +266,8 @@ namespace NyaProxy
                     
                     dest = GetHost(hea.Packet.GetServerAddressOnly());
                     Socket serverSocket = await dest.OpenConnectAsync();
+                    if (!NetworkUtils.CheckConnect(serverSocket))
+                        throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 
                     if (dest.ForwardMode == ForwardMode.Direct)
                     {
@@ -305,7 +305,7 @@ namespace NyaProxy
                 {
                     if (hea != null && hea.Packet.NextState == HandshakeState.Login)
                         acceptSocket.DisconnectOnLogin(message);
-                    Logger.Debug(message);
+                    Logger.Debug($"SocketException {message}");
                 }
                 else
                 {

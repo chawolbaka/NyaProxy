@@ -11,10 +11,11 @@ namespace NyaProxy
 {
     public class NetworkHelper : INetworkHelper
     {
-        private NetworkSender sender = new NetworkSender();
+        private NetworkSender sender;
 
-        internal NetworkHelper(CancellationToken token)
+        public NetworkHelper(bool useBlockingQueue, CancellationToken token)
         {
+            sender = new NetworkSender(useBlockingQueue);
             Thread sendThread = new Thread(() => {
                 AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
                 sender.Start(token);
