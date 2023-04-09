@@ -110,11 +110,11 @@ namespace StringTables
                 .Aggregate((s, a) => s + a) + " |";
 
             // find the longest formatted line
-            var maxRowLength = Math.Max(0, Rows.Any() ? Rows.Max(row => string.Format(format, row).Length) : 0);
+            var maxRowLength = Math.Max(0, Rows.Any() ? Rows.Max(row => GetStringLength(string.Format(format, row))) : 0);
             var columnHeaders = string.Format(format, Columns.ToArray());
 
             // longest line is greater of formatted columnHeader and longest row
-            var longestLine = Math.Max(maxRowLength, columnHeaders.Length);
+            var longestLine = Math.Max(maxRowLength, GetStringLength(columnHeaders));
 
             // add each row
             var results = Rows.Select(row => string.Format(format, row)).ToList();
@@ -234,13 +234,26 @@ namespace StringTables
                 : "-";
         }
 
+        private int GetStringLength(string value)
+        {
+            int length = 0;
+            for (int i = 0; i < value.Length; i++)
+            {
+                if (value[i] == '§')
+                    i += 1;
+                else
+                    length++;
+            }
+            return length;
+        }
+
         private List<int> ColumnLengths()
         {
             var columnLengths = Columns
                 .Select((t, i) => Rows.Select(x => x[i])
                     .Union(new[] { Columns[i] })
                     .Where(x => x != null)
-                    .Select(x => x.ToString().Length).Max())
+                    .Select(x => GetStringLength(x.ToString())).Max())
                 .ToList();
             return columnLengths;
         }

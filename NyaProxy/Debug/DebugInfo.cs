@@ -25,8 +25,8 @@ namespace NyaProxy.Debug
                 IPlayer player = (bridge as BlockingBridge)?.Player;
                 string playerInfo = player is not null ? $"{player.Name}({player.Id})" : "";
                 table.AddRow(bridge.SessionId.ToString($"D{Bridge.CurrentSequence.ToString().Length}"), bridge.Host.Name, playerInfo,
-                     $"{bridge.Source._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Source) ? "Online" : "Offline")})",
-                     $"{bridge.Destination._remoteEndPoint()} ({(NetworkUtils.CheckConnect(bridge.Destination) ? "Online" : "Offline")})");
+                     $"{(NetworkUtils.CheckConnect(bridge.Source) ? "§a" : "§c")}{bridge.Source._remoteEndPoint()}§r",
+                     $"{(NetworkUtils.CheckConnect(bridge.Destination) ? "§a" : "§c")}{bridge.Destination._remoteEndPoint()}§r");
             }
             return table;
         }
