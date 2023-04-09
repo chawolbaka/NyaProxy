@@ -72,9 +72,9 @@ namespace NyaProxy.Debug
                 }
             }
 
-            if (NyaProxy.Plugin is not null && NyaProxy.Plugin.Count > 0)
+            if (NyaProxy.Plugins is not null && NyaProxy.Plugins.Count > 0)
             {
-                report.AppendLine($"  Plugins({NyaProxy.Plugin.Count}) :");
+                report.AppendLine($"  Plugins({NyaProxy.Plugins.Count}) :");
                 report.AppendLine(DebugHelper.CreatePluginTable().ToString());
             }
 
@@ -84,7 +84,7 @@ namespace NyaProxy.Debug
             {
                 ConsoleColor color = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(report);
+                Console.WriteLine(exception.ToString());
                 Console.ForegroundColor = color;
             }
 

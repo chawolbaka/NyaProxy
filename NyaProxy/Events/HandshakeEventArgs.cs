@@ -15,7 +15,7 @@ namespace NyaProxy
     {
         public Socket Source { get; set; }
 
-        public IHostConfig HostConfig { get; set; }
+        public IHost Host { get; set; }
 
         public HandshakePacket Packet { get; set; }
         
@@ -24,11 +24,11 @@ namespace NyaProxy
 
         }
 
-        public HandshakeEventArgs(Socket source, HandshakePacket packet,IHostConfig hostConfig)
+        public HandshakeEventArgs(Socket source, HandshakePacket packet,IHost host)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Packet = packet ?? throw new ArgumentNullException(nameof(packet));
-            HostConfig = hostConfig ?? throw new ArgumentNullException(nameof(hostConfig));
+            Host = host ?? throw new ArgumentNullException(nameof(host));
         }
     }
 }

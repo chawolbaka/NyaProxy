@@ -24,18 +24,20 @@ using System.Linq;
 
 namespace NyaProxy
 {
+
     public static partial class NyaProxy
     {
         public static CommandManager CommandManager { get; private set; }
         public static ChannleContainer Channles { get; private set; }
-        public static PluginManager Plugin { get; private set; }
-        public static ConcurrentDictionary<string, ConcurrentDictionary<long, Bridge>> Bridges { get; private set; }
+        public static PluginManager Plugins { get; private set; }
+        public static Dictionary<string, Host> Hosts { get; private set; }
+        public static ConcurrentDictionary<long, Bridge> Bridges { get; private set; }
+        
         public static IReadOnlyList<Socket> ServerSockets { get; set; }
         public static INyaLogger Logger { get; private set; }
         public static NetworkHelper Network;
         public static readonly CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
         public static readonly MainConfig Config = new MainConfig();
-        public static readonly Dictionary<string, HostConfig> Hosts = new Dictionary<string, HostConfig>();
 
         public static EventContainer<IConnectEventArgs>      Connecting              = new();
         public static EventContainer<IHandshakeEventArgs>    Handshaking             = new();
@@ -50,8 +52,9 @@ namespace NyaProxy
         public static async Task Setup(INyaLogger logger)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            Plugin = new(logger);
+            Hosts = new();
             Bridges = new();
+            Plugins = new(logger);
             Channles = new();
             CommandManager = new();
 
@@ -75,7 +78,7 @@ namespace NyaProxy
                 {
                     try
                     {
-                        await Plugin.LoadAsync(dir);
+                        await Plugins.LoadAsync(dir);
                     }
                     catch (Exception e)
                     {
@@ -129,14 +132,14 @@ namespace NyaProxy
                 try
                 {
                     TomlConfigReader reader = new TomlConfigReader(file.FullName);
-                    HostConfig hostConfig = new HostConfig(file.Name.Split('.')[0]);
+                    Host hostConfig = new Host(file.Name.Split('.')[0]);
                     hostConfig.Read(reader);
 
                     if (Hosts.ContainsKey(hostConfig.Name))
-                        Hosts[hostConfig.Name] = hostConfig;
+                        Hosts[hostConfig.Name] =hostConfig;
                     else
                         Hosts.Add(hostConfig.Name, hostConfig);
-                    Bridges.TryAdd(hostConfig.Name, new ConcurrentDictionary<long, Bridge>());
+
                     removeList.Remove(hostConfig.Name);
                 }
                 catch (Exception e)
@@ -255,8 +258,8 @@ namespace NyaProxy
                 if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
                 {
 
-                    HostConfig dest = GetHost(hp.GetServerAddressOnly());
-                    hea = new HandshakeEventArgs(acceptSocket, hp, dest);
+                    Host destHost = GetHost(hp.GetServerAddressOnly());
+                    hea = new HandshakeEventArgs(acceptSocket, hp, destHost);
                     Handshaking.Invoke(acceptSocket, hea);
                     if (hea.IsBlock)
                     {
@@ -264,26 +267,26 @@ namespace NyaProxy
                         return;
                     }
                     
-                    dest = GetHost(hea.Packet.GetServerAddressOnly());
-                    Socket serverSocket = await dest.OpenConnectAsync();
+                    destHost = GetHost(hea.Packet.GetServerAddressOnly());
+                    Socket serverSocket = await destHost.OpenConnectAsync();
                     if (!NetworkUtils.CheckConnect(serverSocket))
                         throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 
                     if (hp.NextState == HandshakeState.GetStatus)
-                        Logger.Info($"{acceptSocket._remoteEndPoint()} Try to ping {dest.Name}[{serverSocket._remoteEndPoint()}]");
+                        Logger.Info($"{acceptSocket._remoteEndPoint()} Try to ping {destHost.Name}[{serverSocket._remoteEndPoint()}]");
 
-                    if (dest.ForwardMode == ForwardMode.Direct)
+                    if (destHost.ForwardMode == ForwardMode.Direct)
                     {
                         Network.Enqueue(serverSocket, hp.Pack(-1), () =>
                         {
-                            FastBridge fastBridge = new FastBridge(dest, hea.Packet.ServerAddress, acceptSocket, serverSocket);
+                            FastBridge fastBridge = new FastBridge(destHost, hea.Packet.ServerAddress, acceptSocket, serverSocket);
                             fastBridge.Build();
                             hea?.Packet?.Dispose();
                         });
                     }
                     else
                     {
-                        BlockingBridge blockingBridge = new BlockingBridge(dest, hea.Packet, acceptSocket, serverSocket);
+                        BlockingBridge blockingBridge = new BlockingBridge(destHost, hea.Packet, acceptSocket, serverSocket);
                         blockingBridge.Build();
                     }
                 }
@@ -317,7 +320,7 @@ namespace NyaProxy
             }
         }
 
-        public static HostConfig GetHost(string host)
+        public static Host GetHost(string host)
         {
             if (Hosts.ContainsKey(host))
                 return Hosts[host];

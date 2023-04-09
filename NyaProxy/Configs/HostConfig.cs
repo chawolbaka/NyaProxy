@@ -15,7 +15,7 @@ using NyaProxy.API.Config.Nodes;
 
 namespace NyaProxy.Configs
 {
-    public class HostConfig : Config, IDefaultConfig, IManualConfig, IHostConfig, IHostTargetRule
+    public class HostConfig : Config, IDefaultConfig, IManualConfig, IHostTargetRule
     {
         public string Name { get; set; }
         public ServerSelectMode SelectMode { get; set; }
@@ -168,9 +168,9 @@ namespace NyaProxy.Configs
         }
 
 
-        public async Task<Socket> OpenConnectAsync(EndPoint endPoint)
+        public async Task<Socket> OpenConnectAsync(EndPoint remoteEP)
         {
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
+            Socket socket = new Socket(remoteEP.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
             if (TcpFastOpen)
             {
                 if (OperatingSystem.IsWindows())
@@ -178,9 +178,7 @@ namespace NyaProxy.Configs
                 else if (OperatingSystem.IsLinux())
                     socket.EnableLinuxFastOpenConnect();
             }
-
-            await socket.ConnectAsync(endPoint);
-            
+            await socket.ConnectAsync(remoteEP);
             if (!NetworkUtils.CheckConnect(socket))
                 throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 

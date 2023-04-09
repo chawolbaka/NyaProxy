@@ -12,7 +12,7 @@ namespace NyaProxy.API
         /// </summary>
         Socket Source { get; }
 
-        IHostConfig HostConfig { get; }
+        IHost Host { get; }
 
         /// <summary>
         /// 即将被发送的包，可进行修改或直接替换

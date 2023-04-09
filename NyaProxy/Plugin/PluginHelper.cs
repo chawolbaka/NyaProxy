@@ -4,6 +4,8 @@ using NyaProxy.API;
 using NyaProxy.API.Config;
 using NyaProxy.API.Command;
 using NyaProxy.API.Channle;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace NyaProxy.Plugin
 {
@@ -15,9 +17,9 @@ namespace NyaProxy.Plugin
         public ICommandContainer Command => _commandContainer;
         public INetworkHelper Network => _networkHelper;
         public IChannleContainer Channles => NyaProxy.Channles;
+        public IReadOnlyDictionary<long, IBridge> Bridges => NyaProxy.Bridges as IReadOnlyDictionary<long, IBridge>;
         public IHostContainer Hosts => new HostCovariance(NyaProxy.Hosts);
-
-
+        
         private static PluginEvents _events = new PluginEvents();
         private static NetworkHelper _networkHelper = NyaProxy.Network;
         private ConfigContainer _configContainer;

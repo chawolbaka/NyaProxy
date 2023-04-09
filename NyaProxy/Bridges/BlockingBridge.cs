@@ -84,7 +84,7 @@ namespace NyaProxy.Bridges
         private HandshakePacket _handshakePacket;
         private LoginStartPacket _loginStartPacket;
 
-        public BlockingBridge(HostConfig host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
+        public BlockingBridge(Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
         {
             ProtocolVersion = handshakePacket.ProtocolVersion;
             ClientCompressionThreshold = -1;
