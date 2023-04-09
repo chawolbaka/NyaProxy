@@ -17,7 +17,7 @@ namespace NyaProxy.Debug
             tableBuilder.AddColumn("Session Id", "Host", "Player", "Source", "Destination");
             foreach (var bridge in NyaProxy.Bridges?.Values)
             {
-                IPlayer player = (bridge as BlockingBridge)?.Player;
+                IPlayer player = (bridge as QueueBridge)?.Player;
                 string playerInfo = player is not null ? $"{player.Name}({player.Id})" : "";
                 tableBuilder.AddRow(bridge.SessionId.ToString($"D{Bridge.CurrentSequence.ToString().Length}"), bridge.Host.Name, playerInfo,
                      $"{(NetworkUtils.CheckConnect(bridge.Source) ? "§a" : "§c")}{bridge.Source._remoteEndPoint()}§r",

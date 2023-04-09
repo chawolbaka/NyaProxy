@@ -69,7 +69,7 @@ namespace NyaProxy
             if (Config.EnableReceivePool)
                 NetworkListener.SetPoolSize(Config.ReceivePoolBufferLength, Config.ReceivePoolBufferCount);
 
-            BlockingBridge.Setup(Config.NetworkThread);
+            QueueBridge.Setup(Config.NetworkThread);
 
             if (!Directory.Exists("Plugins"))
                 Directory.CreateDirectory("Plugins");
@@ -286,8 +286,8 @@ namespace NyaProxy
                     }
                     else
                     {
-                        BlockingBridge blockingBridge = new BlockingBridge(destHost, hea.Packet, acceptSocket, serverSocket);
-                        blockingBridge.Build();
+                        QueueBridge queueBridge = new QueueBridge(destHost, hea.Packet, acceptSocket, serverSocket);
+                        queueBridge.Build();
                     }
                 }
                 else

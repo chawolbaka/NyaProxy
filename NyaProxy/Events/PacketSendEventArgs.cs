@@ -51,7 +51,7 @@ namespace NyaProxy
         private bool _packetCheaged;
         private int _version;
         
-        internal BlockingBridge Bridge;
+        internal QueueBridge Bridge;
         internal PacketReceivedEventArgs EventArgs;
         
 
@@ -60,7 +60,7 @@ namespace NyaProxy
 
         }
 
-        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket source, Socket destination, Direction direction, CompatiblePacket packet, DateTime receivedTime)
+        internal virtual PacketSendEventArgs Setup(QueueBridge bridge, Socket source, Socket destination, Direction direction, CompatiblePacket packet, DateTime receivedTime)
         {
             if(destination == null)
                 throw new ArgumentNullException(nameof(destination));
@@ -76,7 +76,7 @@ namespace NyaProxy
             _isCancelled = false;
             return this;
         }
-        internal virtual PacketSendEventArgs Setup(BlockingBridge bridge, Socket source, Socket destination, Direction direction, PacketReceivedEventArgs e)
+        internal virtual PacketSendEventArgs Setup(QueueBridge bridge, Socket source, Socket destination, Direction direction, PacketReceivedEventArgs e)
         {
             if(e == null)
                 throw new ArgumentNullException(nameof(e));

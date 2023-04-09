@@ -13,7 +13,6 @@ using MinecraftProtocol.Crypto;
 using MinecraftProtocol.Auth.Yggdrasil;
 using MinecraftProtocol.Compatible;
 using NyaProxy.Configs.Rule;
-using NyaProxy.Configs;
 using MinecraftProtocol.DataType;
 using System.Text;
 using System.Net;
@@ -22,7 +21,7 @@ using MinecraftProtocol.Chat;
 
 namespace NyaProxy.Bridges
 {
-    public partial class BlockingBridge : Bridge, ICompatible
+    public partial class QueueBridge : Bridge, ICompatible
     {
         /// <summary>
         /// 客户端在握手时使用的协议版本
@@ -47,7 +46,7 @@ namespace NyaProxy.Bridges
         /// <summary>
         /// 玩家信息
         /// </summary>
-        public virtual BlockingBridgePlayer Player { get; private set; }
+        public virtual QueueBridgePlayer Player { get; private set; }
 
         /// <summary>
         /// 服务端是否发送了Forge的数据包
@@ -84,7 +83,7 @@ namespace NyaProxy.Bridges
         private HandshakePacket _handshakePacket;
         private LoginStartPacket _loginStartPacket;
 
-        public BlockingBridge(Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
+        public QueueBridge(Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
         {
             ProtocolVersion = handshakePacket.ProtocolVersion;
             ClientCompressionThreshold = -1;
@@ -157,7 +156,7 @@ namespace NyaProxy.Bridges
             if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
             {
                 Stage = Stage.Login;
-                Player = new BlockingBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
+                Player = new QueueBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
                 LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, lsp, DateTime.Now);
                 NyaProxy.LoginStart.Invoke(this, lsea);
                 if (lsea.IsBlock)

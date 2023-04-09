@@ -8,15 +8,10 @@ using NyaProxy.Channles;
 using NyaProxy.Debug;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.IO.Pools;
-using System.Collections.Generic;
-using MinecraftProtocol.Compression;
-using System.Buffers;
-using System.Linq;
-using System.Reflection;
 
 namespace NyaProxy.Bridges
 {
-    public partial class BlockingBridge : Bridge
+    public partial class QueueBridge : Bridge
     {
         private static BlockingCollection<PacketSendEventArgs>[] ReceiveBlockingQueues;
         private static ConcurrentQueue<PacketSendEventArgs>[] ReceiveQueues;

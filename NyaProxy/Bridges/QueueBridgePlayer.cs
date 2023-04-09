@@ -10,13 +10,13 @@ using NyaProxy.API.Enum;
 
 namespace NyaProxy.Bridges
 {
-    public class BlockingBridgePlayer : IPlayer
+    public class QueueBridgePlayer : IPlayer
     {
-        public BlockingBridge Own { get; internal set; }
+        public QueueBridge Own { get; internal set; }
         public UUID Id { get; internal set; }
         public string Name { get; internal set; }
 
-        public BlockingBridgePlayer(BlockingBridge own, UUID id, string name)
+        public QueueBridgePlayer(QueueBridge own, UUID id, string name)
         {
             Own = own;
             Id = id;

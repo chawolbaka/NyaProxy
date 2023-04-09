@@ -15,7 +15,7 @@ namespace NyaProxy
 
         public UUID PlayerUUID { get; set; }
 
-        public LoginStartEventArgs(BlockingBridge bridge, Socket source, Socket destination, Direction direction, LoginStartPacket packet, DateTime receivedTime)
+        public LoginStartEventArgs(QueueBridge bridge, Socket source, Socket destination, Direction direction, LoginStartPacket packet, DateTime receivedTime)
         {
             Setup(bridge, source, destination, direction, packet.AsCompatible(bridge.ProtocolVersion, bridge.ClientCompressionThreshold), receivedTime);
             PlayerName = packet.PlayerName;
