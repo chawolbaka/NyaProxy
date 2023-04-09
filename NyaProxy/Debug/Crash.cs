@@ -1,5 +1,5 @@
 ﻿using CZGL.SystemInfo;
-using StringTables;
+using StringTable;
 using System;
 using System.IO;
 using System.Linq;
@@ -64,10 +64,10 @@ namespace NyaProxy.Debug
 
             if (NyaProxy.Bridges != null)
             {
-                StringTable bridgeTable = DebugHelper.CreateBridgeTable();
-                if (bridgeTable is not null && bridgeTable.Rows.Count > 0)
+                StringTableBuilder bridgeTable = DebugHelper.CreateBridgeTable();
+                if (bridgeTable is not null && bridgeTable.NumberOfRows > 0)
                 {
-                    report.AppendLine($"  Current Connections({bridgeTable.Rows}) :");
+                    report.AppendLine($"  Current Connections({bridgeTable.NumberOfRows}) :");
                     report.AppendLine(bridgeTable.ToString());
                 }
             }
