@@ -261,7 +261,7 @@ namespace NyaProxy
                 if (HandshakePacket.TryRead(FirstPacket, -1, out HandshakePacket hp))
                 {
 
-                    Host destHost = GetHost(hp.GetServerAddressOnly());
+                    Host destHost = GetHost(hp.GetServerAddressOnly(), hp.ServerPort);
                     hea = new HandshakeEventArgs(acceptSocket, hp, destHost);
                     Handshaking.Invoke(acceptSocket, hea);
                     if (hea.IsBlock)
@@ -269,8 +269,8 @@ namespace NyaProxy
                         acceptSocket.Close();
                         return;
                     }
-                    
-                    destHost = GetHost(hea.Packet.GetServerAddressOnly());
+
+                    destHost = GetHost(hea.Packet.GetServerAddressOnly(), hea.Packet.ServerPort);
                     Socket serverSocket = await destHost.OpenConnectAsync();
                     if (!NetworkUtils.CheckConnect(serverSocket))
                         throw new DisconnectException(i18n.Disconnect.ConnectFailed);
@@ -323,12 +323,15 @@ namespace NyaProxy
             }
         }
 
-        public static Host GetHost(string host)
+        public static Host GetHost(string hostName, ushort hostPort)
         {
-            if (Hosts.ContainsKey(host))
-                return Hosts[host];
-            else if (Hosts.ContainsKey("default"))
-                return  Hosts["default"];
+            Host host;
+            if (Hosts.TryGetValue($"{hostName}:{hostPort}", out host))
+                return host;
+            else if (Hosts.TryGetValue(hostName, out host))
+                return host;
+            else if (Hosts.TryGetValue("default", out host))
+                return host;
             else
                 throw new DisconnectException(i18n.Disconnect.NoServerAvailable);
         }
