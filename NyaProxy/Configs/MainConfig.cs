@@ -8,7 +8,7 @@ using NyaProxy.API.Config.Nodes;
 
 namespace NyaProxy.Configs
 {
-    [ConfigFile("config.toml")]
+    [ConfigFile("config")]
     public class MainConfig : Config, IDefaultConfig, IManualConfig
     {
         public IPEndPoint[] Bind { get; set; }
@@ -19,15 +19,18 @@ namespace NyaProxy.Configs
 
 
         public bool EnableBlockingQueue;
+
+        public bool EnableSendPool;
+        public int NumberOfSendPoolBuffers;
+        public int SendPoolBufferLength;
+
         public bool EnableReceivePool;
-        public int ReceivePoolBufferCount;
+        public int NumberOfReceivePoolBuffers;
         public int ReceivePoolBufferLength;
 
         public MainConfig() : base("MainConfig")
         {
-            EnableReceivePool = true;
-            ReceivePoolBufferCount = 1024;
-            ReceivePoolBufferLength = 65536;
+            SetDefault();
         }
 
         public void Read(ConfigReader reader)
@@ -66,13 +69,24 @@ namespace NyaProxy.Configs
                 TcpFastOpen         = advanced.ContainsKey("tcp-fast-open") ? (bool)advanced["tcp-fast-open"] : false;
                 EnableBlockingQueue = advanced.ContainsKey("enable-blocking-queue") ? (bool)advanced["enable-blocking-queue"] : true;
 
+
+                if (advanced.ContainsKey("enable-send-pool"))
+                {
+                    EnableSendPool = (bool)advanced["enable-send-pool"];
+                    NumberOfSendPoolBuffers = advanced.ContainsKey("send-pool-buffer-count") ? (int)advanced["send-pool-buffer-count"] : 1024;
+                    SendPoolBufferLength = advanced.ContainsKey("send-pool-buffer-length") ? (int)advanced["send-pool-buffer-length"] : 65536;
+
+                    if (NumberOfSendPoolBuffers <= 1 || SendPoolBufferLength <= 64)
+                        EnableSendPool = false;
+                }
+
                 if (advanced.ContainsKey("enable-receive-pool"))
                 {
                     EnableReceivePool       = (bool)advanced["enable-receive-pool"];
-                    ReceivePoolBufferCount  = advanced.ContainsKey("receive-pool-buffer-count")  ? (int)advanced["receive-pool-buffer-count"] : 1024;
+                    NumberOfReceivePoolBuffers  = advanced.ContainsKey("receive-pool-buffer-count")  ? (int)advanced["receive-pool-buffer-count"] : 1024;
                     ReceivePoolBufferLength = advanced.ContainsKey("receive-pool-buffer-length") ? (int)advanced["receive-pool-buffer-length"]: 65536;
 
-                    if (ReceivePoolBufferCount <= 1 || ReceivePoolBufferLength <= 64)
+                    if (NumberOfReceivePoolBuffers <= 1 || ReceivePoolBufferLength <= 64)
                         EnableReceivePool = false;
                 }
 
@@ -103,8 +117,14 @@ namespace NyaProxy.Configs
                     ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread),
                     ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen,  i18n.Config.TcpFastOpen),
                     ["enable-blocking-queue"] = new BooleanNode(EnableBlockingQueue, i18n.Config.EnableBlockingQueue),
-                    ["enable-receive-pool"]   = new BooleanNode(EnableReceivePool,   i18n.Config.EnableReceivePool),
-                    ["receive-pool-buffer-count"]  = new NumberNode(ReceivePoolBufferCount,  i18n.Config.ReceivePoolBufferCount),
+
+
+                    ["enable-send-pool"] = new BooleanNode(EnableSendPool, i18n.Config.EnableSnedPool),
+                    ["send-pool-buffers"]  = new NumberNode(NumberOfSendPoolBuffers, i18n.Config.SendPoolBuffers),
+                    ["send-pool-buffer-length"] = new NumberNode(SendPoolBufferLength, i18n.Config.SendPoolBufferLength),
+
+                    ["enable-receive-pool"] = new BooleanNode(EnableReceivePool,   i18n.Config.EnableReceivePool),
+                    ["receive-pool-buffers"]  = new NumberNode(NumberOfReceivePoolBuffers,  i18n.Config.ReceivePoolBuffers),
                     ["receive-pool-buffer-length"] = new NumberNode(ReceivePoolBufferLength, i18n.Config.ReceivePoolBufferLength)
                 }
             });;
@@ -116,9 +136,14 @@ namespace NyaProxy.Configs
             TcpFastOpen = false;
             NetworkThread = Environment.ProcessorCount;
             EnableBlockingQueue = true;
+
+            EnableSendPool = true;
+            NumberOfSendPoolBuffers = 1024;
+            SendPoolBufferLength = 1024 * 2;
+
             EnableReceivePool = true;
-            ReceivePoolBufferCount = 1024;
-            ReceivePoolBufferLength = 65536;
+            NumberOfReceivePoolBuffers = 1024;
+            ReceivePoolBufferLength = 1024 * 8;
             LogFile = new LogFile() { Enable = true, Format = "yyyy-MM-dd", Directory = "log" };
         }
     }

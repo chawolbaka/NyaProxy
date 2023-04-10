@@ -18,6 +18,8 @@ using System.Text;
 using System.Net;
 using MinecraftProtocol.IO.Extensions;
 using MinecraftProtocol.Chat;
+using MinecraftProtocol.IO.Pools;
+using System.Collections.Generic;
 
 namespace NyaProxy.Bridges
 {
@@ -65,10 +67,13 @@ namespace NyaProxy.Bridges
 
         public virtual CryptoHandler CryptoHandler => _clientSocketListener.CryptoHandler;
 
-        public Stage Stage { get; private set; }
+        public virtual Stage Stage { get; private set; }
+
+        protected virtual BufferManager Buffer { get; init; }
 
         protected override string BreakMessage => Player != null ? $"§e{Player.Name} left the game" : base.BreakMessage;
 
+        
         private IHostTargetRule _targetRule;
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
@@ -85,6 +90,9 @@ namespace NyaProxy.Bridges
 
         public QueueBridge(Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
         {
+            if (NyaProxy.Config.EnableSendPool)
+                Buffer = new BufferManager(source, destination, NyaProxy.Network);
+
             ProtocolVersion = handshakePacket.ProtocolVersion;
             ClientCompressionThreshold = -1;
             ServerCompressionThreshold = -1;
@@ -403,6 +411,70 @@ namespace NyaProxy.Bridges
                 ReceiveBlockingQueues[_queueIndex].Add(psea);
             else
                 ReceiveQueues[_queueIndex].Enqueue(psea);
+        }
+
+        protected class BufferManager
+        {
+            public SocketSendBuffer Client { get; set; }
+            public SocketSendBuffer Server { get; set; }
+
+            public BufferManager(Socket clientSocket,Socket serverSocket, NetworkHelper network)
+            {
+                Client = new SocketSendBuffer(clientSocket, network);
+                Server = new SocketSendBuffer(serverSocket, network);
+            }
+
+            public bool Push()
+            {
+                bool clientPushResult = Client.Push();
+                bool serverPushResult = Server.Push();
+                return clientPushResult || serverPushResult;
+            }
+
+            public class SocketSendBuffer
+            {
+                private Socket _socket;
+                private byte[] _buffer;
+                private int _offset;
+                private NetworkHelper _network;
+
+                public SocketSendBuffer(Socket socket, NetworkHelper network)
+                {
+                    _network = network;
+                    _socket = socket;
+                    Reset();
+                }
+
+                public void Add(Memory<byte> memory)
+                {
+                    if (memory.Length > _buffer.Length)
+                        throw new ArgumentOutOfRangeException(nameof(memory));
+
+                    if (_offset + memory.Length >= _buffer.Length)
+                        Push();
+
+                    memory.CopyTo(_buffer.AsMemory(_offset));
+                    _offset += memory.Length;
+                }
+    
+                public bool Push()
+                {
+                    if (_offset == 0)
+                        return false;
+
+                    byte[] buffer = _buffer;
+                    int length = _offset;
+                    Reset();
+                    _network.Enqueue(_socket, buffer.AsMemory(0, length), () => { SendPool.Return(buffer); });
+                    return true;
+                }
+
+                public void Reset()
+                {
+                    _offset = 0;
+                    _buffer = SendPool.Rent();
+                }
+            }
         }
     }
 }

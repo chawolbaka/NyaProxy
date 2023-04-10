@@ -21,6 +21,7 @@ using NyaProxy.Plugin;
 using NyaProxy.Bridges;
 using NyaProxy.Channles;
 using System.Linq;
+using MinecraftProtocol.IO.Pools;
 
 namespace NyaProxy
 {
@@ -67,7 +68,9 @@ namespace NyaProxy
 
             Network = new NetworkHelper(Config.EnableBlockingQueue, GlobalQueueToken.Token);
             if (Config.EnableReceivePool)
-                NetworkListener.SetPoolSize(Config.ReceivePoolBufferLength, Config.ReceivePoolBufferCount);
+                NetworkListener.SetPoolSize(Config.ReceivePoolBufferLength, Config.NumberOfReceivePoolBuffers);
+            if (Config.EnableSendPool)
+                QueueBridge.SendPool = new Bucket<byte>(Config.SendPoolBufferLength, Config.NumberOfSendPoolBuffers, 233, true);
 
             QueueBridge.Setup(Config.NetworkThread);
 

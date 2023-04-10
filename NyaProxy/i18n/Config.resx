@@ -138,6 +138,9 @@
   <data name="EnableReceivePool" xml:space="preserve">
     <value />
   </data>
+  <data name="EnableSnedPool" xml:space="preserve">
+    <value />
+  </data>
   <data name="ForwardMode" xml:space="preserve">
     <value />
   </data>
@@ -150,13 +153,19 @@
   <data name="ProtocolVersion" xml:space="preserve">
     <value />
   </data>
-  <data name="ReceivePoolBufferCount" xml:space="preserve">
-    <value />
-  </data>
   <data name="ReceivePoolBufferLength" xml:space="preserve">
     <value />
   </data>
+  <data name="ReceivePoolBuffers" xml:space="preserve">
+    <value />
+  </data>
   <data name="SelectMode" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SendPoolBufferLength" xml:space="preserve">
+    <value />
+  </data>
+  <data name="SendPoolBuffers" xml:space="preserve">
     <value />
   </data>
   <data name="ServerFlags" xml:space="preserve">

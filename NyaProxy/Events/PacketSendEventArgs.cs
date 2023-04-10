@@ -17,7 +17,7 @@ namespace NyaProxy
 
         public Socket Source { get; set; }
      
-        public Socket Destination { get; set; }
+        public Socket Destination { get => _destination; set { DestinationCheaged = true; _destination = value; } }
 
         public virtual Direction Direction { get; private set; }
 
@@ -30,6 +30,8 @@ namespace NyaProxy
         public virtual int CompressionThreshold => Direction == Direction.ToClient ? Bridge.ClientCompressionThreshold : Bridge.ServerCompressionThreshold;
 
         public IPlayer Player => Bridge.Player;
+
+        public bool DestinationCheaged { get; private set; }
 
         public bool PacketCheaged => _packetCheaged || _version != GetField_ByteWriter_versionn(_packet);
 
@@ -47,6 +49,7 @@ namespace NyaProxy
         }
 
         private static Func<ByteWriter, int> GetField_ByteWriter_versionn = ExpressionTreeUtils.CreateGetFieldMethodFormInstance<ByteWriter, int>("_version");
+        private Socket _destination;
         private CompatiblePacket _packet;
         private bool _packetCheaged;
         private int _version;
@@ -69,6 +72,7 @@ namespace NyaProxy
             Destination = destination;
             Bridge = bridge;
             EventArgs = null;
+            DestinationCheaged = false;
             _packet = packet;
             _packetCheaged = false;
             _version = GetField_ByteWriter_versionn(packet);
