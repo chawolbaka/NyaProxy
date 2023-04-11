@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using MinecraftProtocol.IO.Pools;
 using NyaProxy.API;
 using NyaProxy.API.Config;
 using NyaProxy.API.Config.Nodes;
@@ -15,14 +16,15 @@ namespace NyaProxy.Configs
         public bool TcpFastOpen { get; set; }
         public int NetworkThread { get; set; }
 
-        LogFile LogFile { get; set; }
-
+        public LogFile LogFile;
 
         public bool EnableBlockingQueue;
 
-        public bool EnableSendPool;
-        public int NumberOfSendPoolBuffers;
-        public int SendPoolBufferLength;
+        public bool EnableStickyPacket;
+        public bool EnableStickyPool;
+        public int StickyPacketLimit;
+        public int NumberOfStickyPoolBuffers;
+        public int StickyPoolBufferLength;
 
         public bool EnableReceivePool;
         public int NumberOfReceivePoolBuffers;
@@ -62,6 +64,28 @@ namespace NyaProxy.Configs
                 };
             }
 
+            if (reader.ContainsKey("sticky-packet"))
+            {
+                ObjectNode stickyPacket = reader.ReadObjectProperty("sticky-packet");
+
+                EnableStickyPacket = (bool)stickyPacket["enable"];
+                StickyPacketLimit = (int)stickyPacket["limit"];
+
+                if (stickyPacket.ContainsKey("enable-pool"))
+                {
+                    EnableStickyPool = (bool)stickyPacket["enable-pool"];
+                    if (stickyPacket.ContainsKey("pool-buffers"))
+                        NumberOfStickyPoolBuffers = (int)stickyPacket["pool-buffers"];
+                    if (stickyPacket.ContainsKey("pool-buffer-length"))
+                        StickyPoolBufferLength = (int)stickyPacket["pool-buffer-length"];
+
+                    if (NumberOfStickyPoolBuffers <= 1 || StickyPoolBufferLength <= 64)
+                        EnableStickyPool = false;
+                }
+
+       
+
+            }
             if (reader.ContainsKey("advanced"))
             {
                 ObjectNode advanced = reader.ReadObjectProperty("advanced");
@@ -69,27 +93,17 @@ namespace NyaProxy.Configs
                 TcpFastOpen         = advanced.ContainsKey("tcp-fast-open") ? (bool)advanced["tcp-fast-open"] : false;
                 EnableBlockingQueue = advanced.ContainsKey("enable-blocking-queue") ? (bool)advanced["enable-blocking-queue"] : true;
 
-
-                if (advanced.ContainsKey("enable-send-pool"))
-                {
-                    EnableSendPool = (bool)advanced["enable-send-pool"];
-                    NumberOfSendPoolBuffers = advanced.ContainsKey("send-pool-buffer-count") ? (int)advanced["send-pool-buffer-count"] : 1024;
-                    SendPoolBufferLength = advanced.ContainsKey("send-pool-buffer-length") ? (int)advanced["send-pool-buffer-length"] : 65536;
-
-                    if (NumberOfSendPoolBuffers <= 1 || SendPoolBufferLength <= 64)
-                        EnableSendPool = false;
-                }
-
                 if (advanced.ContainsKey("enable-receive-pool"))
                 {
-                    EnableReceivePool       = (bool)advanced["enable-receive-pool"];
-                    NumberOfReceivePoolBuffers  = advanced.ContainsKey("receive-pool-buffer-count")  ? (int)advanced["receive-pool-buffer-count"] : 1024;
-                    ReceivePoolBufferLength = advanced.ContainsKey("receive-pool-buffer-length") ? (int)advanced["receive-pool-buffer-length"]: 65536;
+                    EnableReceivePool = (bool)advanced["enable-receive-pool"];
+                    if (advanced.ContainsKey("receive-pool-buffers"))
+                        NumberOfReceivePoolBuffers = (int)advanced["receive-pool-buffers"];
+                    if (advanced.ContainsKey("receive-pool-buffer-length"))
+                        ReceivePoolBufferLength = (int)advanced["receive-pool-buffer-length"];
 
                     if (NumberOfReceivePoolBuffers <= 1 || ReceivePoolBufferLength <= 64)
                         EnableReceivePool = false;
                 }
-
             }
         }
 
@@ -110,6 +124,19 @@ namespace NyaProxy.Configs
                 }
             });
 
+
+            writer.WriteProperty("sticky-packet", new ObjectNode()
+            {
+                Nodes = new Dictionary<string, ConfigNode>()
+                {
+                    ["enable"]             = new BooleanNode(EnableStickyPacket, i18n.Config.EnableStickyPool),
+                    ["limit"]              = new NumberNode(StickyPacketLimit, i18n.Config.StickyPacketLimit),
+                    ["enable-pool"]        = new BooleanNode(EnableStickyPool, i18n.Config.EnableStickyPool),
+                    ["pool-buffers"]       = new NumberNode(NumberOfStickyPoolBuffers, i18n.Config.NumberOfStickyPoolBuffers),
+                    ["pool-buffer-length"] = new NumberNode(StickyPoolBufferLength, i18n.Config.StickyPoolBufferLength),
+                }
+            });
+
             writer.WriteProperty("advanced", new ObjectNode()
             {
                 Nodes = new Dictionary<string, ConfigNode>()
@@ -117,11 +144,6 @@ namespace NyaProxy.Configs
                     ["network-threads"]     = new NumberNode(NetworkThread, i18n.Config.NetworkThread),
                     ["tcp-fast-open"]       = new BooleanNode(TcpFastOpen,  i18n.Config.TcpFastOpen),
                     ["enable-blocking-queue"] = new BooleanNode(EnableBlockingQueue, i18n.Config.EnableBlockingQueue),
-
-
-                    ["enable-send-pool"] = new BooleanNode(EnableSendPool, i18n.Config.EnableSnedPool),
-                    ["send-pool-buffers"]  = new NumberNode(NumberOfSendPoolBuffers, i18n.Config.SendPoolBuffers),
-                    ["send-pool-buffer-length"] = new NumberNode(SendPoolBufferLength, i18n.Config.SendPoolBufferLength),
 
                     ["enable-receive-pool"] = new BooleanNode(EnableReceivePool,   i18n.Config.EnableReceivePool),
                     ["receive-pool-buffers"]  = new NumberNode(NumberOfReceivePoolBuffers,  i18n.Config.ReceivePoolBuffers),
@@ -137,9 +159,11 @@ namespace NyaProxy.Configs
             NetworkThread = Environment.ProcessorCount;
             EnableBlockingQueue = true;
 
-            EnableSendPool = true;
-            NumberOfSendPoolBuffers = 1024;
-            SendPoolBufferLength = 1024 * 2;
+            EnableStickyPacket = true;
+            EnableStickyPool = true;
+            StickyPacketLimit = 32;
+            NumberOfStickyPoolBuffers = 1024;
+            StickyPoolBufferLength = StickyPacketLimit * 20;
 
             EnableReceivePool = true;
             NumberOfReceivePoolBuffers = 1024;

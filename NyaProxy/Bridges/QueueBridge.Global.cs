@@ -13,7 +13,7 @@ namespace NyaProxy.Bridges
 {
     public partial class QueueBridge : Bridge
     {
-        internal static Bucket<byte> SendPool;
+        internal static Bucket<byte> StickyPool;
 
         private static BlockingCollection<PacketSendEventArgs>[] ReceiveBlockingQueues;
         private static ConcurrentQueue<PacketSendEventArgs>[] ReceiveQueues;
@@ -78,7 +78,7 @@ namespace NyaProxy.Bridges
                             Thread.Sleep(200 / ((int)Bridge.Count + 1));
                         }
                         
-                        if (NyaProxy.Config.EnableSendPool)
+                        if (NyaProxy.Config.EnableStickyPacket)
                         {
                             if (lastBridgeId > 0 && psea.Bridge.SessionId != lastBridgeId && sendBuffer != null && sendBuffer.Push())
                                 sendBuffer = null;
@@ -125,7 +125,7 @@ namespace NyaProxy.Bridges
                             if (psea.EventArgs != null && !psea.Bridge.IsOnlineMode && !psea.Bridge.OverCompression && !psea.PacketCheaged)
                             {
                                 var rawDataBlock = psea.EventArgs.RawData.Span;
-                                if (!EnableBlockingQueue && !psea.DestinationCheaged && rawDataBlock.Length == 1 && rawDataBlock[0].Length < 30)
+                                if (sendBuffer!=null && !EnableBlockingQueue && !psea.DestinationCheaged && rawDataBlock.Length == 1 && rawDataBlock[0].Length < NyaProxy.Config.StickyPacketLimit)
                                 {
                                     /*
                                      * 主动粘连小包，减缓对内核的压力，在遇到以下条件时会发送缓存区内的数据
@@ -134,6 +134,7 @@ namespace NyaProxy.Bridges
                                      * 3.加入的数据大于缓存区可用空间
                                      * 4.需要发送不满足粘包条件的数据包前
                                      */
+
                                     if (psea.Direction == Direction.ToClient)
                                         sendBuffer.Client.Add(rawDataBlock[0]);
                                     else
@@ -144,10 +145,11 @@ namespace NyaProxy.Bridges
                                 {
                                     if (sendBuffer != null && sendBuffer.Push())
                                         sendBuffer = null;
+
                                     for (int i = 0; i < rawDataBlock.Length; i++)
                                     {
                                         if (rawDataBlock[i].Length > 0)
-                                            NyaProxy.Network.Enqueue(psea.Destination, rawDataBlock[i], i + 1 < psea.EventArgs.RawData.Length ? null : psea.EventArgs);
+                                            NyaProxy.Network.Enqueue(psea.Destination, rawDataBlock[i], i + 1 >= psea.EventArgs.RawData.Length ? psea.EventArgs : null);
                                     }
                                 }
 
@@ -156,6 +158,7 @@ namespace NyaProxy.Bridges
                             {
                                 if (sendBuffer != null && sendBuffer.Push())
                                     sendBuffer = null;
+
                                 if (psea.Direction == Direction.ToClient)
                                     NyaProxy.Network.Enqueue(psea.Destination, psea.Bridge.CryptoHandler.TryEncrypt(psea.Packet.Pack()), (IDisposable)psea.EventArgs ?? psea.Packet);
                                 else

@@ -90,8 +90,8 @@ namespace NyaProxy.Bridges
 
         public QueueBridge(Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
         {
-            if (NyaProxy.Config.EnableSendPool)
-                Buffer = new BufferManager(source, destination, NyaProxy.Network);
+            if (NyaProxy.Config.EnableStickyPool)
+                Buffer = new BufferManager(source, destination, NyaProxy.Network, NyaProxy.Config.EnableStickyPool);
 
             ProtocolVersion = handshakePacket.ProtocolVersion;
             ClientCompressionThreshold = -1;
@@ -418,10 +418,10 @@ namespace NyaProxy.Bridges
             public SocketSendBuffer Client { get; set; }
             public SocketSendBuffer Server { get; set; }
 
-            public BufferManager(Socket clientSocket,Socket serverSocket, NetworkHelper network)
+            public BufferManager(Socket clientSocket, Socket serverSocket, NetworkHelper network, bool usePool)
             {
-                Client = new SocketSendBuffer(clientSocket, network);
-                Server = new SocketSendBuffer(serverSocket, network);
+                Client = new SocketSendBuffer(clientSocket, network, usePool);
+                Server = new SocketSendBuffer(serverSocket, network, usePool);
             }
 
             public bool Push()
@@ -434,14 +434,16 @@ namespace NyaProxy.Bridges
             public class SocketSendBuffer
             {
                 private Socket _socket;
+                private NetworkHelper _network;
                 private byte[] _buffer;
                 private int _offset;
-                private NetworkHelper _network;
+                private bool _usePool;
 
-                public SocketSendBuffer(Socket socket, NetworkHelper network)
+                public SocketSendBuffer(Socket socket, NetworkHelper network, bool usePool)
                 {
                     _network = network;
                     _socket = socket;
+                    _usePool = usePool;
                     Reset();
                 }
 
@@ -465,14 +467,14 @@ namespace NyaProxy.Bridges
                     byte[] buffer = _buffer;
                     int length = _offset;
                     Reset();
-                    _network.Enqueue(_socket, buffer.AsMemory(0, length), () => { SendPool.Return(buffer); });
+                    _network.Enqueue(_socket, buffer.AsMemory(0, length), _usePool ? () => { StickyPool.Return(buffer); } : null);
                     return true;
                 }
 
                 public void Reset()
                 {
                     _offset = 0;
-                    _buffer = SendPool.Rent();
+                    _buffer = _usePool ? StickyPool.Rent() : new byte[25565];
                 }
             }
         }
