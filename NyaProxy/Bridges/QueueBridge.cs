@@ -160,66 +160,77 @@ namespace NyaProxy.Bridges
         private void BeforeLoginStart(object sender, PacketReceivedEventArgs e)
         {
             _clientSocketListener.PacketReceived -= BeforeLoginStart;
-
-            if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
+            try
             {
-                Stage = Stage.Login;
-                Player = new QueueBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
-                LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, lsp, DateTime.Now);
-                NyaProxy.LoginStart.Invoke(this, lsea);
-                if (lsea.IsBlock)
+                if (LoginStartPacket.TryRead(e.Packet, out LoginStartPacket lsp))
                 {
-                    Break();
-                    return;
-                }
-                NyaProxy.Logger.Info($"{lsp.PlayerName}[{Source._remoteEndPoint()}] logged in with host {Host.Name}[{Destination._remoteEndPoint()}]");
+                    Stage = Stage.Login;
+                    Player = new QueueBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
+                    LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, lsp, DateTime.Now);
+                    NyaProxy.LoginStart.Invoke(this, lsea);
+                    if (lsea.IsBlock)
+                    {
+                        Break();
+                        return;
+                    }
+                    NyaProxy.Logger.Info($"{lsp.PlayerName}[{Source._remoteEndPoint()}] logged in with host {Host.Name}[{Destination._remoteEndPoint()}]");
 
-                _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : lsp;
-                    
-                _targetRule     = Host.GetRule(lsp.PlayerName);
-                IsOnlineMode    = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);
-                OverCompression = _targetRule.CompressionThreshold != -1;
-                if (_targetRule.ProtocolVersion > 0)
-                {
-                    ProtocolVersion = _targetRule.ProtocolVersion;
-                    _clientSocketListener.ProtocolVersion = ProtocolVersion;
-                    _serverSocketListener.ProtocolVersion = ProtocolVersion;
-                }
+                    _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : lsp;
 
-                string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
-                switch (Host.ForwardMode)
-                {
-                    case ForwardMode.Default:
-                        if (Host.Flags.HasFlag(ServerFlags.Forge) && !_handshakePacket.ServerAddress.Contains(forgeTag))
-                            _handshakePacket.ServerAddress += forgeTag;
-                        break;
-                    case ForwardMode.BungeeCord:
-                        _handshakePacket.ServerAddress = new StringBuilder(_handshakePacket.GetServerAddressOnly())
-                            .Append($"\0{(Source._remoteEndPoint() as IPEndPoint).Address}")
-                            .Append($"\0{(_targetRule.Flags.HasFlag(ServerFlags.OnlineMode) ? UUID.GetFromMojangAsync(_loginStartPacket.PlayerName).Result : UUID.GetFromPlayerName(_loginStartPacket.PlayerName))}")
-                            .Append(_targetRule.Flags.HasFlag(ServerFlags.Forge) ? forgeTag : "\0").ToString();
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
+                    _targetRule = Host.GetRule(lsp.PlayerName);
+                    IsOnlineMode = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);
+                    OverCompression = _targetRule.CompressionThreshold != -1;
+                    if (_targetRule.ProtocolVersion > 0)
+                    {
+                        ProtocolVersion = _targetRule.ProtocolVersion;
+                        _clientSocketListener.ProtocolVersion = ProtocolVersion;
+                        _serverSocketListener.ProtocolVersion = ProtocolVersion;
+                    }
 
-                if (IsOnlineMode)
-                {
-                    _rsaService = RSA.Create(1024);
-                    _verifyToken = CryptoUtils.GenerateRandomNumber(4);
-                    _clientSocketListener.PacketReceived += BeforeEncryptionResponse;
-                    EncryptionRequestPacket encryptionRequest = new EncryptionRequestPacket(_serverId, _rsaService.ExportSubjectPublicKeyInfo(), _verifyToken, ProtocolVersion);
-                    NyaProxy.Network.Enqueue(Source, encryptionRequest.Pack(-1));
+                    string forgeTag = ProtocolVersion >= ProtocolVersions.V1_13 ? "\0FML2\0" : "\0FML\0"; ///好像Forge是在1.13更换了协议的?
+                    switch (Host.ForwardMode)
+                    {
+                        case ForwardMode.Default:
+                            if (Host.Flags.HasFlag(ServerFlags.Forge) && !_handshakePacket.ServerAddress.Contains(forgeTag))
+                                _handshakePacket.ServerAddress += forgeTag;
+                            break;
+                        case ForwardMode.BungeeCord:
+                            _handshakePacket.ServerAddress = new StringBuilder(_handshakePacket.GetServerAddressOnly())
+                                .Append($"\0{(Source._remoteEndPoint() as IPEndPoint).Address}")
+                                .Append($"\0{(_targetRule.Flags.HasFlag(ServerFlags.OnlineMode) ? UUID.GetFromMojangAsync(_loginStartPacket.PlayerName).Result : UUID.GetFromPlayerName(_loginStartPacket.PlayerName))}")
+                                .Append(_targetRule.Flags.HasFlag(ServerFlags.Forge) ? forgeTag : "\0").ToString();
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+
+                    if (IsOnlineMode)
+                    {
+                        _rsaService = RSA.Create(1024);
+                        _verifyToken = CryptoUtils.GenerateRandomNumber(4);
+                        _clientSocketListener.PacketReceived += BeforeEncryptionResponse;
+                        EncryptionRequestPacket encryptionRequest = new EncryptionRequestPacket(_serverId, _rsaService.ExportSubjectPublicKeyInfo(), _verifyToken, ProtocolVersion);
+                        NyaProxy.Network.Enqueue(Source, encryptionRequest.Pack(-1));
+                    }
+                    else
+                    {
+                        StartExchange();
+                    }
                 }
                 else
                 {
-                    StartExchange();
+                    NyaProxy.Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringLoginStart.Replace("{EndPoint}", Source._remoteEndPoint(), "{Packet}", e.Packet));
+                    Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{EndPoint}", Source._remoteEndPoint(), "{PacketId}", e.Packet.Id));
                 }
             }
-            else
+            catch (Exception ex)
             {
-                NyaProxy.Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringLoginStart.Replace("{EndPoint}", Source._remoteEndPoint(), "{Packet}", e.Packet));
-                Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{EndPoint}", Source._remoteEndPoint(), "{PacketId}", e.Packet.Id));
+                NyaProxy.Logger.Exception(ex);
+                Break();
+            }
+            finally
+            {
+                e.Dispose();
             }
         }
 
@@ -261,6 +272,10 @@ namespace NyaProxy.Bridges
                 NyaProxy.Logger.Exception(ex);
                 Break();
             }
+            finally
+            {
+                e.Dispose();
+            }
         }
 
         private void StartExchange()
@@ -290,6 +305,7 @@ namespace NyaProxy.Bridges
                 _serverSocketListener.PacketReceived -= WaitForGameJoin;
                 jgp.TryGetChatTypes(out ChatType[] chatTypes);
                 ChatTypes = chatTypes;
+                jgp.Dispose();
             }
         }
 
@@ -300,6 +316,7 @@ namespace NyaProxy.Bridges
                 if (e.Packet == PacketType.Login.Server.EncryptionRequest)
                 {
                     NyaProxy.Logger.Error(i18n.Error.OnlineModeNotTurned.Replace("{Host}", Host.Name));
+                    e.Dispose(); 
                     Break(i18n.Disconnect.IncorrectServerConfiguration);
                     return;
                 }
@@ -310,7 +327,7 @@ namespace NyaProxy.Bridges
                     if (!OverCompression)
                         _clientSocketListener.CompressionThreshold = ServerCompressionThreshold;
                     else //如果是接管了数据包压缩那么就把服务端发给客户端的SetCompression拦下来。
-                        return;
+                        { e.Dispose(); return; }
                 }
                 else if (LoginSuccessPacket.TryRead(e.Packet, out LoginSuccessPacket lsp))
                 {
@@ -330,7 +347,9 @@ namespace NyaProxy.Bridges
                     }
                     else
                     {
+                        e.Dispose();
                         Break();
+                        return;
                     }
                 }
                 ServerPacketReceived(sender, e);
@@ -354,7 +373,7 @@ namespace NyaProxy.Bridges
                 {
                     _serverSocketListener.PacketReceived -= CheckForge;
                     IsForge = true;
-                }    
+                }
             }
         }
 
@@ -433,10 +452,14 @@ namespace NyaProxy.Bridges
 
             public class SocketSendBuffer
             {
+
+                private static Bucket<IDisposable> DisposablePool = new Bucket<IDisposable>(64, 2048, 2333, false);
                 private Socket _socket;
                 private NetworkHelper _network;
+
+                private int _bufferOffset, _disposableOffset;
+                private IDisposable[] _disposableBlock;
                 private byte[] _buffer;
-                private int _offset;
                 private bool _usePool;
 
                 public SocketSendBuffer(Socket socket, NetworkHelper network, bool usePool)
@@ -447,34 +470,47 @@ namespace NyaProxy.Bridges
                     Reset();
                 }
 
-                public void Add(Memory<byte> memory)
+                public void Add(Memory<byte> memory, IDisposable disposable)
                 {
                     if (memory.Length > _buffer.Length)
                         throw new ArgumentOutOfRangeException(nameof(memory));
 
-                    if (_offset + memory.Length >= _buffer.Length)
+                    if ((_disposableOffset + 1 >= _disposableBlock.Length) || (_bufferOffset + memory.Length >= _buffer.Length))
                         Push();
 
-                    memory.CopyTo(_buffer.AsMemory(_offset));
-                    _offset += memory.Length;
+                    memory.CopyTo(_buffer.AsMemory(_bufferOffset));
+                    _disposableBlock[_disposableOffset++] = disposable;
+                    _bufferOffset += memory.Length;
                 }
     
                 public bool Push()
                 {
-                    if (_offset == 0)
+                    if (_bufferOffset == 0)
                         return false;
 
+                    IDisposable[] disposableBlock = _disposableBlock;
                     byte[] buffer = _buffer;
-                    int length = _offset;
+                    int bufferLength = _bufferOffset, disposableBlocklength = _disposableOffset;
                     Reset();
-                    _network.Enqueue(_socket, buffer.AsMemory(0, length), _usePool ? () => { StickyPool.Return(buffer); } : null);
+                    _network.Enqueue(_socket, buffer.AsMemory(0, bufferLength), _usePool ? () =>
+                    {
+                        //直接在Add后Dispose会造成NetworkListener中的缓存区线程不安全，但我找了好久也没找到问题在哪里，所以暂时只能先这样延后到Push时再Dispose
+                        for (int i = 0; i < disposableBlocklength; i++)
+                        {
+                            disposableBlock[i]?.Dispose();
+                        }
+                        DisposablePool.Return(disposableBlock);
+                        StickyPool.Return(buffer);
+                    } : null);
                     return true;
                 }
 
                 public void Reset()
                 {
-                    _offset = 0;
-                    _buffer = _usePool ? StickyPool.Rent() : new byte[25565];
+                    _bufferOffset = 0;
+                    _disposableOffset = 0;
+                    _buffer = (_usePool ? StickyPool.Rent() : new byte[25565]) ?? new byte[25565];
+                    _disposableBlock = (_usePool ? DisposablePool.Rent() : new IDisposable[64]) ?? new IDisposable[64];
                 }
             }
         }

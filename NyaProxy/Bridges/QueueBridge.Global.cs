@@ -136,10 +136,10 @@ namespace NyaProxy.Bridges
                                      */
 
                                     if (psea.Direction == Direction.ToClient)
-                                        sendBuffer.Client.Add(rawDataBlock[0]);
+                                        sendBuffer.Client.Add(rawDataBlock[0], psea.EventArgs);
                                     else
-                                        sendBuffer.Server.Add(rawDataBlock[0]);
-                                    psea.EventArgs.Dispose();
+                                        sendBuffer.Server.Add(rawDataBlock[0], psea.EventArgs);
+                                    
                                 }
                                 else
                                 {
