@@ -163,7 +163,7 @@ namespace NyaProxy.Configs
             EnableStickyPool = true;
             StickyPacketLimit = 32;
             NumberOfStickyPoolBuffers = 1024;
-            StickyPoolBufferLength = StickyPacketLimit * 20;
+            StickyPoolBufferLength = 1460;
 
             EnableReceivePool = true;
             NumberOfReceivePoolBuffers = 1024;
