@@ -96,11 +96,7 @@ namespace NyaProxy.Plugin
                         pluginController = new PluginController(plugin, context, this, directory);
                         SetupPlugin.Invoke(plugin, new object[] { new PluginHelper(directory, manifest), Logger, manifest });
 
-                        Thread thread = Thread.CurrentThread;
-                        string oldName = thread.Name;
-                        thread.Name = manifest.Name;
                         await plugin.OnEnable();
-                        thread.Name = oldName;
                         Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
                         Plugins.Add(manifest.UniqueId, pluginController);
                         return true;

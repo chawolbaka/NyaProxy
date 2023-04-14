@@ -41,9 +41,10 @@ namespace NyaProxy.Plugin
             try
             {
                 UnloadLock.Enter(ref lockTaken);
-                plugin = Plugin;
+                
                 if (Plugin == null)
                     return;
+                plugin = Plugin;
                 Plugin = null;
             }
             finally
@@ -54,11 +55,7 @@ namespace NyaProxy.Plugin
 
             try
             {
-                Thread thread = Thread.CurrentThread;
-                string oldName = thread.Name;
-                thread.Name = Plugin.Manifest.Name;
                 await plugin.OnDisable();
-                thread.Name = oldName;
                 var helper = plugin.Helper as PluginHelper;
                 var config = helper.Config as PluginHelper.ConfigContainer;
                 var commnad = helper.Command as PluginHelper.CommandContainer;
