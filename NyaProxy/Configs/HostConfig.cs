@@ -152,6 +152,7 @@ namespace NyaProxy.Configs
             SelectMode = ServerSelectMode.Failover;
             Flags = ServerFlags.None;
             ServerEndPoints = new List<EndPoint>() { new DnsEndPoint("example.net", 25565), new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), 233) };
+            PlayerRules = new Dictionary<string, HostTargetRule>();
             ProtocolVersion = -1;
             CompressionThreshold = -1;
             TcpFastOpen = false;
