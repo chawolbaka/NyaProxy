@@ -73,6 +73,7 @@ namespace NyaProxy
             Bridge = bridge;
             EventArgs = null;
             DestinationCheaged = false;
+            ReceivedTime = receivedTime;
             _packet = packet;
             _packetCheaged = false;
             _version = GetField_ByteWriter_versionn(packet);
