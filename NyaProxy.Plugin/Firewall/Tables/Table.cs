@@ -1,5 +1,5 @@
 ﻿using NyaFirewall.Rules;
-using StringTables;
+using StringTable;
 using System.Collections;
 using System.Xml;
 
@@ -55,13 +55,14 @@ namespace NyaFirewall.Tables
             if (Rules.Count == 0)
                 return string.Empty;
 
-            StringTable table = new StringTable(Rules.First.Value.CreateFirstColumns());
+            StringTableBuilder table = new StringTableBuilder();
+            table.AddColumn(Rules.First.Value.CreateFirstColumns());
             foreach (var rule in Rules)
             {
                 if (!rule.Disabled && rule.IsEffective)
                     table.AddRow(rule.CreateRow().Select(x => x == null ? "Any" : x.ToString()).ToArray());
             }
-            return table.ToMinimalString();
+            return table.Export();
         }
 
         public IEnumerator<T> GetEnumerator()

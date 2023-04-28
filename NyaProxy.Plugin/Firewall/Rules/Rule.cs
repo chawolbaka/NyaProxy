@@ -1,10 +1,5 @@
-﻿using StringTables;
-using System;
-using System.Text;
-using System.Xml;
+﻿using System.Xml;
 using NyaGenerator.Equatable;
-using NyaProxy.API.Config;
-using System.Data;
 
 namespace NyaFirewall.Rules
 {
