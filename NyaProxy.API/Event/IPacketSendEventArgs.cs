@@ -38,7 +38,7 @@ namespace NyaProxy.API
         /// <summary>
         /// 即将被发送的包，可进行修改或直接替换
         /// </summary>
-        CompatiblePacket Packet { get; set; }
+        LazyCompatiblePacket Packet { get; set; }
 
         /// <summary>
         /// 数据包被接收到的时间

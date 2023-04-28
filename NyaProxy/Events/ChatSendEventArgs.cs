@@ -1,7 +1,6 @@
 ﻿using System;
 using NyaProxy.API;
 using NyaProxy.API.Enum;
-using MinecraftProtocol.IO.Extensions;
 using MinecraftProtocol.Chat;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
@@ -15,7 +14,7 @@ namespace NyaProxy
 {
     public class ChatSendEventArgs : PacketSendEventArgs, IChatSendEventArgs
     {
-        public override CompatiblePacket Packet { get => base.Packet; set { base.Packet = value; _message = null; } }
+        public override LazyCompatiblePacket Packet { get => base.Packet; set { base.Packet = value; _message = null; } }
         public virtual ChatComponent Message
         {
             get 
@@ -25,9 +24,9 @@ namespace NyaProxy
                     switch (Direction)
                     {
                         case Direction.ToClient:
-                            CompatibleReader.TryReadServerChatMessage(Packet, Bridge.ChatTypes, out _message, out _definedPacket); break;
+                            CompatibleReader.TryReadServerChatMessage(Packet.Get(), Bridge.ChatTypes, out _message, out _definedPacket); break;
                         case Direction.ToServer:
-                            if (CompatibleReader.TryReadClientChatMessage(Packet, out var message, out var ccmp))
+                            if (CompatibleReader.TryReadClientChatMessage(Packet.Get(), out var message, out var ccmp))
                             {
                                 _definedPacket = ccmp;
                                 _message = ChatComponent.Parse(message);
@@ -54,12 +53,12 @@ namespace NyaProxy
                             SystemChatMessagePacket scmp = new SystemChatMessagePacket(_message.Serialize(), false, ProtocolVersion);
                             _definedPacket?.Dispose();
                             _definedPacket = scmp;
-                            Packet = scmp.AsCompatible(Packet);
+                            Packet = new FakeLazyCompatiblePacket(scmp.AsCompatible(Packet.Get()));
                         }
                         else if (_definedPacket is ServerChatMessagePacket scmp)
                         {
                             scmp.Context = value.Serialize();
-                            Packet = _definedPacket.AsCompatible(Packet);
+                            Packet = new FakeLazyCompatiblePacket(_definedPacket.AsCompatible(Packet.Get()));
                         }
                         else
                         {
@@ -70,12 +69,12 @@ namespace NyaProxy
                         if(_definedPacket is ClientChatMessagePacket ccmp)
                         {
                             ccmp.Message = value.ToString();
-                            Packet = ccmp.AsCompatible(Packet);
+                            Packet = new FakeLazyCompatiblePacket(ccmp.AsCompatible(Packet.Get()));
                         }
                         else if(_definedPacket  is ChatCommandPacket ccp)
                         {
                             ccp.Command = value.ToString();
-                            Packet = ccp.AsCompatible(Packet);
+                            Packet = new FakeLazyCompatiblePacket(ccp.AsCompatible(Packet.Get()));
                         }
                         else
                         {

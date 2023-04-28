@@ -139,7 +139,6 @@ namespace NyaProxy.Bridges
                                         sendBuffer.Client.Add(rawDataBlock[0], psea.EventArgs);
                                     else
                                         sendBuffer.Server.Add(rawDataBlock[0], psea.EventArgs);
-                                    
                                 }
                                 else
                                 {
@@ -160,9 +159,9 @@ namespace NyaProxy.Bridges
                                     sendBuffer = null;
 
                                 if (psea.Direction == Direction.ToClient)
-                                    NyaProxy.Network.Enqueue(psea.Destination, psea.Bridge.CryptoHandler.TryEncrypt(psea.Packet.Pack()), (IDisposable)psea.EventArgs ?? psea.Packet);
+                                    NyaProxy.Network.Enqueue(psea.Destination, psea.Bridge.CryptoHandler.TryEncrypt(psea.Packet.Get().Pack()), (IDisposable)psea.EventArgs ?? psea.Packet);
                                 else
-                                    NyaProxy.Network.Enqueue(psea.Destination, psea.Packet.Pack(), (IDisposable)psea.EventArgs ?? psea.Packet);
+                                    NyaProxy.Network.Enqueue(psea.Destination, psea.Packet.Get().Pack(), (IDisposable)psea.EventArgs ?? psea.Packet);
                             }
                         }
                         else

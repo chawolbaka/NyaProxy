@@ -175,7 +175,7 @@ namespace NyaProxy.Bridges
                     }
                     NyaProxy.Logger.Info($"{lsp.PlayerName}[{Source._remoteEndPoint()}] logged in with host {Host.Name}[{Destination._remoteEndPoint()}]");
 
-                    _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.AsLoginStart() : lsp;
+                    _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.Get().AsLoginStart() : lsp;
 
                     _targetRule = Host.GetRule(lsp.PlayerName);
                     IsOnlineMode = _targetRule.Flags.HasFlag(ServerFlags.OnlineMode);

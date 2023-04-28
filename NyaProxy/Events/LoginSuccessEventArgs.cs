@@ -18,7 +18,7 @@ namespace NyaProxy
 {
     public class LoginSuccessEventArgs : PacketSendEventArgs, ILoginSuccessEventArgs
     {
-        public override CompatiblePacket Packet { get => base.Packet; set { base.Packet = value; _loginSuccessPacket = null; } }
+        public override LazyCompatiblePacket Packet { get => base.Packet; set { base.Packet = value; _loginSuccessPacket = null; } }
         public UUID Id
         {
             get
@@ -51,7 +51,7 @@ namespace NyaProxy
         {
             if (_loginSuccessPacket is not null)
                 return;
-            _loginSuccessPacket = Packet.AsLoginSuccess();
+            _loginSuccessPacket = Packet.Get().AsLoginSuccess();
         }
 
 

@@ -66,7 +66,7 @@ namespace Motd
             if (e.Stage == Stage.Login || e.Stage == Stage.Play)
                 return;
 
-            if (e.Stage == Stage.Handshake && e.Packet == PacketType.Handshake && e.Packet.AsHandshake().NextState == HandshakeState.GetStatus)
+            if (e.Stage == Stage.Handshake && e.Packet == PacketType.Handshake && e.Packet.Get().AsHandshake().NextState == HandshakeState.GetStatus)
             {
                 //如果该连接已被接管就阻止握手包被发送到服务器
                 if (CurrentConnections.ContainsKey(e.Source.RemoteEndPoint!))
