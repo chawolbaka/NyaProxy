@@ -383,7 +383,7 @@ namespace NyaProxy.Bridges
                 return;
 
             if (OverCompression)
-                e.Packet.CompressionThreshold = ClientCompressionThreshold;
+                e.Packet.Get().CompressionThreshold = ClientCompressionThreshold;
 
             if (Stage == Stage.Play ? e.Packet == PacketType.Play.Server.Disconnect : e.Packet == PacketType.Login.Server.Disconnect)
             {
@@ -397,7 +397,7 @@ namespace NyaProxy.Bridges
         private void ClientPacketReceived(object sender, PacketReceivedEventArgs e)
         {
             if (OverCompression)
-                e.Packet.CompressionThreshold = ServerCompressionThreshold;
+                e.Packet.Get().CompressionThreshold = ServerCompressionThreshold;
 
             if (Stage == Stage.Play && e.Packet == PacketType.Play.Client.ChatMessage)
                 Enqueue(ChatEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
@@ -410,7 +410,7 @@ namespace NyaProxy.Bridges
         private void ServerPacketReceived(object sender, PacketReceivedEventArgs e)
         {
             if (OverCompression)
-                e.Packet.CompressionThreshold = ClientCompressionThreshold;
+                e.Packet.Get().CompressionThreshold = ClientCompressionThreshold;
 
             if (Stage == Stage.Play
                 && e.Packet == PacketType.Play.Server.ChatMessage
