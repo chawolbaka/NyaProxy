@@ -1,6 +1,7 @@
 ﻿using CZGL.SystemInfo;
 using StringTable;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -68,14 +69,15 @@ namespace NyaProxy.Debug
                 if (bridgeTable is not null && bridgeTable.NumberOfRows > 0)
                 {
                     report.AppendLine($"  Current Connections({bridgeTable.NumberOfRows}) :");
-                    report.AppendLine(bridgeTable.ToString());
+                    report.AppendLine(bridgeTable.Export());
                 }
             }
+
 
             if (NyaProxy.Plugins is not null && NyaProxy.Plugins.Count > 0)
             {
                 report.AppendLine($"  Plugins({NyaProxy.Plugins.Count}) :");
-                report.AppendLine(DebugHelper.CreatePluginTable().ToString());
+                report.AppendLine(DebugHelper.CreatePluginTable().Export());
             }
 
 
