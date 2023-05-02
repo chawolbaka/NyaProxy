@@ -42,6 +42,7 @@ namespace NyaProxy.CLI
                         fileStream.Flush();
                         fileStream.Close();
                         fileStream = GetLogFileStream(logger);
+                        time = DateTime.Now;
                     }
                     if (log.Type == LogType.Unpreformat)
                         fileStream.Write(Encoding.UTF8.GetBytes(log.Message + Environment.NewLine));
