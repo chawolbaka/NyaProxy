@@ -1,5 +1,7 @@
-﻿using NyaFirewall.Rules;
+﻿using Firewall.Rules;
+using NyaFirewall.Rules;
 using StringTable;
+using System;
 using System.Collections;
 using System.Xml;
 
@@ -9,7 +11,7 @@ namespace NyaFirewall.Tables
     {
         public virtual bool IsEmpty => Rules.Count == 0;
 
-        public virtual LinkedList<T> Rules { get; set; }
+        public virtual RuleList<T> Rules { get; set; }
 
         public Table()
         {
@@ -33,7 +35,7 @@ namespace NyaFirewall.Tables
             string key = typeof(T).Name;
             foreach (var rule in Rules)
             {
-                if (rule.EffectiveTime > 0)
+                if (rule.EffectiveTime >= 0)
                     continue;
 
                 writer.WriteStartElement(key);
@@ -56,11 +58,11 @@ namespace NyaFirewall.Tables
                 return string.Empty;
 
             StringTableBuilder table = new StringTableBuilder();
-            table.AddColumn(Rules.First.Value.CreateFirstColumns());
+            table.AddColumn(Rules[0].CreateFirstColumns());
             foreach (var rule in Rules)
             {
                 if (!rule.Disabled && rule.IsEffective)
-                    table.AddRow(rule.CreateRow().Select(x => x == null ? "Any" : x.ToString()).ToArray());
+                    table.AddRow(rule.CreateRow().Select(x => x == null ? "Any" : x.ToString()));
             }
             return table.Export();
         }

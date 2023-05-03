@@ -12,8 +12,12 @@ namespace NyaFirewall.Rules
         [IgnoreEquality]
         public bool IsEffective => !(EffectiveTime > 0 && (DateTime.Now - _createTime).TotalMilliseconds > EffectiveTime);
 
+        [IgnoreEquality] //用于RuleList
+        internal bool IsRemoved { get; set; }
+
         [IgnoreEquality]
         public int EffectiveTime { get; set; }
+
 
         public RuleItem<string> Host { get; set; }
 

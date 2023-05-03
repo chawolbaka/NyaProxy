@@ -14,7 +14,7 @@ namespace StringTable
             return builder;
         }
 
-        public static StringTableBuilder AddColumn(this StringTableBuilder builder, List<string> columnNames)
+        public static StringTableBuilder AddColumn(this StringTableBuilder builder, IEnumerable<string> columnNames)
         {
 #if NET35
             columnNames.ForEach(f => builder.Column.Add(f));
@@ -30,7 +30,7 @@ namespace StringTable
             return builder;
         }
 
-        public static StringTableBuilder WithColumn(this StringTableBuilder builder, List<string> columnNames)
+        public static StringTableBuilder WithColumn(this StringTableBuilder builder, IEnumerable<string> columnNames)
         {
             builder.Column = new List<object>();
 #if NET35
