@@ -4,6 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Firewall.Rules
 {
+
+    /// <summary>
+    /// 一个通过预分配比正常集合更大空间并且通过内部数组的索引不从0开始来做到插入、添加、删除性能可以达到O(1)的集合，并且遍历的性能约等于直接对数组遍历
+    /// <para/>
+    /// (删除操作部分抄袭了硬盘的机制，不在操作时真的去删除，仅仅是标记为已移除。虽然这样做到了非常快的删除，但这会导致在扩容的性能很低，因为会在扩容时会删除已被删除的成员暂时不能直接复制内存)
+    /// </summary>
     public class RuleList<T> : IEnumerable<T> where T : Rule
     {
         public virtual int Count => _count;
@@ -19,7 +25,7 @@ namespace Firewall.Rules
                     return;
 
                 T[] newRules = new T[value];
-                
+
                 //一般来说插入规则的情况会比加在末位更多，使用这边刻意的给插入留出更多的空间
                 int start = newRules.Length - _count - (int)((newRules.Length - _count) / 2.4);
                 _version++;
@@ -78,11 +84,11 @@ namespace Firewall.Rules
             }
         }
 
-        private int _start;
-        private int _split;
-        private int _offset;
-        private int _count;
-        private bool _hasRemove;
+        private int _start; //起始坐标
+        private int _split; //起始和尾部区域的分界线
+        private int _offset; //尾部坐标
+        private int _count; //当前长度
+        private bool _hasRemove; //是否有元素被移除
         private int _version;
         private T[] _rules;
         private const int DEFAULT_CAPACITY = 128;
@@ -164,6 +170,7 @@ namespace Firewall.Rules
             return _rules.AsMemory(_start, _count);
         }
 
+        
         private void CompressRules()
         {
             T[] oldRules = _rules;
@@ -178,6 +185,10 @@ namespace Firewall.Rules
             _rules = newRules;
         }
 
+        /// <summary>
+        /// 将input中未被remove的元素移动到output中
+        /// </summary>
+        /// <returns>被移除的元素数量</returns>
         private int CompressRules(Span<T> input, Span<T> output)
         {
             int offset = 0, remove = 0;
