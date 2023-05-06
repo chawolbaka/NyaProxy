@@ -231,7 +231,8 @@ namespace NyaProxy
         {
             try
             {
-                ConnectEventArgs eventArgs = new ConnectEventArgs(e.AcceptSocket, e.SocketError);
+
+                ConnectEventArgs eventArgs = new ConnectEventArgs(Bridge.GetNextSessionId(), e.AcceptSocket, e.SocketError);
 
                 Connecting.Invoke(e.AcceptSocket, eventArgs);
                 if (!eventArgs.IsBlock)
@@ -239,7 +240,7 @@ namespace NyaProxy
                     Socket AcceptSocket = eventArgs.AcceptSocket;
                     switch (e.SocketError)
                     {
-                        case SocketError.Success: SessionHanderAsync(AcceptSocket); break;
+                        case SocketError.Success: SessionHanderAsync(eventArgs.SessionId, AcceptSocket); break;
                         default: AcceptSocket.Close(); break;
                     }
                 }
@@ -252,7 +253,7 @@ namespace NyaProxy
             catch (ObjectDisposedException) { }
         }
 
-        private static async Task SessionHanderAsync(Socket acceptSocket)
+        private static async Task SessionHanderAsync(long sessionId, Socket acceptSocket)
         {
             HandshakeEventArgs hea = null;
             try
@@ -262,7 +263,7 @@ namespace NyaProxy
                 {
 
                     Host destHost = GetHost(hp.GetServerAddressOnly(), hp.ServerPort);
-                    hea = new HandshakeEventArgs(acceptSocket, hp, destHost);
+                    hea = new HandshakeEventArgs(sessionId, acceptSocket, hp, destHost);
                     Handshaking.Invoke(acceptSocket, hea);
                     if (hea.IsBlock)
                     {
@@ -282,14 +283,14 @@ namespace NyaProxy
                     {
                         Network.Enqueue(serverSocket, hp.Pack(-1), () =>
                         {
-                            FastBridge fastBridge = new FastBridge(destHost, hea.Packet.ServerAddress, acceptSocket, serverSocket);
+                            FastBridge fastBridge = new FastBridge(hea.SessionId, destHost, hea.Packet.ServerAddress, acceptSocket, serverSocket);
                             fastBridge.Build();
                             hea?.Packet?.Dispose();
                         });
                     }
                     else
                     {
-                        QueueBridge queueBridge = new QueueBridge(destHost, hea.Packet, acceptSocket, serverSocket);
+                        QueueBridge queueBridge = new QueueBridge(hea.SessionId, destHost, hea.Packet, acceptSocket, serverSocket);
                         queueBridge.Build();
                     }
                 }

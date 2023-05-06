@@ -10,6 +10,7 @@ namespace NyaProxy
 {
     public class ConnectEventArgs : TransportEventArgs, IConnectEventArgs
     {
+        public long SessionId { get; }
         public Socket AcceptSocket { get; set; }
         public SocketError SocketError { get; }
 
@@ -18,12 +19,13 @@ namespace NyaProxy
 
         }
 
-        public ConnectEventArgs(Socket acceptSocket)
+        public ConnectEventArgs(long sessionId, Socket acceptSocket)
         {
+            SessionId = sessionId;
             AcceptSocket = acceptSocket ?? throw new ArgumentNullException(nameof(acceptSocket));
         }
 
-        public ConnectEventArgs(Socket acceptSocket, SocketError socketError) : this(acceptSocket)
+        public ConnectEventArgs(long sessionId, Socket acceptSocket, SocketError socketError) : this(sessionId, acceptSocket)
         {
             SocketError = socketError;
         }

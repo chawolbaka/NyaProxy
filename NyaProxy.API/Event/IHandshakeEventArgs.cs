@@ -1,17 +1,26 @@
-﻿using MinecraftProtocol.Packets.Client;
+﻿using System.Net.Sockets;
+using MinecraftProtocol.Packets.Client;
 using MinecraftProtocol.Utils;
-using NyaProxy.API.Enum;
-using System.Net.Sockets;
+
 
 namespace NyaProxy.API
 {
     public interface IHandshakeEventArgs : ICancelEvent, IBlockEventArgs
     {
+
+        /// <summary>
+        /// 会话Id
+        /// </summary>
+        long SessionId { get; }
+
         /// <summary>
         /// 数据包来源
         /// </summary>
         Socket Source { get; }
 
+        /// <summary>
+        /// 目标Host
+        /// </summary>
         IHost Host { get; }
 
         /// <summary>

@@ -1,18 +1,14 @@
-﻿using MinecraftProtocol.Packets.Client;
-using NyaProxy.API;
-using NyaProxy.API.Enum;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
+using NyaProxy.API;
+using MinecraftProtocol.Packets.Client;
 
 namespace NyaProxy
 {
     public class HandshakeEventArgs : TransportEventArgs, IHandshakeEventArgs
     {
+        public long SessionId { get; }
+
         public Socket Source { get; set; }
 
         public IHost Host { get; set; }
@@ -24,8 +20,9 @@ namespace NyaProxy
 
         }
 
-        public HandshakeEventArgs(Socket source, HandshakePacket packet,IHost host)
+        public HandshakeEventArgs(long sessionId, Socket source, HandshakePacket packet,IHost host)
         {
+            SessionId = sessionId;
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Packet = packet ?? throw new ArgumentNullException(nameof(packet));
             Host = host ?? throw new ArgumentNullException(nameof(host));

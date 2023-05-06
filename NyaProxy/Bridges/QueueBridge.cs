@@ -88,7 +88,8 @@ namespace NyaProxy.Bridges
         private HandshakePacket _handshakePacket;
         private LoginStartPacket _loginStartPacket;
 
-        public QueueBridge(Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(host, handshakePacket.ServerAddress, source, destination)
+        public QueueBridge(Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : this(GetNextSessionId(), host, handshakePacket, source, destination) { }
+        internal QueueBridge(long sessionId, Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(sessionId, host, handshakePacket.ServerAddress, source, destination)
         {
             if (NyaProxy.Config.EnableStickyPool)
                 Buffer = new BufferManager(source, destination, NyaProxy.Network, NyaProxy.Config.EnableStickyPool);

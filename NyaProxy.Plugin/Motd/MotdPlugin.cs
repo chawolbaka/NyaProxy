@@ -97,8 +97,8 @@ namespace Motd
 
         private void OnDisconnected(object? sender, IDisconnectEventArgs e)
         {
-            if (HostIndex.ContainsKey(e.Host))
-                Helper.Config.Get<MotdConfig>(HostIndex[e.Host]).PingReply.Player.Online--;
+            if (HostIndex.ContainsKey(e.Host.Name))
+                Helper.Config.Get<MotdConfig>(HostIndex[e.Host.Name]).PingReply.Player.Online--;
         }
 
         public override async Task OnDisable()

@@ -1,15 +1,13 @@
-﻿using MinecraftProtocol.IO;
-using MinecraftProtocol.Utils;
-using System;
-using System.Net;
+﻿using System;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using NyaProxy.API;
 using NyaProxy.EventArgs;
 using NyaProxy.Extension;
-using NyaProxy.Configs;
 using NyaProxy.Debug;
-using System.Threading.Tasks;
+using MinecraftProtocol.IO;
+using MinecraftProtocol.Utils;
 
 namespace NyaProxy.Bridges
 {
@@ -32,10 +30,16 @@ namespace NyaProxy.Bridges
         private static long _count = 0;
         private static long _sequence = 1000; //从0开始的话StringTable那边看着有点太短，这边设置成1000仅仅是为了看着舒服点。
 
-        public Bridge(Host host, string handshakeAddress, Socket source, Socket destination)
+        internal static long GetNextSessionId()
         {
             Interlocked.CompareExchange(ref _sequence, 1000, int.MaxValue);
-            SessionId = Interlocked.Increment(ref _sequence);
+            return Interlocked.Increment(ref _sequence);
+        }
+
+        public Bridge(Host host, string handshakeAddress, Socket source, Socket destination) : this(GetNextSessionId(), host, handshakeAddress, source, destination) { }
+        internal Bridge(long sessionId, Host host, string handshakeAddress, Socket source, Socket destination)
+        {
+            SessionId = sessionId;
             HandshakeAddress = handshakeAddress;
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
@@ -47,6 +51,7 @@ namespace NyaProxy.Bridges
 
             _count = Interlocked.Increment(ref _count);
         }
+
 
         public abstract IBridge Build();
 
@@ -89,8 +94,7 @@ namespace NyaProxy.Bridges
                         Destination.Close();
                     }
                 });
-        
-                NyaProxy.Disconnected.Invoke(this, new DisconnectEventArgs(Host.Name));
+                NyaProxy.Disconnected.Invoke(this, new DisconnectEventArgs(SessionId, Host));
                 NyaProxy.Logger.Info(BreakMessage);
             }
             catch (SocketException) { }

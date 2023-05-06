@@ -11,10 +11,12 @@ namespace NyaProxy.EventArgs
 {
     public class DisconnectEventArgs : CancelEventArgs, IDisconnectEventArgs
     {
-        public string Host { get; set; }
+        public long SessionId { get; }
+        public IHost Host     { get; }
 
-        public DisconnectEventArgs(string host)
+        public DisconnectEventArgs(long sessionId, IHost host)
         {
+            SessionId = sessionId;
             Host = host;
         }
     }

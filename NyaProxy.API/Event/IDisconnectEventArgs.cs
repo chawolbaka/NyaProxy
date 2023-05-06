@@ -5,6 +5,7 @@ namespace NyaProxy.API
 {
     public interface IDisconnectEventArgs : ICancelEvent
     {
-        string Host { get; }
+        long SessionId { get; }
+        IHost Host { get; }
     }
 }

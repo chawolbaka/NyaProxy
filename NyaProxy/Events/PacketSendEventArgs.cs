@@ -5,7 +5,6 @@ using NyaProxy.API.Enum;
 using NyaProxy.Bridges;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.Packets;
-using MinecraftProtocol.Utils;
 using MinecraftProtocol.Compatible;
 
 namespace NyaProxy
@@ -13,6 +12,8 @@ namespace NyaProxy
 
     public class PacketSendEventArgs : TransportEventArgs, IPacketSendEventArgs, ICompatible
     {
+        public long SessionId => Bridge.SessionId;
+
         public string Host => Bridge.Host.Name;
 
         public Socket Source { get; set; }

@@ -1,9 +1,8 @@
-﻿using MinecraftProtocol.Utils;
-using MinecraftProtocol.Packets;
-using NyaProxy.API.Enum;
-using System;
+﻿using System;
 using System.Net.Sockets;
-using System.Net;
+using NyaProxy.API.Enum;
+using MinecraftProtocol.Utils;
+using MinecraftProtocol.Packets;
 
 namespace NyaProxy.API
 {
@@ -13,6 +12,8 @@ namespace NyaProxy.API
     /// </summary>
     public interface IPacketSendEventArgs : ICancelEvent, IBlockEventArgs
     {
+        long SessionId { get; }
+
         string Host { get; }
 
         /// <summary>
