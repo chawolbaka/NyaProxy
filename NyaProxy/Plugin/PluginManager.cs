@@ -42,12 +42,14 @@ namespace NyaProxy.Plugin
             directory = Path.Combine(Environment.CurrentDirectory, directory);
             if (!Directory.GetFiles(directory).Any(f => f.EndsWith("Manifest.json")))
                 return false;
-            Manifest manifest = null;
+
+            //这边必须调用Manifest的构造函数，否则编译器不会把这个构造函数编译出来（仅限单文件编译）
+            Manifest manifest = new Manifest();
             PluginController pluginController = null;
             try
             {
-                manifest = JsonSerializer.Deserialize<Manifest>(File.ReadAllText(Path.Combine(directory, "Manifest.json")));
-
+                manifest = JsonSerializer.Deserialize<Manifest>(await File.ReadAllTextAsync(Path.Combine(directory, "Manifest.json")));
+             
                 //检查必选项
                 if (string.IsNullOrWhiteSpace(manifest.UniqueId))
                     throw new PluginLoadException(i18n.Plugin.UniqueId_Empty);
