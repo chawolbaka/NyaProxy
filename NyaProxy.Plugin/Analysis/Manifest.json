@@ -1,0 +1,8 @@
+{
+  "Name": "Analysis",
+  "Author": "Chawol",
+  "Version": "1.0.0",
+  "UniqueId": "NyaProxy.Analysis",
+  "EntryDll": "Analysis.dll",
+  "CommandPrefixes": [ "analysis" ]
+}

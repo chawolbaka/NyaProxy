@@ -6,6 +6,8 @@ using NyaProxy.Bridges;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Compatible;
+using MinecraftProtocol.Compression;
+using MinecraftProtocol.IO.Pools;
 
 namespace NyaProxy
 {
@@ -34,10 +36,12 @@ namespace NyaProxy
 
         public bool DestinationCheaged { get; private set; }
 
-        public bool PacketCheaged => _packetCheaged ||  _version != _packet.Version;
+        public bool PacketCheaged => _packetCheaged ||  _version != _packet.Version; //这样计算不准确，如果数据包被压缩就会导致该值变大，但无所谓，反正我也不需要非常准确的去统计
+       
+        public int BytesTransferred => _bytesTransferred <= 0 ||  PacketCheaged ? _bytesTransferred = VarInt.GetLength(Packet.Get().Count) + Packet.Get().Count : _bytesTransferred;
 
-        public virtual LazyCompatiblePacket Packet 
-        { 
+        public virtual LazyCompatiblePacket Packet
+        {
             get => _packet; 
             set 
             {
@@ -53,14 +57,16 @@ namespace NyaProxy
         private LazyCompatiblePacket _packet;
         private bool _packetCheaged;
         private int _version;
-        
+        private int _bytesTransferred;
+
+
         internal QueueBridge Bridge;
         internal PacketReceivedEventArgs EventArgs;
         
 
         public PacketSendEventArgs()
         {
-
+            _bytesTransferred = -1;
         }
 
         internal virtual PacketSendEventArgs Setup(QueueBridge bridge, Socket source, Socket destination, Direction direction, CompatiblePacket packet, DateTime receivedTime)
@@ -71,6 +77,7 @@ namespace NyaProxy
         {
             if(destination == null)
                 throw new ArgumentNullException(nameof(destination));
+
             Source = source;
             Direction = direction;
             Destination = destination;
@@ -80,6 +87,7 @@ namespace NyaProxy
             ReceivedTime = receivedTime;
             _packet = packet;
             _packetCheaged = false;
+            _bytesTransferred = 0;
             _version = packet.Version;
             _isBlock = false;
             _isCancelled = false;
@@ -92,6 +100,7 @@ namespace NyaProxy
 
             Setup(bridge, source, destination, direction, e.Packet, e.ReceivedTime);
             EventArgs = e;
+            _bytesTransferred = VarInt.GetLength(e.PacketLength) + e.PacketLength;
             return this;
         }
     }

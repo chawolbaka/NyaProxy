@@ -31,20 +31,23 @@ namespace NyaProxy.API.Event
 
         public void Invoke(object sender, TEventArgs e)
         {
-            for (int i = 0; i < Events.Count; i++)
+            for (int y = 0; y < Events.Count; y++)
             {
-                for (int x = 0; x < Events[i].Count; x++)
+                for (int x = 0; x < Events[y].Count; x++)
                 {
-                    EventHandler<TEventArgs> handler = Events[i][x];
+                    EventHandler<TEventArgs> handler = Events[y][x];
+                    if (handler == null)
+                        continue;
+
                     if (e is ICancelEvent eventArgs)
                     {
-                        handler?.Invoke(sender, e);
+                        handler.Invoke(sender, e);
                         if (eventArgs.IsCancelled)
                             return;
                     }
                     else
                     {
-                        handler?.Invoke(sender, e);
+                        handler.Invoke(sender, e);
                     }
                 }
             }

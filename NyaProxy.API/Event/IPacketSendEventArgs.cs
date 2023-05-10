@@ -55,6 +55,11 @@ namespace NyaProxy.API
         /// 当前的压缩阈值
         /// </summary>
         int CompressionThreshold { get; }
+        
+        /// <summary>
+        /// 传输该数据包需要花费多少字节
+        /// </summary>
+        int BytesTransferred { get; }
 
         /// <summary>
         /// 玩家（可能为null）
