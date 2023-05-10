@@ -1,6 +1,6 @@
 ﻿namespace Analysis
 {
-    public class TransportAnalysis : Analysis
+    public class PingAnalysis : BridgeAnalysis
     {
         public long BytesTransferred { get; set; }
     }

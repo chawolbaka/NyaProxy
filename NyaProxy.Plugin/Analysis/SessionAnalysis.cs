@@ -3,17 +3,11 @@ using NyaProxy.API;
 
 namespace Analysis
 {
-    public class SessionAnalysis
+
+    public class SessionAnalysis: BridgeAnalysis
     {
-        public long SessionId { get; set; }
-        public DateTime ConnectTime { get; set; }
-        public DateTime HandshakeTime { get; set; }
         public DateTime LoginStartTime { get; set; }
         public DateTime LoginSuccessTime { get; set; }
-        public DateTime DisconnectTime { get; set; }
-        public IPEndPoint Source { get; set; }
-        public IPEndPoint Destination { get; set; }
-        public IHost Host { get; set; }
         public IPlayer Player { get; set; }
         public (PacketAnalysis Client, PacketAnalysis Server) PacketAnalysis { get; set; }
      
