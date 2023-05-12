@@ -272,12 +272,20 @@ namespace NyaProxy
                     }
 
                     destHost = GetHost(hea.Packet.GetServerAddressOnly(), hea.Packet.ServerPort);
+                    if (destHost.ForwardMode == ForwardMode.Dorp)
+                        return;
+                    if (destHost.ForwardMode == ForwardMode.Reject)
+                        acceptSocket.Close();
+
+
                     Socket serverSocket = await destHost.OpenConnectAsync();
                     if (!NetworkUtils.CheckConnect(serverSocket))
                         throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 
                     if (hp.NextState == HandshakeState.GetStatus)
                         Logger.Info($"{acceptSocket._remoteEndPoint()} Try to ping {destHost.Name}[{serverSocket._remoteEndPoint()}]");
+
+                    
 
                     if (destHost.ForwardMode == ForwardMode.Direct)
                     {

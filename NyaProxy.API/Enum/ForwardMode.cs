@@ -10,6 +10,8 @@ namespace NyaProxy.API.Enum
     {
         Default,
         Direct,
+        Dorp,
+        Reject,
         NyaProxy,
         BungeeCord,
         BungeeGuard,
