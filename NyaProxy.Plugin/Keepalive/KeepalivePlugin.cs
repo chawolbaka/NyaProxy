@@ -6,6 +6,7 @@ using MinecraftProtocol.Chat;
 using MinecraftProtocol.Packets;
 using MinecraftProtocol.Packets.Client;
 using NyaProxy.API;
+using NyaProxy.API.Enum;
 
 namespace Keepalive
 {
@@ -26,6 +27,9 @@ namespace Keepalive
 
         private void OnPacketSendToServer(object sender, IPacketSendEventArgs e)
         {
+            if (e.Stage != Stage.Play)
+                return;
+
             if (e.Packet == PacketType.Play.Client.KeepAlive)
             {
                 //如果Timeout是负数就无限接管，客户端永远不会因为连接超时掉线
@@ -52,6 +56,9 @@ namespace Keepalive
 
         private void OnPacketSendToClient(object sender, IPacketSendEventArgs e)
         {
+            if (e.Stage != Stage.Play)
+                return;
+
             if (e.Packet == PacketType.Play.Server.KeepAlive)
             {
                 //直接由代理端发送给服务端响应包，但依旧会发送给客户端，不过客户端那边就别想发到服务端了，这么做的目的是重写心跳包的超时时间
