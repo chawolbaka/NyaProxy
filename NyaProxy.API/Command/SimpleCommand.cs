@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NyaProxy.API.Command
 {
-    public class SimpleCommand : Command
+    public sealed class SimpleCommand : Command
     {
         public override string Name { get; }
 
@@ -24,9 +24,10 @@ namespace NyaProxy.API.Command
             _func = executeAsync ?? throw new ArgumentNullException(nameof(executeAsync));
         }
 
-        public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
-            return _func(args, helper);
+            await _func(args, helper);
+            return false; 
         }
 
         public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)

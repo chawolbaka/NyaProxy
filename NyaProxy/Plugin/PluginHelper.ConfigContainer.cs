@@ -153,7 +153,7 @@ namespace NyaProxy.Plugin
                 ConfigPathDictionary.Clear();
             }
 
-            private Config LoadConfig(Type configType,string path)
+            private Config LoadConfig(Type configType, string path)
             {
                 //如果实现了IManualConfig接口那么就通过read来读取配置文件，否则就通过反序列化读取
                 if (typeof(IManualConfig).IsAssignableFrom(configType))
@@ -261,7 +261,7 @@ namespace NyaProxy.Plugin
                 }
             }
 
-            private class ConfigCommand : Command
+            private sealed class ConfigCommand : Command
             {
                 public override string Name => "config";
 
@@ -276,7 +276,7 @@ namespace NyaProxy.Plugin
                     _configContainer = configContainer ?? throw new ArgumentNullException(nameof(configContainer));
                 }
 
-                public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+                public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
                 {
                     if (args.Length == 1)
                     {
@@ -295,11 +295,12 @@ namespace NyaProxy.Plugin
                         else
                             switch (args.Span[0])
                             {
-                                case "reload": _configContainer.Reload(args.Span[1]); break;
-                                case "save": await _configContainer.SaveAsync(args.Span[1]); break;
+                                case "reload": _configContainer.Reload(uniqueId); break;
+                                case "save": await _configContainer.SaveAsync(uniqueId); break;
                                 default: helper.Logger.Unpreformat($"Unknow operate {args.Span[0]}"); break;
                             }
                     }
+                    return false;
                 }
 
                 public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)

@@ -21,25 +21,38 @@ namespace NyaProxy.API.Command
                 if (!string.IsNullOrWhiteSpace(Description))
                     sb.Append("Description: ").AppendLine(Description).AppendLine().AppendLine();
 
-                sb.AppendLine("Usage:");
-                sb.Append(' ').Append(Name).Append(" [options]").AppendLine().AppendLine();
-
-                
-
-                if(_optionDictionray.Count > 0)
+                if (_children.Count > 0)
                 {
-                    sb.AppendLine("Options:");
-                    foreach (var option in _optionDictionray.Values)
+                    sb.AppendLine("Commands:");
+                    foreach (var command in _children.Values)
                     {
-                        sb.Append("  ").Append(option.Name);
-                        if (option.Aliases != null)
-                            sb.Append(", ").Append(string.Join(", ", option.Aliases));
-
-                       sb.Append('\t').AppendLine(option.Description);
+                        sb.Append("  ").Append(command.Name).Append("\t").AppendLine(command.Description);
                     }
-                    sb.AppendLine();
+
+                    sb.AppendLine().AppendLine("Options:");
                 }
-                return sb.ToString();
+                else
+                {
+                    sb.AppendLine("Usage:");
+                    sb.Append(' ').Append(Name).Append(" [options]").AppendLine().AppendLine();
+
+
+                    if (_optionDictionray.Count > 0)
+                    {
+                        sb.AppendLine("Options:");
+                        foreach (var option in _optionDictionray.Values)
+                        {
+                            sb.Append("  ").Append(option.Name);
+                            if (option.Aliases != null)
+                                sb.Append(", ").Append(string.Join(", ", option.Aliases));
+
+                            sb.Append('\t').AppendLine(option.Description);
+                        }
+                    }
+                }
+
+                sb.Append("  ").Append(HELP_COMMAND).Append('\t').AppendLine("Show help and usage information");
+                return sb.AppendLine().ToString();
             }
         }
 
@@ -51,12 +64,9 @@ namespace NyaProxy.API.Command
         public ReadOnlyDictionary<string, Command> Children => new ReadOnlyDictionary<string, Command>(_children);
         private Dictionary<string, Command> _children = new Dictionary<string, Command>();
         private Dictionary<string, Option> _optionDictionray = new();
-        
-        public Command()
-        {
-            AddOption(new Option("--help", "Show help and usage information", (command, e) => e.Helper.Logger.Unpreformat(command.Help)));
-        }
 
+        private const string HELP_COMMAND = "--help";
+        
         public void AddOption(Option option)
         {
             _optionDictionray.Add(option.Name, option);
@@ -69,7 +79,52 @@ namespace NyaProxy.API.Command
             }
         }
 
-        public virtual async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        /// <summary>
+        /// 执行命令
+        /// </summary>
+        /// <param name="args">命令参数</param>
+        /// <returns>命令是否还可以继续被执行</returns>
+        public virtual async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        {
+            if (_children.Count > 0)
+            {
+                if (args.Length == 1 && args.Span[0] == HELP_COMMAND)
+                {
+                    helper.Logger.Unpreformat(Help);
+                    return false;
+                }
+                else
+                {
+                    await ExecuteChildrenAsync(args, helper);
+                    return true;
+                }
+            }
+            else
+            {
+                if (args.ToArray().Any(s => s == HELP_COMMAND))
+                {
+                    helper.Logger.Unpreformat(Help);
+                    return false;
+                }
+                else
+                {
+                    await ExecuteOptionAsync(args, helper);
+                    return true;
+                }
+                    
+            }
+        }
+
+
+        public virtual IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
+        {
+            if (_children.Count > 0)
+                return GetChildrenTabCompletions(args);
+            else
+                return GetOptionTabCompletions(args);
+        }
+
+        public virtual async Task ExecuteOptionAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             if (args.IsEmpty)
                 return;
@@ -102,7 +157,7 @@ namespace NyaProxy.API.Command
             }
         }
 
-        public virtual IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
+        public virtual IEnumerable<string> GetOptionTabCompletions(ReadOnlySpan<string> args)
         {
             if (_optionDictionray.Count == 0)
                 return Enumerable.Empty<string>();
@@ -112,6 +167,52 @@ namespace NyaProxy.API.Command
 
             string[] arguments = args.ToArray();
             return _optionDictionray.Keys.Where(x => !arguments.Any(a => a == x));
+        }
+
+
+        public virtual async Task ExecuteChildrenAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        {
+            if (_children.Count == 0 || args.Length == 0)
+                return;
+
+            string commnad = args.Span[0];
+            if (!_children.ContainsKey(commnad))
+                throw new CommandNotFoundException(commnad);
+            else if (_children[commnad].MinimumArgs > args.Length - 1)
+                throw new CommandLeastRequiredException(_children[commnad], _children[commnad].MinimumArgs);
+            else
+                await _children[commnad].ExecuteAsync(args.Slice(1), helper);
+        }
+
+
+        public virtual IEnumerable<string> GetChildrenTabCompletions(ReadOnlySpan<string> args)
+        {
+            if (_children.Count == 0)
+                return Enumerable.Empty<string>();
+
+            if (args.Length == 0)
+                return _children.Keys;
+            else if (_children.ContainsKey(args[0]))
+                return _children[args[0]].GetTabCompletions(args.Slice(1));
+            else
+                return Enumerable.Empty<string>();
+        }
+
+        public virtual void RegisterChild(Command command)
+        {
+            command._parent = this;
+            if (_children.ContainsKey(command.Name))
+                throw new CommandRegisteredException(command.Name);
+
+            _children.Add(command.Name, command);
+        }
+
+        public virtual void UnregisterChild(string commandName)
+        {
+            if (string.IsNullOrWhiteSpace(commandName))
+                throw new ArgumentNullException(commandName);
+
+            _children.Remove(commandName);
         }
 
         public bool Equals(Command other)
@@ -132,50 +233,6 @@ namespace NyaProxy.API.Command
         public override string ToString()
         {
             return Name.ToString();
-        }
-
-        public virtual void RegisterChild(Command command)
-        {
-            command._parent = this;
-            if (_children.ContainsKey(command.Name))
-                throw new CommandRegisteredException(command.Name);
-
-            _children.Add(command.Name, command);
-        }
-
-        public virtual void UnregisterChild(string commandName)
-        {
-            if (string.IsNullOrWhiteSpace(commandName))
-                throw new ArgumentNullException(commandName);
-
-            _children.Remove(commandName);
-        }
-
-        public virtual async Task ExecuteChildrenAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
-        {
-            if (_children.Count == 0 || args.Length == 0)
-                return;
-
-            string commnad = args.Span[0];
-            if (!_children.ContainsKey(commnad))
-                throw new CommandNotFoundException(commnad);
-            else if (_children[commnad].MinimumArgs > args.Length - 1)
-                throw new CommandLeastRequiredException(_children[commnad], _children[commnad].MinimumArgs);
-            else
-                await _children[commnad].ExecuteAsync(args.Slice(1), helper);
-        }
-
-        public virtual IEnumerable<string> GetChildrenTabCompletions(ReadOnlySpan<string> args)
-        {
-            if (_children.Count == 0)
-                return Enumerable.Empty<string>();
-
-            if (args.Length == 0)
-                return _children.Keys;
-            else if (_children.ContainsKey(args[0]))
-                return _children[args[0]].GetTabCompletions(args.Slice(1));
-            else
-                return Enumerable.Empty<string>();
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Motd
             AddOption(new Option("generate", 1, (command, e) => _address = e.Arguments.Span[0]));
         }
 
-        public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             _host = null; _address = null;
             await base.ExecuteAsync(args, helper);
@@ -34,9 +34,7 @@ namespace Motd
                 await MotdPlugin.CurrentInstance.Helper.Config.SaveAsync(MotdPlugin.CurrentInstance.Helper.Config.Register(config, Path.Combine("Hosts", fileName)));
                 helper.Logger.Unpreformat("§aGenerate success.");
             }
-
+            return true;
         }
-
     }
-
 }

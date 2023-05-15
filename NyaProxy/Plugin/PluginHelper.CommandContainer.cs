@@ -104,9 +104,10 @@ namespace NyaProxy.Plugin
                     Name = name;
                 }
 
-                public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+                public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
                 {
                     await ExecuteChildrenAsync(args, helper);
+                    return true;
                 }
 
                 public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
