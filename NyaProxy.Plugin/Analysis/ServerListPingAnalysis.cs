@@ -1,6 +1,6 @@
 ﻿namespace Analysis
 {
-    public class PingAnalysis : BridgeAnalysis
+    public class ServerListPingAnalysis : BridgeAnalysis
     {
         public long BytesTransferred { get; set; }
     }

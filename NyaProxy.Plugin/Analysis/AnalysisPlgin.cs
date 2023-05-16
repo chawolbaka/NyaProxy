@@ -134,7 +134,7 @@ namespace Analysis
                 if (!Directory.Exists(saveDirectory))
                     Directory.CreateDirectory(saveDirectory);
 
-                if(Pings.Count>0)
+                if (Pings.Count > 0)
                 {
                     using FileStream fs = new FileStream(Path.Combine(saveDirectory, $"ping-{_startTime: yyyy-MM-dd mmHHssss}.json"), FileMode.OpenOrCreate);
                     await JsonSerializer.SerializeAsync(fs, Sessions);
