@@ -111,7 +111,7 @@ namespace NyaProxy.Bridges
             e.Handled = true;
             if (e.Exception is OverflowException && NetworkUtils.CheckConnect(Source) && NetworkUtils.CheckConnect(Destination))
             {
-                NyaProxy.Logger.Error(i18n.Error.PacketDecompressFailed);
+                NyaProxy.Logger.Exception(e.Exception);
                 return;
             }
             else if (e.Exception is not ObjectDisposedException && e.Exception is not SocketException && e.Exception is not OverflowException)

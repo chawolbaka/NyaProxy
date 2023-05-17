@@ -322,7 +322,7 @@ namespace NyaProxy
                 else if(e.CheckException<SocketException>(out string message))
                 {
                     if (hea != null && hea.Packet.NextState == HandshakeState.Login)
-                        acceptSocket.DisconnectOnLogin(message);
+                        acceptSocket.DisconnectOnLogin(i18n.Disconnect.ServerClosed);
                     Logger.Debug($"SocketException {message}");
                 }
                 else

@@ -138,4 +138,7 @@
   <data name="ReceivedEnexpectedPacket" xml:space="preserve">
     <value>Received abnormal packet (Id = {PacketId})</value>
   </data>
+  <data name="ServerClosed" xml:space="preserve">
+    <value>Server closed</value>
+  </data>
 </root>
