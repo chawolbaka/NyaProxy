@@ -115,7 +115,7 @@ namespace NyaProxy.Configs
                 writer.WriteProperty("server-flags",                new StringNode(Flags.ToString(), i18n.Config.ServerFlags));
                 writer.WriteProperty("server-version",              new NumberNode(ProtocolVersion, i18n.Config.ProtocolVersion));
                 writer.WriteProperty("compression-threshold",       new NumberNode(CompressionThreshold, i18n.Config.CompressionThreshold));
-                writer.WriteProperty("player-info-forwarding-mode", new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
+                writer.WriteProperty("forwarding-mode",             new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
                 writer.WriteProperty("tcp-fast-open",               new BooleanNode(TcpFastOpen, i18n.Config.ClientTcpFastOpen));
                 writer.WriteProperty("connection-timeout",          new NumberNode(ConnectionTimeout, i18n.Config.ConnectionTimeout));
                 writer.WriteProperty("connection-throttle",         new NumberNode(ConnectionThrottle, i18n.Config.ConnectionThrottle));
@@ -248,6 +248,11 @@ namespace NyaProxy.Configs
             throw new Exception(i18n.Error.NoSocketAvailable);
         }
 
+
+        public override string ToString()
+        {
+            return Name.ToString();
+        }
 
         public override int GetHashCode()
         {
