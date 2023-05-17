@@ -98,9 +98,10 @@ namespace NyaProxy.Configs
         {
             try
             {
-                writer.WriteProperty("host", new StringNode(Name));
+                writer.WriteProperty("host", new StringNode(Name, i18n.Config.Host));
 
                 ArrayNode servers = new ArrayNode();
+                servers.Comment.Preceding = i18n.Config.Servers;
 
                 for (int i = 0; i < ServerEndPoints.Count; i++)
                 {

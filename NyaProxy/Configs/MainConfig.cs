@@ -118,9 +118,9 @@ namespace NyaProxy.Configs
             {
                 Nodes = new Dictionary<string, ConfigNode>()
                 {
-                    ["enable"]    = new BooleanNode(LogFile.Enable, i18n.Config.EnableReceivePool),
-                    ["format"]    = new StringNode(LogFile.Format, i18n.Config.EnableReceivePool),
-                    ["directory"] = new StringNode(LogFile.Directory, i18n.Config.EnableReceivePool)
+                    ["enable"]    = new BooleanNode(LogFile.Enable, i18n.Config.EnableLogFile),
+                    ["format"]    = new StringNode(LogFile.Format, i18n.Config.LogFormat),
+                    ["directory"] = new StringNode(LogFile.Directory, i18n.Config.LogFileDirectory)
                 }
             });
 
@@ -129,7 +129,7 @@ namespace NyaProxy.Configs
             {
                 Nodes = new Dictionary<string, ConfigNode>()
                 {
-                    ["enable"]             = new BooleanNode(EnableStickyPacket, i18n.Config.EnableStickyPool),
+                    ["enable"]             = new BooleanNode(EnableStickyPacket, i18n.Config.EnableStickyPacket),
                     ["limit"]              = new NumberNode(StickyPacketLimit, i18n.Config.StickyPacketLimit),
                     ["enable-pool"]        = new BooleanNode(EnableStickyPool, i18n.Config.EnableStickyPool),
                     ["pool-buffers"]       = new NumberNode(NumberOfStickyPoolBuffers, i18n.Config.NumberOfStickyPoolBuffers),
