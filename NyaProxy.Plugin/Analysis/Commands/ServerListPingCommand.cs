@@ -1,7 +1,7 @@
 ﻿using NyaProxy.API.Command;
 using StringTable;
 
-namespace Analysis
+namespace Analysis.Commands
 {
     public class ServerListPingCommand : Command
     {
@@ -9,11 +9,11 @@ namespace Analysis
 
         public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
-            if (AnalysisPlgin.Pings.Count > 0)
+            if (AnalysisData.Pings.Count > 0)
             {
                 StringTableBuilder table = new StringTableBuilder();
                 table.AddColumn("Client", "Server", "Transferred", "Count");
-                foreach (var group in AnalysisPlgin.Pings.Values.GroupBy(p => new { p.Host, p.Source.Address, p.Destination }))
+                foreach (var group in AnalysisData.Pings.Values.GroupBy(p => new { p.Host, p.Source.Address, p.Destination }))
                 {
                     long transferred = 0;
                     int count = 0;
@@ -24,9 +24,9 @@ namespace Analysis
                     }
 
                     var firstPA = group.First();
-                    table.AddRow(firstPA.Source.Address, $"{firstPA.Host.Name} [{firstPA.Destination}]", Utils.SizeSuffix(transferred), count);
+                    table.AddRow(firstPA?.Source?.Address, $"{firstPA?.Host?.Name} [{firstPA?.Destination}]", Utils.SizeSuffix(transferred), count);
                 }
-             
+
                 helper.Logger.Unpreformat(table.Export());
             }
             else

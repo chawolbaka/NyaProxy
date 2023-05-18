@@ -1,6 +1,6 @@
 ﻿using NyaProxy.API.Command;
 
-namespace Analysis
+namespace Analysis.Commands
 {
     public class OverviewCommand : Command
     {
