@@ -188,7 +188,7 @@ namespace NyaProxy
             {
                 //如果该地址已被绑定就跳过
                 if (ServerSockets != null && ServerSockets.Any(s => s.LocalEndPoint is IPEndPoint local && local.Equals(bind)))
-                    break;
+                    continue;
 
                 Socket socket = BindSocket(bind);
                 if (socket != null)
