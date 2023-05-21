@@ -27,7 +27,7 @@ namespace Analysis
 
         private void Transport_Connecting(object? sender, IConnectEventArgs e)
         {
-            ServerListPingAnalysis anlysis = new ServerListPingAnalysis();
+            ServerListPingAnalysisData anlysis = new ServerListPingAnalysisData();
             anlysis.SessionId = e.SessionId;
             anlysis.ConnectTime = DateTime.Now;
             anlysis.Source = e.AcceptSocket.RemoteEndPoint as IPEndPoint;
@@ -39,11 +39,11 @@ namespace Analysis
         {
             if (!AnalysisData.Pings.ContainsKey(e.SessionId))
                 return;
-            BridgeAnalysis analysis = AnalysisData.Pings[e.SessionId];
+            BridgeAnalysisData analysis = AnalysisData.Pings[e.SessionId];
             if(e.Packet.NextState == HandshakeState.Login)
             {
                 //如果是登录的握手请求就转换类型
-                SessionAnalysis sessionAnalysis = new SessionAnalysis();
+                SessionAnalysisData sessionAnalysis = new SessionAnalysisData();
                 sessionAnalysis.SessionId = analysis.SessionId;
                 sessionAnalysis.ConnectTime = analysis.ConnectTime;
                 sessionAnalysis.Source = analysis.Source;
@@ -88,18 +88,18 @@ namespace Analysis
                 Add(pingAnalysis, e);
         }
 
-        private void Add(ServerListPingAnalysis anslysis, IPacketSendEventArgs e)
+        private void Add(ServerListPingAnalysisData anslysis, IPacketSendEventArgs e)
         {
             anslysis.BytesTransferred += e.BytesTransferred;
             anslysis.Destination ??= e.Destination.RemoteEndPoint as IPEndPoint;
         }
 
-        private void Add(PacketAnalysis anslysis, IPacketSendEventArgs e)
+        private void Add(PacketAnalysisData anslysis, IPacketSendEventArgs e)
         {
             int id = e.Packet.Id;
 
             if (!anslysis.Table.ContainsKey(id))
-                anslysis.Table.Add(id, new TransportAnalysis());
+                anslysis.Table.Add(id, new TransportAnalysisData());
 
             anslysis.Table[id].Count++;
             anslysis.Table[id].BytesTransferred += e.BytesTransferred;

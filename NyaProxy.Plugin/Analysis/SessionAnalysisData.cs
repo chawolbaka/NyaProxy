@@ -4,16 +4,19 @@ using NyaProxy.API;
 namespace Analysis
 {
 
-    public class SessionAnalysis: BridgeAnalysis
+    public class SessionAnalysisData : BridgeAnalysisData
     {
         public DateTime LoginStartTime { get; set; }
+        
         public DateTime LoginSuccessTime { get; set; }
+        
         public IPlayer Player { get; set; }
-        public (PacketAnalysis Client, PacketAnalysis Server) PacketAnalysis { get; set; }
      
-        public SessionAnalysis()
+        public (PacketAnalysisData Client, PacketAnalysisData Server) PacketAnalysis { get; set; }
+     
+        public SessionAnalysisData()
         {
-            PacketAnalysis = (new PacketAnalysis(), new PacketAnalysis());
+            PacketAnalysis = (new PacketAnalysisData(), new PacketAnalysisData());
         }
 
         public List<object> ToRow(bool hideTime)
@@ -27,6 +30,7 @@ namespace Analysis
                 Destination != null ? Destination.ToString() : "",
                 Utils.SizeSuffix(PacketAnalysis.Client.BytesTransferred+PacketAnalysis.Server.BytesTransferred),
             };
+
             if (!hideTime)
             {
                 row.AddRange(new object[] {
@@ -37,7 +41,6 @@ namespace Analysis
                 DisconnectTime   != default ? DisconnectTime   : ""
                 });
             }
-
             return row;
         }
 
