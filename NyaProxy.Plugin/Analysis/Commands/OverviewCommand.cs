@@ -10,6 +10,7 @@ namespace Analysis.Commands
         {
             RegisterChild(new ServerListPingCommand());
             RegisterChild(new PlayCommand());
+            RegisterChild(new PacketCommand());
         }
 
     }
