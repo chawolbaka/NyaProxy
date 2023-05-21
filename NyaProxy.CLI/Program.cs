@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using ConsolePlus;
+using NyaProxy.CLI.Commands;
 
 namespace NyaProxy.CLI
 {
@@ -18,7 +19,9 @@ namespace NyaProxy.CLI
                 NyaProxy.Logger.Info($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
             }
             NyaProxy.BindSockets();
+            NyaProxy.CommandManager.Register(new ConfigCommand());
 
+            
             FileStream fileStream = null!;
             DateTime time = DateTime.Now;
             if (logger.LogFile.Enable)
