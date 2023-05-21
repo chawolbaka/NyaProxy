@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Bind" xml:space="preserve">
+    <value>NyaProxy绑定的端口号（可绑定多个端口）</value>
+  </data>
+  <data name="ClientTcpFastOpen" xml:space="preserve">
+    <value>如果启用该选项，那么在连接到服务端时会尝试使用TcpFastOpen</value>
+  </data>
+  <data name="CompressionThreshold" xml:space="preserve">
+    <value>如果该选项的值不是-1，那么在客户端到NyaProxy之间会启用独立的数据包压缩（不推荐启用该选项，这会导致严重的性能问题）</value>
+  </data>
+  <data name="ConnectionThrottle" xml:space="preserve">
+    <value>客户端连接到NyaProxy的频率上限，如果1秒内连接数超过该选项设置的值那么连接会被阻止，设置为-1可以删除该限制</value>
+  </data>
+  <data name="ConnectionTimeout" xml:space="preserve">
+    <value>NyaProxy连接到服务端的时间如果超出该时间那么将不会继续等待连接，该选项单位为毫秒，设置为-1可以删除该限制</value>
+  </data>
+  <data name="EnableBlockingQueue" xml:space="preserve">
+    <value>是否启用阻塞队列，如果启用那么在玩家数较低时可以降低一点CPU占用，但玩家数一旦达到一定量那么该选项会导致占用率比关闭时还高</value>
+  </data>
+  <data name="EnableLogFile" xml:space="preserve">
+    <value>是否启用日志文件</value>
+  </data>
+  <data name="EnableReceivePool" xml:space="preserve">
+    <value>是否启用接收池，该选项可以降低GC压力，但会导致内存占用率上升</value>
+  </data>
+  <data name="EnableStickyPacket" xml:space="preserve">
+    <value>是否主动对小包进行粘连，这可以降低因为大量小包造成的高CPU占有率</value>
+  </data>
+  <data name="EnableStickyPool" xml:space="preserve">
+    <value>对小包的粘连是否需要使用数组池，该选项可以降低GC压力，但会导致内存占用率上升</value>
+  </data>
+  <data name="ForwardMode" xml:space="preserve">
+    <value>Default： 默认模式，选择该模式时NyaProxy会解析所有经过的数据包，并有可能拦截或篡改数据包
+Direct：  直通模式，选择该模式时NyaProxy只会单纯的转发消息，不会对数据包进行解析、拦截、篡改
+Reject ： 拦截模式，选择该模式时任何尝试连接到Host的请求都会被主动断开
+Dorp：      丢弃模式，选择该模式时该Host不会回应任何连接
+BungeeCord；BungeeCord模式，选择该模式时如果服务端在spigot.yml中开启了对应的选项，那么玩家的IP不再会是代理端的IP而是源IP</value>
+  </data>
+  <data name="Host" xml:space="preserve">
+    <value>如果玩家在客户端填写的服务端地址符合该选项中的值那么NyaProxy就会根据该选项来进行后续的连接（如果设为Default那么在找不到任何符合玩家填写的地址时就会选择该Host文件）</value>
+  </data>
+  <data name="LogFileDirectory" xml:space="preserve">
+    <value>日志文件存储目录</value>
+  </data>
+  <data name="LogFormat" xml:space="preserve">
+    <value>日志的格式</value>
+  </data>
+  <data name="NetworkThread" xml:space="preserve">
+    <value>处理数据包的线程数</value>
+  </data>
+  <data name="NumberOfStickyPoolBuffers" xml:space="preserve">
+    <value>粘包池中预创建的数组数量</value>
+  </data>
+  <data name="ProtocolVersion" xml:space="preserve">
+    <value>连接到服务端时使用的协议版本，如果填写-1那么会直接使用客户端在连接到NyaProxy时发送的协议版本</value>
+  </data>
+  <data name="ReceivePoolBufferLength" xml:space="preserve">
+    <value>接收池中每个数组的长度</value>
+  </data>
+  <data name="ReceivePoolBuffers" xml:space="preserve">
+    <value>接收池中预创建的数组数量</value>
+  </data>
+  <data name="SelectMode" xml:space="preserve">
+    <value>如何使用Server选项中配置的多个服务器地址，可用选项：Failover = 故障转移、Pool = 轮流选择、Random = 随机选择</value>
+  </data>
+  <data name="ServerFlags" xml:space="preserve">
+    <value>一些特殊的标记， 可用选项：OnlineMode = 启用正版验证、Forge = 在连接到服务端时添加Forge的标记（可多选）</value>
+  </data>
+  <data name="Servers" xml:space="preserve">
+    <value>服务端IP或域名（可配置多个）</value>
+  </data>
+  <data name="StickyPacketLimit" xml:space="preserve">
+    <value>如果一个数据包小于该选项配置的值，那么在EnableStickyPacket = true 时就会尝试将它粘起来</value>
+  </data>
+  <data name="StickyPoolBufferLength" xml:space="preserve">
+    <value>粘包池中每个数组的长度</value>
+  </data>
+  <data name="TcpFastOpen" xml:space="preserve">
+    <value>如果启用该选项那么在Linux下NyaProxy的监听Socket会尝试启用TcpFastOpen</value>
+  </data>
+</root>
