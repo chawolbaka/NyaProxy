@@ -17,14 +17,5 @@ namespace NyaFirewall.Commands
             RegisterChild(new ClearCommand<T>(table));
         }
 
-        public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
-        {
-            return base.ExecuteChildrenAsync(args, helper);
-        }
-
-        public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
-        {
-            return base.GetChildrenTabCompletions(args);
-        }
     }
 }

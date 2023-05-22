@@ -69,16 +69,6 @@ namespace NyaFirewall.Chains
                         helper.Logger.Unpreformat("Empty.");
                 }));
             }
-
-            public override Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
-            {
-                return base.ExecuteChildrenAsync(args, helper);
-            }
-
-            public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
-            {
-                return base.GetChildrenTabCompletions(args);
-            }
         }
     }
 }

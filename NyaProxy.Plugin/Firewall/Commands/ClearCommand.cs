@@ -15,10 +15,10 @@ namespace NyaFirewall.Commands
             Table = table;
         }
 
-        public override async Task ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             if (args.Length == 0)
-                return;
+                return false;
 
             try
             {
@@ -33,6 +33,7 @@ namespace NyaFirewall.Commands
                 helper.Logger.Exception(e);
                 helper.Logger.Unpreformat("§cClear failed.");
             }
+            return false;
         }
 
     }
