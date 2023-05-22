@@ -1,20 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\NyaProxy.API\NyaProxy.API.csproj" />
-		<PackageReference Include="MinecraftProtocol" Version="1.0.0" />
+		<PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="Manifest.json">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+		<ProjectReference Include="..\..\NyaProxy.API\NyaProxy.API.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Manifest.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>

@@ -2,7 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MinecraftProtocol" Version="1.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
+	</ItemGroup>
+
 </Project>
