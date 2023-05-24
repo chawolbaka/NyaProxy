@@ -49,6 +49,10 @@ namespace Analysis.Commands
                 return true;
             }
 
+            public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
+            {
+                return AnalysisData.Sessions.Keys.Select(x => x.ToString());
+            }
         }
 
         private class ServerCommand : Command
@@ -75,6 +79,11 @@ namespace Analysis.Commands
                 }
 
                 return true;
+            }
+
+            public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
+            {
+                return AnalysisData.Sessions.Keys.Select(x => x.ToString());
             }
         }
 
