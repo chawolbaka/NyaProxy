@@ -8,11 +8,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
+		<PackageReference Include="NyaGenerator.Equatable" Version="1.0.1" />
 	</ItemGroup>
 	
 	<ItemGroup>
 		<ProjectReference Include="..\..\NyaProxy.API\NyaProxy.API.csproj" />
-		<ProjectReference Include="..\..\NyaGenerator\NyaGenerator.Equatable\NyaGenerator.Equatable.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="Manifest.json">
