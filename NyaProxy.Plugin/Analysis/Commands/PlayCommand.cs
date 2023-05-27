@@ -14,10 +14,13 @@ namespace Analysis.Commands
 
         public virtual bool ShowFullTime { get; set; }
 
+        public virtual bool Reverse { get; set; }
+
         private const int SINGLE_PAGE_LENGTH = 10;
 
         public PlayCommand()
         {
+            AddOption(new Option("-r", 0, (command, e) => Reverse = true, "--reverse"));
             AddOption(new Option("-t", 0, (command, e) => ShowShortTime = true, "--show-time"));
             AddOption(new Option("--show-time-full", 0, (command, e) => ShowFullTime = true));
         }
@@ -25,6 +28,7 @@ namespace Analysis.Commands
         public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             int page = 0;
+            Reverse = false;
             ShowShortTime = false;
             ShowFullTime = false;
             if (await base.ExecuteAsync(args.Length > 0 && int.TryParse(args.Span[0], out page) ? args.Slice(1) : args, helper))
@@ -39,32 +43,22 @@ namespace Analysis.Commands
                         table.AddColumn("Connect", "Disconnect");
 
 
-                    foreach (var session in AnalysisData.Sessions.Values)
+                    var Sessions = AnalysisData.Sessions.Values.ToArray();
+                    if (Reverse)
                     {
-                        List<object> row = new List<object> {
-                            session.SessionId,
-                            session.Host != null ? session.Host.Name : "",
-                            session.Player != null ? session.Player.Name : "",
-                            session.Source != null ? session.Source.ToString() : "",
-                            session.Destination != null ? session.Destination.ToString() : "",
-                            Utils.SizeSuffix(session.PacketAnalysis.Client.BytesTransferred+session.PacketAnalysis.Server.BytesTransferred)};
-                        if (ShowFullTime)
+                        for (int i = Sessions.Length - 1; i >= 0; i--)
                         {
-                            row.AddRange(new object[] {
-                                session.ConnectTime      != default ? session.ConnectTime      : "",
-                                session.HandshakeTime    != default ? session.HandshakeTime    : "",
-                                session.LoginStartTime   != default ? session.LoginStartTime   : "",
-                                session.LoginSuccessTime != default ? session.LoginSuccessTime : "",
-                                session.DisconnectTime   != default ? session.DisconnectTime   : ""});
+                            table.AddRow(GetRow(Sessions[i]));
                         }
-                        else if (ShowShortTime)
-                        {
-                            row.AddRange(new object[] {
-                                session.ConnectTime      != default ? session.ConnectTime      : "",
-                                session.DisconnectTime   != default ? session.DisconnectTime   : ""});
-                        }
-                        table.AddRow(row);
                     }
+                    else
+                    {
+                        for (int i = 0; i < Sessions.Length; i++)
+                        {
+                            table.AddRow(GetRow(Sessions[i]));
+                        }
+                    }
+
 
                     try
                     {
@@ -81,6 +75,33 @@ namespace Analysis.Commands
                 }
             }
             return true;
+        }
+
+        public List<object> GetRow(SessionAnalysisData session)
+        {
+            List<object> row = new List<object> {
+                            session.SessionId,
+                            session.Host != null ? session.Host.Name : "",
+                            session.Player != null ? session.Player.Name : "",
+                            session.Source != null ? session.Source.ToString() : "",
+                            session.Destination != null ? session.Destination.ToString() : "",
+                            Utils.SizeSuffix(session.PacketAnalysis.Client.BytesTransferred+session.PacketAnalysis.Server.BytesTransferred)};
+            if (ShowFullTime)
+            {
+                row.AddRange(new object[] {
+                                session.ConnectTime      != default ? session.ConnectTime      : "",
+                                session.HandshakeTime    != default ? session.HandshakeTime    : "",
+                                session.LoginStartTime   != default ? session.LoginStartTime   : "",
+                                session.LoginSuccessTime != default ? session.LoginSuccessTime : "",
+                                session.DisconnectTime   != default ? session.DisconnectTime   : ""});
+            }
+            else if (ShowShortTime)
+            {
+                row.AddRange(new object[] {
+                                session.ConnectTime      != default ? session.ConnectTime      : "",
+                                session.DisconnectTime   != default ? session.DisconnectTime   : ""});
+            }
+            return row;
         }
     }
 }
