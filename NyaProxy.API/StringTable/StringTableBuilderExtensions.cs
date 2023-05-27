@@ -317,6 +317,24 @@ namespace StringTable
             return builder;
         }
 
+
+        public static string Export(this StringTableBuilder builder, int page, int singlePageLength)
+        {
+            if (page * singlePageLength > builder.Rows.Count)
+                throw new ArgumentOutOfRangeException("Page overflow");
+            if (builder.Rows.Count < singlePageLength)
+                return Export(builder);
+
+            var rows = builder.Rows;
+            if (builder.Rows.Count - (page * singlePageLength) > singlePageLength)
+                builder.Rows = builder.Rows.Skip(page * singlePageLength).Take(singlePageLength).ToList();
+            else
+                builder.Rows = builder.Rows.Skip(page * singlePageLength).ToList();
+            string result = Export(builder);
+            builder.Rows = rows;
+            return result;
+        }
+
         public static string Export(this StringTableBuilder builder)
         {
             var numberOfColumns = 0;
@@ -414,9 +432,6 @@ namespace StringTable
                 headerBottomLine = builder.CreateHeaderBottomLine(columnLengths, filledMap, filledHeaderMap);
             }
 
-            // find the longest formatted line
-            //var maxRowLength = Math.Max(0, builder.Rows.Any() ? builder.Rows.Max(row => string.Format(tableRowContentFormat, row.ToArray()).Length) : 0);
-
             var hasHeader = builder.FormattedColumns != null && builder.FormattedColumns.Any() && builder.FormattedColumns.Max(x => (x ?? string.Empty).ToString().Length) > 0;
 
             // header
@@ -437,9 +452,6 @@ namespace StringTable
                 var headerSlices = builder.FormattedColumns.ToArray();
                 var formattedHeaderSlice = builder.CenterColumnContent(headerSlices, columnLengths);
 
-                //var formattedHeaderSlice = Enumerable.Range(0, headerSlices.Length).Select(idx => builder.ColumnFormatterStore.ContainsKey(idx) ? builder.ColumnFormatterStore[idx](headerSlices[idx] == null ? string.Empty : headerSlices[idx].ToString()) : headerSlices[idx] == null ? string.Empty : headerSlices[idx].ToString()).ToArray();
-                //formattedHeaderSlice = builder.CenterColumnContent(headerSlices, columnLengths);
-
                 if (headerRowContentFormat != null && headerRowContentFormat.Trim().Length > 0)
                 {
                     strBuilder.AppendLine(string.Format(headerRowContentFormat, formattedHeaderSlice));
@@ -449,18 +461,6 @@ namespace StringTable
                     strBuilder.AppendLine(string.Format(tableRowContentFormat, formattedHeaderSlice));
                 }
             }
-            //else
-            //{
-            //    if (beginTableFormat.Length > 0) strBuilder.AppendLine(beginTableFormat);
-            //    strBuilder.AppendLine(string.Format(rowContentTableFormat, builder.FormattedColumns.ToArray()));
-            //}
-
-            // add each row
-
-            //var results = builder.Rows.Select(row => {
-            //    var rowSlices = row.ToArray();
-            //    return string.Format(tableRowContentFormat, Enumerable.Range(0, rowSlices.Length).Select(idx => builder.FormatterStore.ContainsKey(idx) ? builder.FormatterStore[idx](rowSlices[idx] == null ? string.Empty : rowSlices[idx].ToString()) : rowSlices[idx] == null ? string.Empty : rowSlices[idx].ToString()).ToArray());
-            //}).ToList();
 
             var results = builder.FormattedRows.Select(row =>
             {
@@ -539,179 +539,6 @@ namespace StringTable
 
             return strBuilder;
         }
-
-        //private static StringBuilder CreateTableForDefaultFormat(ConsoleTableBuilder builder)
-        //{
-        //    var strBuilder = new StringBuilder();
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Top);
-
-        //    // create the string format with padding
-        //    var format = builder.Format('|');
-
-        //    if (format == string.Empty)
-        //    {
-        //        return strBuilder;
-        //    }
-
-        //    // find the longest formatted line
-        //    var maxRowLength = Math.Max(0, builder.Rows.Any() ? builder.Rows.Max(row => string.Format(format, row.ToArray()).Length) : 0);
-
-        //    // add each row
-        //    var results = builder.Rows.Select(row => string.Format(format, row.ToArray())).ToList();
-
-        //    // create the divider
-        //    var divider = new string('-', maxRowLength);
-
-        //    // header
-        //    if (builder.Column != null && builder.Column.Any() && builder.Column.Max(x => (x ?? string.Empty).ToString().Length) > 0)
-        //    {
-        //        strBuilder.AppendLine(divider);
-        //        strBuilder.AppendLine(string.Format(format, builder.Column.ToArray()));
-        //    }
-
-        //    foreach (var row in results)
-        //    {
-        //        strBuilder.AppendLine(divider);
-        //        strBuilder.AppendLine(row);
-        //    }
-
-        //    strBuilder.AppendLine(divider);
-
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Bottom);
-        //    return strBuilder;
-        //}
-
-        //private static StringBuilder CreateTableForMinimalFormat(ConsoleTableBuilder builder)
-        //{
-        //    var strBuilder = new StringBuilder();
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Top);
-
-        //    // create the string format with padding
-        //    var format = builder.Format('\0').Trim();
-
-        //    if (format == string.Empty)
-        //    {
-        //        return strBuilder;
-        //    }
-
-        //    var skipFirstRow = false;
-        //    var columnHeaders = string.Empty;
-
-        //    if (builder.Column != null && builder.Column.Any() && builder.Column.Max(x => (x ?? string.Empty).ToString().Length) > 0)
-        //    {
-        //        skipFirstRow = false;
-        //        columnHeaders = string.Format(format, builder.Column.ToArray());
-        //    }
-        //    else
-        //    {
-        //        skipFirstRow = true;
-        //        columnHeaders = string.Format(format, builder.Rows.First().ToArray());
-        //    }
-
-        //    // create the divider
-        //    var divider = Regex.Replace(columnHeaders, @"[^|]", '-'.ToString());
-
-        //    strBuilder.AppendLine(columnHeaders);
-        //    strBuilder.AppendLine(divider);
-
-        //    // add each row
-        //    var results = builder.Rows.Skip(skipFirstRow ? 1 : 0).Select(row => string.Format(format, row.ToArray())).ToList();
-        //    results.ForEach(row => strBuilder.AppendLine(row));
-
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Bottom);
-
-        //    return strBuilder;
-        //}
-
-        //private static StringBuilder CreateTableForMarkdownFormat(ConsoleTableBuilder builder)
-        //{
-        //    var strBuilder = new StringBuilder();
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Top);
-
-        //    // create the string format with padding
-        //    var format = builder.Format('|');
-
-        //    if (format == string.Empty)
-        //    {
-        //        return strBuilder;
-        //    }
-
-        //    var skipFirstRow = false;
-        //    var columnHeaders = string.Empty;
-
-        //    if (builder.Column != null && builder.Column.Any() && builder.Column.Max(x => (x ?? string.Empty).ToString().Length) > 0)
-        //    {
-        //        skipFirstRow = false;
-        //        columnHeaders = string.Format(format, builder.Column.ToArray());
-        //    }
-        //    else
-        //    {
-        //        skipFirstRow = true;
-        //        columnHeaders = string.Format(format, builder.Rows.First().ToArray());
-        //    }
-
-        //    // create the divider
-        //    var divider = Regex.Replace(columnHeaders, @"[^|]", '-'.ToString());
-
-        //    strBuilder.AppendLine(columnHeaders);
-        //    strBuilder.AppendLine(divider);
-
-        //    // add each row
-        //    var results = builder.Rows.Skip(skipFirstRow ? 1 : 0).Select(row => string.Format(format, row.ToArray())).ToList();
-        //    results.ForEach(row => strBuilder.AppendLine(row));
-
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Bottom);
-
-        //    return strBuilder;
-        //}
-
-        //private static StringBuilder CreateTableForAlternativeFormat(ConsoleTableBuilder builder)
-        //{
-        //    var strBuilder = new StringBuilder();
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Top);
-
-        //    // create the string format with padding
-        //    var format = builder.Format('|');
-
-        //    if (format == string.Empty)
-        //    {
-        //        return strBuilder;
-        //    }
-
-        //    var skipFirstRow = false;
-        //    var columnHeaders = string.Empty;
-
-        //    if (builder.Column != null && builder.Column.Any() && builder.Column.Max(x => (x ?? string.Empty).ToString().Length) > 0)
-        //    {
-        //        skipFirstRow = false;
-        //        columnHeaders = string.Format(format, builder.Column.ToArray());
-        //    }
-        //    else
-        //    {
-        //        skipFirstRow = true;
-        //        columnHeaders = string.Format(format, builder.Rows.First().ToArray());
-        //    }
-
-        //    // create the divider
-        //    var divider = Regex.Replace(columnHeaders, @"[^|]", '-'.ToString());
-        //    var dividerPlus = divider.Replace("|", "+");
-
-        //    strBuilder.AppendLine(dividerPlus);
-        //    strBuilder.AppendLine(columnHeaders);
-
-        //    // add each row
-        //    var results = builder.Rows.Skip(skipFirstRow ? 1 : 0).Select(row => string.Format(format, row.ToArray())).ToList();
-
-        //    foreach (var row in results)
-        //    {
-        //        strBuilder.AppendLine(dividerPlus);
-        //        strBuilder.AppendLine(row);
-        //    }
-        //    strBuilder.AppendLine(dividerPlus);
-
-        //    BuildMetaRowsFormat(builder, strBuilder, MetaRowPositions.Bottom);
-        //    return strBuilder;
-        //}
 
         private static List<string> BuildMetaRowsFormat(StringTableBuilder builder, MetaRowPositions position)
         {

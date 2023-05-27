@@ -14,19 +14,20 @@ namespace Analysis.Commands
 
         public virtual bool ShowFullTime { get; set; }
 
+        private const int SINGLE_PAGE_LENGTH = 10;
+
         public PlayCommand()
         {
-            AddOption(new Option("--show-time", 0, (command, e) => ShowShortTime = true));
-
+            AddOption(new Option("-t", 0, (command, e) => ShowShortTime = true, "--show-time"));
             AddOption(new Option("--show-time-full", 0, (command, e) => ShowFullTime = true));
         }
 
         public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
+            int page = 0;
             ShowShortTime = false;
             ShowFullTime = false;
-
-            if (await base.ExecuteAsync(args, helper))
+            if (await base.ExecuteAsync(args.Length > 0 && int.TryParse(args.Span[0], out page) ? args.Slice(1) : args, helper))
             {
                 if (AnalysisData.Sessions.Count > 0)
                 {
@@ -40,16 +41,13 @@ namespace Analysis.Commands
 
                     foreach (var session in AnalysisData.Sessions.Values)
                     {
-                        List<object> row = new List<object>
-                        { 
+                        List<object> row = new List<object> {
                             session.SessionId,
                             session.Host != null ? session.Host.Name : "",
                             session.Player != null ? session.Player.Name : "",
                             session.Source != null ? session.Source.ToString() : "",
                             session.Destination != null ? session.Destination.ToString() : "",
                             Utils.SizeSuffix(session.PacketAnalysis.Client.BytesTransferred+session.PacketAnalysis.Server.BytesTransferred)};
-
-                        
                         if (ShowFullTime)
                         {
                             row.AddRange(new object[] {
@@ -65,9 +63,17 @@ namespace Analysis.Commands
                                 session.ConnectTime      != default ? session.ConnectTime      : "",
                                 session.DisconnectTime   != default ? session.DisconnectTime   : ""});
                         }
+                        table.AddRow(row);
                     }
 
-                    helper.Logger.Unpreformat(table.Export());
+                    try
+                    {
+                        helper.Logger.Unpreformat(table.Export(page, SINGLE_PAGE_LENGTH));
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        helper.Logger.Unpreformat($"页面{page}不存在");
+                    }
                 }
                 else
                 {
