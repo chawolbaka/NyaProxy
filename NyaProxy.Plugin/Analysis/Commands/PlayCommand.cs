@@ -83,7 +83,7 @@ namespace Analysis.Commands
                             session.SessionId,
                             session.Host != null ? session.Host.Name : "",
                             session.Player != null ? session.Player.Name : "",
-                            session.Source != null ? session.Source.ToString() : "",
+                            session.Source != null ? session.Source.Address.ToString() : "",
                             session.Destination != null ? session.Destination.ToString() : "",
                             Utils.SizeSuffix(session.PacketAnalysis.Client.BytesTransferred+session.PacketAnalysis.Server.BytesTransferred)};
             if (ShowFullTime)
