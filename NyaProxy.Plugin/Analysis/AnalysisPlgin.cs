@@ -27,11 +27,11 @@ namespace Analysis
 
         private void Transport_Connecting(object? sender, IConnectEventArgs e)
         {
-            ServerListPingAnalysisData anlysis = new ServerListPingAnalysisData();
-            anlysis.SessionId = e.SessionId;
-            anlysis.ConnectTime = DateTime.Now;
-            anlysis.Source = e.AcceptSocket.RemoteEndPoint as IPEndPoint;
-            AnalysisData.Pings.Add(e.SessionId, anlysis);
+            ServerListPingAnalysisData record = new ServerListPingAnalysisData();
+            record.SessionId = e.SessionId;
+            record.ConnectTime = DateTime.Now;
+            record.Source = e.AcceptSocket.RemoteEndPoint as IPEndPoint;
+            AnalysisData.Pings.Add(e.SessionId, record);
             ConnectCount++;
         }
 
@@ -39,53 +39,57 @@ namespace Analysis
         {
             if (!AnalysisData.Pings.ContainsKey(e.SessionId))
                 return;
-            BridgeAnalysisData analysis = AnalysisData.Pings[e.SessionId];
+            BridgeAnalysisData record = AnalysisData.Pings[e.SessionId];
             if(e.Packet.NextState == HandshakeState.Login)
             {
                 //如果是登录的握手请求就转换类型
-                SessionAnalysisData sessionAnalysis = new SessionAnalysisData();
-                sessionAnalysis.SessionId = analysis.SessionId;
-                sessionAnalysis.ConnectTime = analysis.ConnectTime;
-                sessionAnalysis.Source = analysis.Source;
+                SessionAnalysisData sessionRecord = new SessionAnalysisData();
+                sessionRecord.SessionId = record.SessionId;
+                sessionRecord.ConnectTime = record.ConnectTime;
+                sessionRecord.Source = record.Source;
+                sessionRecord.ProtocolVersion = e.Packet.ProtocolVersion;
 
-                analysis = sessionAnalysis;
+                record = sessionRecord;
                 AnalysisData.Pings.Remove(e.SessionId);
-                AnalysisData.Sessions.Add(e.SessionId, sessionAnalysis);
+                AnalysisData.Sessions.Add(e.SessionId, sessionRecord);
             }
-            analysis.Host = e.Host;
-            analysis.HandshakeTime = DateTime.Now;
+            record.Host = e.Host;
+            record.HandshakeTime = DateTime.Now;
         }
 
         private void Transport_LoginStart(object? sender, ILoginStartEventArgs e)
         {
-            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var anlysis))
+            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var record))
             {
-                anlysis.Player = e.Player;
-                anlysis.LoginStartTime = DateTime.Now;
-                anlysis.Destination = e.Destination.RemoteEndPoint as IPEndPoint;
+                record.Player = e.Player;
+                record.LoginStartTime = e.ReceivedTime;
+                record.Destination = e.Destination.RemoteEndPoint as IPEndPoint;
             }
         }
         
         private void Transport_LoginSuccess(object? sender, ILoginSuccessEventArgs e)
         {
-            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var anlysis))
-                anlysis.LoginSuccessTime = DateTime.Now;
+            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var record))
+            {
+                record.CompressionThreshold = e.CompressionThreshold;
+                record.LoginSuccessTime = e.ReceivedTime;
+            }   
         }
 
         private void Transport_PacketSendToClient(object? sender, IPacketSendEventArgs e)
         {
-            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var analysis))
-                Add(analysis.PacketAnalysis.Server, e);
-            else if (AnalysisData.Pings.TryGetValue(e.SessionId, out var pingAnalysis))
-                Add(pingAnalysis, e);
+            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var sessionRecord))
+                Add(sessionRecord.PacketAnalysis.Server, e);
+            else if (AnalysisData.Pings.TryGetValue(e.SessionId, out var pingRecord))
+                Add(pingRecord, e);
         }
 
         private void Transport_PacketSendToServer(object? sender, IPacketSendEventArgs e)
         {
-            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var analysis))
-                Add(analysis.PacketAnalysis.Client, e);
-            else if (AnalysisData.Pings.TryGetValue(e.SessionId, out var pingAnalysis))
-                Add(pingAnalysis, e);
+            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var sessionRecord))
+                Add(sessionRecord.PacketAnalysis.Client, e);
+            else if (AnalysisData.Pings.TryGetValue(e.SessionId, out var pingRecord))
+                Add(pingRecord, e);
         }
 
         private void Add(ServerListPingAnalysisData anslysis, IPacketSendEventArgs e)
@@ -110,8 +114,8 @@ namespace Analysis
 
         private void Transport_Disconnected(object? sender, IDisconnectEventArgs e)
         {
-            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var anlysis))
-                anlysis.DisconnectTime = DateTime.Now;
+            if (AnalysisData.Sessions.TryGetValue(e.SessionId, out var record))
+                record.DisconnectTime = DateTime.Now;
         }
 
         public override async Task OnDisable()

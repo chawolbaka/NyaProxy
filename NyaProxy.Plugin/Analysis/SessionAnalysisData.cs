@@ -3,9 +3,12 @@ using NyaProxy.API;
 
 namespace Analysis
 {
-
     public class SessionAnalysisData : BridgeAnalysisData
     {
+        public int ProtocolVersion { get; set; }
+
+        public int CompressionThreshold { get; set; }
+
         public DateTime LoginStartTime { get; set; }
         
         public DateTime LoginSuccessTime { get; set; }
