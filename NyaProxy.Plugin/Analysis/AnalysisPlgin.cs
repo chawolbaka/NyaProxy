@@ -11,6 +11,9 @@ namespace Analysis
     {
         public static long ConnectCount { get; private set; }
 
+        public static AnalysisConfig Config => CurrentInstance.Helper.Config.Get<AnalysisConfig>(0);
+        public static AnalysisPlgin CurrentInstance;
+
         public override async Task OnEnable()
         {
             AnalysisData.SetDirectory(Helper.WorkDirectory.FullName);
@@ -21,7 +24,9 @@ namespace Analysis
             Helper.Events.Transport.LoginSuccess += Transport_LoginSuccess;
             Helper.Events.Transport.PacketSendToServer += Transport_PacketSendToServer;
             Helper.Events.Transport.PacketSendToClient += Transport_PacketSendToClient;
+            Helper.Config.Register(typeof(AnalysisConfig));
             Helper.Command.Register(new OverviewCommand());
+            CurrentInstance = this;
         }
 
 

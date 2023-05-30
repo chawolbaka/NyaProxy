@@ -20,14 +20,12 @@ namespace Analysis.Commands
 
         public virtual bool Reverse { get; set; }
 
-        private const int SINGLE_PAGE_LENGTH = 10;
-
         public PlayCommand()
         {
             AddOption(new Option("-r", 0, (command, e) => Reverse = true, "--reverse"));
             AddOption(new Option("-t", 0, (command, e) => ShowShortTime = true, "--show-time"));
             AddOption(new Option("--show-time-full", 0, (command, e) => ShowFullTime = true));
-            AddOption(new Option("--show-protocol", 0, (command, e) => ShowProtocolVersion = true));
+            AddOption(new Option("--show-protocol", 0, (command, e) => ShowProtocolVersion = true));   
             AddOption(new Option("--show-uuid", 0, (command, e) => ShowUUID = true));
         }
 
@@ -70,7 +68,7 @@ namespace Analysis.Commands
 
                     try
                     {
-                        helper.Logger.Unpreformat(table.Export(page, SINGLE_PAGE_LENGTH));
+                        helper.Logger.Unpreformat(table.Export(page, AnalysisPlgin.Config.SinglePageLength));
                     }
                     catch (ArgumentOutOfRangeException)
                     {
