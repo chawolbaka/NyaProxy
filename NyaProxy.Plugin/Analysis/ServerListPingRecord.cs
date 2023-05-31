@@ -1,6 +1,6 @@
 ﻿namespace Analysis
 {
-    public class TransportAnalysisData : BaseAnalysisData
+    public class ServerListPingRecord : BridgeRecord
     {
         public long BytesTransferred { get; set; }
     }

@@ -83,7 +83,7 @@ namespace Analysis.Commands
             return true;
         }
 
-        public List<object> GetRow(SessionAnalysisData session)
+        public List<object> GetRow(SessionRecord session)
         {
             List<object> row = new List<object> {
                             session.SessionId,

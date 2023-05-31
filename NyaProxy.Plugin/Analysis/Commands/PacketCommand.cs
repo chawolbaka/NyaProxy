@@ -87,7 +87,7 @@ namespace Analysis.Commands
             }
         }
 
-        private static StringTableBuilder BuildTable(PacketAnalysisData data)
+        private static StringTableBuilder BuildTable(PacketRecord data)
         {
             StringTableBuilder table = new StringTableBuilder();
             table.AddColumn("Id", "Count", "Transferred");

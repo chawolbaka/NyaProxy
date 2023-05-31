@@ -4,8 +4,8 @@ namespace Analysis
 {
     public static class AnalysisData
     {
-        public static readonly Dictionary<long, ServerListPingAnalysisData> Pings = new Dictionary<long, ServerListPingAnalysisData>();
-        public static readonly Dictionary<long, SessionAnalysisData> Sessions = new Dictionary<long, SessionAnalysisData>();
+        public static readonly Dictionary<long, ServerListPingRecord> Pings = new Dictionary<long, ServerListPingRecord>();
+        public static readonly Dictionary<long, SessionRecord> Sessions = new Dictionary<long, SessionRecord>();
         private static string _saveDirectory;
 
 

@@ -3,7 +3,7 @@ using NyaProxy.API;
 
 namespace Analysis
 {
-    public class BridgeAnalysisData
+    public class BridgeRecord
     {
         public long SessionId { get; set; }
         public DateTime ConnectTime { get; set; }

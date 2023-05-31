@@ -3,7 +3,7 @@ using NyaProxy.API;
 
 namespace Analysis
 {
-    public class SessionAnalysisData : BridgeAnalysisData
+    public class SessionRecord : BridgeRecord
     {
         public int ProtocolVersion { get; set; }
 
@@ -15,11 +15,11 @@ namespace Analysis
         
         public IPlayer Player { get; set; }
      
-        public (PacketAnalysisData Client, PacketAnalysisData Server) PacketAnalysis { get; set; }
+        public (PacketRecord Client, PacketRecord Server) PacketAnalysis { get; set; }
      
-        public SessionAnalysisData()
+        public SessionRecord()
         {
-            PacketAnalysis = (new PacketAnalysisData(), new PacketAnalysisData());
+            PacketAnalysis = (new PacketRecord(), new PacketRecord());
         }
     }
 }

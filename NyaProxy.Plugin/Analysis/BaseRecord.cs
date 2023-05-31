@@ -1,6 +1,6 @@
 ﻿namespace Analysis
 {
-    public class BaseAnalysisData
+    public class BaseRecord
     {
         public int Count { get; set; }
     }
