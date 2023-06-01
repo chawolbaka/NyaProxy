@@ -18,6 +18,7 @@ namespace Analysis
 
         public void SetDefault()
         {
+            SinglePageLength = 10;
         }
     }
 }
