@@ -49,7 +49,7 @@ namespace Analysis.Commands
                         table.AddColumn("Connect", "Disconnect");
 
 
-                    var Sessions = AnalysisData.Sessions.Values.ToArray();
+                    var Sessions = AnalysisData.Sessions.Where(x => x != null).ToArray();
                     if (Reverse)
                     {
                         for (int i = Sessions.Length - 1; i >= 0; i--)

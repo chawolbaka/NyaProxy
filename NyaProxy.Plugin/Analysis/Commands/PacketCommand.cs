@@ -34,10 +34,11 @@ namespace Analysis.Commands
                 if (args.IsEmpty)
                     throw new CommandLeastRequiredException(this, MinimumArgs);
 
-                if (long.TryParse(args.Span[0], out long id) && AnalysisData.Sessions.TryGetValue(id, out var data))
+                if (int.TryParse(args.Span[0], out int id) && id - AnalysisPlgin.StartIndex < AnalysisData.Sessions.Count && AnalysisData.Sessions[id - AnalysisPlgin.StartIndex] != null)
                 {
-                    if (data.PacketAnalysis.Client.Count > 0)
-                        helper.Logger.Unpreformat(BuildTable(data.PacketAnalysis.Client).Export());
+                    var record = AnalysisData.Sessions[id - AnalysisPlgin.StartIndex];
+                    if (record.PacketAnalysis.Client.Count > 0)
+                        helper.Logger.Unpreformat(BuildTable(record.PacketAnalysis.Client).Export());
                     else
                         helper.Logger.Unpreformat("无可用数据");
                 }
@@ -51,7 +52,7 @@ namespace Analysis.Commands
 
             public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
             {
-                return AnalysisData.Sessions.Keys.Select(x => x.ToString());
+                return AnalysisData.Sessions.Where(x => x != null).Select(x => x.ToString());
             }
         }
 
@@ -66,10 +67,11 @@ namespace Analysis.Commands
                 if (args.IsEmpty)
                     throw new CommandLeastRequiredException(this, MinimumArgs);
 
-                if (long.TryParse(args.Span[0], out long id) && AnalysisData.Sessions.TryGetValue(id, out var data))
+                if (int.TryParse(args.Span[0], out int id) && id - AnalysisPlgin.StartIndex < AnalysisData.Sessions.Count && AnalysisData.Sessions[id - AnalysisPlgin.StartIndex] != null)
                 {
-                    if (data.PacketAnalysis.Client.Count > 0)
-                        helper.Logger.Unpreformat(BuildTable(data.PacketAnalysis.Server).Export());
+                    var record = AnalysisData.Sessions[id - AnalysisPlgin.StartIndex];
+                    if (record.PacketAnalysis.Client.Count > 0)
+                        helper.Logger.Unpreformat(BuildTable(record.PacketAnalysis.Server).Export());
                     else
                         helper.Logger.Unpreformat("无可用数据");
                 }
@@ -83,7 +85,7 @@ namespace Analysis.Commands
 
             public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)
             {
-                return AnalysisData.Sessions.Keys.Select(x => x.ToString());
+                return AnalysisData.Sessions.Where(x => x != null).Select(x => x.ToString());
             }
         }
 

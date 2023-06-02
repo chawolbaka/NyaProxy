@@ -13,7 +13,7 @@ namespace Analysis.Commands
             {
                 StringTableBuilder table = new StringTableBuilder();
                 table.AddColumn("Client", "Server", "Transferred", "Count");
-                foreach (var group in AnalysisData.Pings.Values.GroupBy(p => new { p.Host, p.Source.Address, p.Destination }))
+                foreach (var group in AnalysisData.Pings.Where(x => x != null).GroupBy(p => new { p.Host, p.Source.Address, p.Destination }))
                 {
                     long transferred = 0;
                     int count = 0;
