@@ -94,7 +94,7 @@ namespace NyaProxy.Bridges
                         Destination.Close();
                     }
                 });
-                NyaProxy.Disconnected.Invoke(this, new DisconnectEventArgs(SessionId, Host));
+                NyaProxy.Disconnected.Invoke(this, new DisconnectEventArgs(SessionId, Host), NyaProxy.Logger);
                 NyaProxy.Logger.Info(BreakMessage);
             }
             catch (SocketException) { }

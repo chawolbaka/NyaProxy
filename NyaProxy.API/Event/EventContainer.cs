@@ -29,7 +29,7 @@ namespace NyaProxy.API.Event
             Events[(int)EventPriorityAttribute.GetPriority(eventHandler)].RemoveAll(x => x == eventHandler);
         }
 
-        public void Invoke(object sender, TEventArgs e)
+        public void Invoke(object sender, TEventArgs e, INyaLogger logger, bool ignoreException = true)
         {
             for (int y = 0; y < Events.Count; y++)
             {
@@ -39,15 +39,25 @@ namespace NyaProxy.API.Event
                     if (handler == null)
                         continue;
 
-                    if (e is ICancelEvent eventArgs)
+                    try
                     {
-                        handler.Invoke(sender, e);
-                        if (eventArgs.IsCancelled)
-                            return;
+                        if (e is ICancelEvent eventArgs)
+                        {
+                            handler.Invoke(sender, e);
+                            if (eventArgs.IsCancelled)
+                                return;
+                        }
+                        else
+                        {
+                            handler.Invoke(sender, e);
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        handler.Invoke(sender, e);
+                        if (ignoreException)
+                            logger.Exception(ex);
+                        else
+                            throw;
                     }
                 }
             }

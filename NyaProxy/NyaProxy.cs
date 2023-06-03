@@ -233,8 +233,7 @@ namespace NyaProxy
             {
 
                 ConnectEventArgs eventArgs = new ConnectEventArgs(Bridge.GetNextSessionId(), e.AcceptSocket, e.SocketError);
-
-                Connecting.Invoke(e.AcceptSocket, eventArgs);
+                Connecting.Invoke(e.AcceptSocket, eventArgs, Logger);
                 if (!eventArgs.IsBlock)
                 {
                     Socket AcceptSocket = eventArgs.AcceptSocket;
@@ -251,6 +250,7 @@ namespace NyaProxy
                     AcceptCompleted(e);
             }
             catch (ObjectDisposedException) { }
+            catch (Exception ex) { Logger.Exception(ex); }
         }
 
         private static async Task SessionHanderAsync(long sessionId, Socket acceptSocket)
@@ -264,7 +264,7 @@ namespace NyaProxy
 
                     Host destHost = GetHost(hp.GetServerAddressOnly(), hp.ServerPort);
                     hea = new HandshakeEventArgs(sessionId, acceptSocket, hp, destHost);
-                    Handshaking.Invoke(acceptSocket, hea);
+                    Handshaking.Invoke(acceptSocket, hea, Logger);
                     if (hea.IsBlock)
                     {
                         acceptSocket.Close();

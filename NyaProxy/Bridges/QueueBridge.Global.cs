@@ -101,9 +101,9 @@ namespace NyaProxy.Bridges
                             try
                             {
                                 if (psea is ChatSendEventArgs csea)
-                                    (psea.Direction == Direction.ToClient ? NyaProxy.ChatMessageSendToClient : NyaProxy.ChatMessageSendToServer).Invoke(psea.Bridge, csea);
+                                    (psea.Direction == Direction.ToClient ? NyaProxy.ChatMessageSendToClient : NyaProxy.ChatMessageSendToServer).Invoke(psea.Bridge, csea, NyaProxy.Logger);
                                 else
-                                    (psea.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer).Invoke(psea.Bridge, psea);
+                                    (psea.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer).Invoke(psea.Bridge, psea, NyaProxy.Logger);
 
                                 if (!psea.IsBlock && psea is PluginChannleSendEventArgs pcsea && NyaProxy.Channles.ContainsKey(pcsea.ChannleName))
                                 {

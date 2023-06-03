@@ -168,7 +168,9 @@ namespace NyaProxy.Bridges
                     Stage = Stage.Login;
                     Player = new QueueBridgePlayer(this, lsp.PlayerUUID, lsp.PlayerName);
                     LoginStartEventArgs lsea = new LoginStartEventArgs(this, Source, Destination, Direction.ToServer, lsp, DateTime.Now);
-                    NyaProxy.LoginStart.Invoke(this, lsea);
+                    NyaProxy.LoginStart.Invoke(this, lsea, NyaProxy.Logger);
+                 
+                    
                     if (lsea.IsBlock)
                     {
                         Break();
@@ -336,7 +338,7 @@ namespace NyaProxy.Bridges
                     Player.Id = lsp.PlayerUUID;
                     Player.Name = lsp.PlayerName;
                     LoginSuccessEventArgs eventArgs = new LoginSuccessEventArgs();
-                    NyaProxy.LoginSuccess.Invoke(this, eventArgs.Setup(this, Source, Destination, Direction.ToClient, e) as LoginSuccessEventArgs);
+                    NyaProxy.LoginSuccess.Invoke(this, eventArgs.Setup(this, Source, Destination, Direction.ToClient, e) as LoginSuccessEventArgs, NyaProxy.Logger);
                     if (!eventArgs.IsBlock)
                     {
                         Stage = Stage.Play;
