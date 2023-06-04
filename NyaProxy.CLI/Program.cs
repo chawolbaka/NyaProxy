@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using ConsolePlus;
+using NyaProxy.API.Command;
 using NyaProxy.CLI.Commands;
 
 namespace NyaProxy.CLI
@@ -20,6 +21,7 @@ namespace NyaProxy.CLI
             }
             NyaProxy.BindSockets();
             NyaProxy.CommandManager.Register(new ConfigCommand());
+            NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) => helper.Logger.Unpreformat(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
 
             
             FileStream fileStream = null!;
