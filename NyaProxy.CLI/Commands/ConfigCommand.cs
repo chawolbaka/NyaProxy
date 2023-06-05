@@ -20,7 +20,14 @@ namespace NyaProxy.CLI.Commands
             {
                 switch (args.Span[0])
                 {
-                    case "reload": NyaProxy.ReloadConfig(); NyaProxy.ReloadHosts(); NyaProxy.RebindSockets(); break;
+                    case "reload": 
+                        NyaProxy.ReloadConfig();
+                        NyaProxy.ReloadHosts();
+                        NyaProxy.RebindSockets();
+                        foreach (var server in NyaProxy.Hosts)
+                        {
+                            helper.Logger.Info($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
+                        } break;
                     case "save": var w = new TomlConfigWriter(); NyaProxy.Config.Write(w); w.Save("config.toml"); break;
                     default: throw new UnrecognizedArgumentException(this, args.Span[0]);
                 }
