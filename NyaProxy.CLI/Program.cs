@@ -21,6 +21,7 @@ namespace NyaProxy.CLI
             }
             NyaProxy.BindSockets();
             NyaProxy.CommandManager.Register(new ConfigCommand());
+            NyaProxy.CommandManager.Register(new PluginCommand());
             NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) => helper.Logger.Unpreformat(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
 
             
