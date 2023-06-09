@@ -93,9 +93,28 @@ namespace Analysis
             if (AnalysisData.Sessions[index] != null)
             {
                 var record = AnalysisData.Sessions[index];
-                record.CompressionThreshold = e.CompressionThreshold;
                 record.LoginSuccessTime = e.ReceivedTime;
-            }   
+                Helper.Events.Transport.PacketSendToClient += InitServerCompressionThreshold;
+                Helper.Events.Transport.PacketSendToServer += InitClientCompressionThreshold;
+            }
+        }
+
+        private void InitClientCompressionThreshold(object? sender, IPacketSendEventArgs e)
+        {
+            int index = (int)e.SessionId - StartIndex;
+            if (AnalysisData.Sessions[index] != null)
+                AnalysisData.Sessions[index].ClientCompressionThreshold = e.CompressionThreshold;
+
+            Helper.Events.Transport.PacketSendToServer -= InitClientCompressionThreshold;
+        }
+
+        private void InitServerCompressionThreshold(object? sender, IPacketSendEventArgs e)
+        {
+            int index = (int)e.SessionId - StartIndex;
+            if (AnalysisData.Sessions[index] != null)
+                AnalysisData.Sessions[index].ClientCompressionThreshold = e.CompressionThreshold;
+
+            Helper.Events.Transport.PacketSendToClient -= InitServerCompressionThreshold;
         }
 
         private void Transport_PacketSendToClient(object? sender, IPacketSendEventArgs e)
@@ -105,8 +124,6 @@ namespace Analysis
                 Add(AnalysisData.Sessions[index].PacketAnalysis.Server, e);
             else if (AnalysisData.Pings[index] != null)
                 Add(AnalysisData.Pings[index], e);
-            
-
         }
 
         private void Transport_PacketSendToServer(object? sender, IPacketSendEventArgs e)

@@ -7,7 +7,9 @@ namespace Analysis
     {
         public int ProtocolVersion { get; set; }
 
-        public int CompressionThreshold { get; set; }
+        public int ClientCompressionThreshold { get; set; }
+
+        public int ServerCompressionThreshold { get; set; }
 
         public DateTime LoginStartTime { get; set; }
         

@@ -18,15 +18,19 @@ namespace Analysis.Commands
 
         public virtual bool ShowProtocolVersion { get; set; }
 
+        public virtual bool ShowCompressionThreshold { get; set; }
+
         public virtual bool Reverse { get; set; }
 
         public PlayCommand()
         {
             AddOption(new Option("-r", 0, (command, e) => Reverse = true, "--reverse"));
             AddOption(new Option("-t", 0, (command, e) => ShowShortTime = true, "--show-time"));
-            AddOption(new Option("--show-time-full", 0, (command, e) => ShowFullTime = true));
+            AddOption(new Option("--show-compression-threshold", 0, (command, e) => ShowCompressionThreshold = true));
+            AddOption(new Option("--show-protocol", 0, (command, e) => ShowProtocolVersion = true));
             AddOption(new Option("--show-protocol", 0, (command, e) => ShowProtocolVersion = true));   
             AddOption(new Option("--show-uuid", 0, (command, e) => ShowUUID = true));
+
         }
 
         public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
@@ -42,6 +46,8 @@ namespace Analysis.Commands
                     table.AddColumn("Id", "Host", "Player", "Client", "Server", "Transferred");
                     if (ShowProtocolVersion)
                         table.AddColumn("Protocol");
+                    if (ShowCompressionThreshold)
+                        table.AddColumn("CompressionThreshold");
 
                     if (ShowFullTime)
                         table.AddColumn("Connect", "Handshake", "LoginStart", "LoginSuccess", "Disconnect");
@@ -94,9 +100,10 @@ namespace Analysis.Commands
                             Utils.SizeSuffix(session.PacketAnalysis.Client.BytesTransferred+session.PacketAnalysis.Server.BytesTransferred)};
 
             if(ShowProtocolVersion)
-            {
                 row.Add(session.ProtocolVersion);
-            }
+            if (ShowCompressionThreshold)
+                row.Add($"{session.ClientCompressionThreshold}/{session.ServerCompressionThreshold}");
+
             if (ShowFullTime)
             {
                 row.AddRange(new object[] {
