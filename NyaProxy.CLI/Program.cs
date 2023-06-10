@@ -4,6 +4,8 @@ using System.Text;
 using ConsolePlus;
 using NyaProxy.API.Command;
 using NyaProxy.CLI.Commands;
+using NyaProxy.Debug;
+using StringTable;
 
 namespace NyaProxy.CLI
 {
@@ -22,9 +24,13 @@ namespace NyaProxy.CLI
             NyaProxy.BindSockets();
             NyaProxy.CommandManager.Register(new ConfigCommand());
             NyaProxy.CommandManager.Register(new PluginCommand());
-            NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) => helper.Logger.Unpreformat(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
-
+            NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) =>
+                helper.Logger.Unpreformat(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
             
+            NyaProxy.CommandManager.Register(new SimpleCommand("plugins", async (args, helper) =>
+                helper.Logger.Unpreformat(NyaProxy.Plugins.Count > 0 ? DebugHelper.CreatePluginTable().Export() : "当前没有任何已加载的插件")));
+
+
             FileStream fileStream = null!;
             DateTime time = DateTime.Now;
             if (logger.LogFile.Enable)
