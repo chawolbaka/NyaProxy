@@ -16,7 +16,7 @@ namespace NyaProxy.CLI
             ColorfullyConsole.Init();
             NyaLogger logger = new NyaLogger();
             await NyaProxy.Setup(logger);
-            
+
             foreach (var server in NyaProxy.Hosts)
             {
                 NyaProxy.Logger.Info($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
@@ -24,12 +24,12 @@ namespace NyaProxy.CLI
             NyaProxy.BindSockets();
             NyaProxy.CommandManager.Register(new ConfigCommand());
             NyaProxy.CommandManager.Register(new PluginCommand());
+            NyaProxy.CommandManager.Register(new SimpleCommand("stop", async (args, helper) => { await NyaProxy.StopAsync(); Environment.Exit(0); }));
             NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) =>
                 helper.Logger.Unpreformat(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
-            
             NyaProxy.CommandManager.Register(new SimpleCommand("plugins", async (args, helper) =>
                 helper.Logger.Unpreformat(NyaProxy.Plugins.Count > 0 ? DebugHelper.CreatePluginTable().Export() : "当前没有任何已加载的插件")));
-
+            
 
             FileStream fileStream = null!;
             DateTime time = DateTime.Now;

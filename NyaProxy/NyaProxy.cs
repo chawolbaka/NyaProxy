@@ -50,6 +50,8 @@ namespace NyaProxy
         public static EventContainer<IChatSendEventArgs>     ChatMessageSendToServer = new();
         public static EventContainer<IDisconnectEventArgs>   Disconnected            = new();
 
+        private static bool _stoping;
+
         public static async Task Setup(INyaLogger logger)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -92,6 +94,27 @@ namespace NyaProxy
 #endif
                     }
                 }
+
+            _stoping = false;
+        }
+
+        public static async Task StopAsync()
+        {
+            if (_stoping)
+                return;
+            _stoping = true;
+            foreach (var plugin in Plugins)
+            {
+                await plugin.UnloadAsync();
+            }
+
+            foreach (var bridge in Bridges)
+            {
+                if (bridge.Value is QueueBridge qb)
+                    qb.Break("server closed.");
+                else
+                    bridge.Value.Break();
+            }
         }
 
         public static void ReloadConfig()
@@ -231,6 +254,8 @@ namespace NyaProxy
         {
             try
             {
+                if (_stoping || GlobalQueueToken.IsCancellationRequested)
+                    return;
 
                 ConnectEventArgs eventArgs = new ConnectEventArgs(Bridge.GetNextSessionId(), e.AcceptSocket, e.SocketError);
                 Connecting.Invoke(e.AcceptSocket, eventArgs, Logger);
