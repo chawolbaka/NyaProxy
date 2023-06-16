@@ -24,12 +24,17 @@ namespace NyaProxy.CLI
             NyaProxy.BindSockets();
             NyaProxy.CommandManager.Register(new ConfigCommand());
             NyaProxy.CommandManager.Register(new PluginCommand());
-            NyaProxy.CommandManager.Register(new SimpleCommand("stop", async (args, helper) => { await NyaProxy.StopAsync(); Environment.Exit(0); }));
+            NyaProxy.CommandManager.Register(new SimpleCommand("stop", async (args, helper) => await ExitAsync()));
             NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) =>
                 helper.Logger.Unpreformat(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
             NyaProxy.CommandManager.Register(new SimpleCommand("plugins", async (args, helper) =>
                 helper.Logger.Unpreformat(NyaProxy.Plugins.Count > 0 ? DebugHelper.CreatePluginTable().Export() : "当前没有任何已加载的插件")));
-            
+
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                if (e.SpecialKey == ConsoleSpecialKey.ControlC)
+                    ExitAsync().Wait();
+            };
 
             FileStream fileStream = null!;
             DateTime time = DateTime.Now;
@@ -67,6 +72,13 @@ namespace NyaProxy.CLI
                 else
                     ColorfullyConsole.WriteLine($"§{(int)log.Type:x1}[{now:HH:mm:ss}] [{threadName}] [{log.Type}] : {log.Message}");
             }
+        }
+
+        public static async Task ExitAsync()
+        {
+            NyaProxy.Logger.Info("stoping...");
+            await NyaProxy.StopAsync();
+            Environment.Exit(0);
         }
 
         private static FileStream GetLogFileStream(NyaLogger logger)
