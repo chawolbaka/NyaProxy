@@ -26,8 +26,16 @@ namespace NyaProxy.API.Command
 
         public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
-            await _func(args, helper);
-            return false; 
+            try
+            {
+                await _func(args, helper);
+                return true;
+            }
+            catch (Exception e)
+            {
+                helper.Logger.Exception(e);
+                return false;
+            }
         }
 
         public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)

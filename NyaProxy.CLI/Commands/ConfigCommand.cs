@@ -32,7 +32,7 @@ namespace NyaProxy.CLI.Commands
                     default: throw new UnrecognizedArgumentException(this, args.Span[0]);
                 }
             }
-            return false;
+            return true;
         }
 
         public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)

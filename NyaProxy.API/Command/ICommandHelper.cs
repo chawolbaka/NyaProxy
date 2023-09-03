@@ -9,5 +9,6 @@ namespace NyaProxy.API.Command
     public interface ICommandHelper
     {
         public INyaLogger Logger { get; }
+        public bool BlockRemainingCommands { get; set; }
     }
 }

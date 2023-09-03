@@ -25,14 +25,13 @@ namespace NyaProxy.CLI.Commands
                 case "unload": if (IsIdExists(args.Span[1])) await NyaProxy.Plugins[args.Span[1]].UnloadAsync(); break;
                 case "reload": if (IsIdExists(args.Span[1])) await NyaProxy.Plugins[args.Span[1]].ReloadAsync(); break;
             }
-            return false;
+            return true;
 
             bool IsIdExists(string id)
             {
-                if (NyaProxy.Plugins.Contains(id))
-                    return true;
-                helper.Logger.Unpreformat($"§e插件{args.Span[1]}不存在");
-                return false;
+                if (!NyaProxy.Plugins.Contains(id))
+                    helper.Logger.Unpreformat($"§e插件{args.Span[1]}不存在");
+                return true;
             }
         }
 
@@ -48,7 +47,7 @@ namespace NyaProxy.CLI.Commands
             else if (args.Length == 1)
                 return new List<string>() { "load", "unload", "reload" };
             else
-                return null;
+                return Enumerable.Empty<string>();
         }
     }
 }

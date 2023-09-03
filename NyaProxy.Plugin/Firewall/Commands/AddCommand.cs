@@ -27,17 +27,13 @@ namespace NyaFirewall.Commands
         public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             if (args.Length == 0)
-                return false;
+                throw new CommandLeastRequiredException(this);
 
             try
             {
-                _parser.Rule = null;
                 await _parser.ExecuteAsync(args, helper);
-                if (_parser.Rule == null)
-                    return true;
                 Table.Rules.AddLast(_parser.Rule);
                 helper.Logger.Unpreformat("§aAdd success.");
-  
             }
             catch (Exception e)
             {
@@ -46,8 +42,9 @@ namespace NyaFirewall.Commands
 
                 helper.Logger.Exception(e);
                 helper.Logger.Unpreformat("§cAdd failed.");
+                return false;
             }
-            return false;
+            return true;
         }
 
         public override IEnumerable<string> GetTabCompletions(ReadOnlySpan<string> args)

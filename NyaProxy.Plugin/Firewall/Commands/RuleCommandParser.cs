@@ -45,6 +45,12 @@ namespace NyaFirewall.Commands
             AddOption(new Option("-a", 1, (command, e) => (Rule ??= new T()).Action = Enum.Parse<RuleAction>(e.Arguments.Span[0]), "--action"));
             AddOption(new Option("--description", 1, (command, e) => (Rule ??= new T()).Description = e.Arguments.Span[0]));
         }
+
+        public override Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        {
+            Rule = null;
+            return base.ExecuteAsync(args, helper);
+        }
     }
 
 

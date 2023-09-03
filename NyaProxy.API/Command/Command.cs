@@ -83,20 +83,22 @@ namespace NyaProxy.API.Command
         /// 执行命令
         /// </summary>
         /// <param name="args">命令参数</param>
-        /// <returns>命令是否还可以继续被执行</returns>
+        /// <returns>命令是否执行成功</returns>
         public virtual async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
+            if (helper.BlockRemainingCommands)
+                return true;
+
             if (_children.Count > 0)
             {
                 if (args.Length == 1 && args.Span[0] == HELP_COMMAND)
                 {
                     helper.Logger.Unpreformat(Help);
-                    return false;
+                    helper.BlockRemainingCommands = true;
                 }
                 else
                 {
-                    await ExecuteChildrenAsync(args, helper);
-                    return true;
+                   return await ExecuteChildrenAsync(args, helper);
                 }
             }
             else
@@ -104,15 +106,14 @@ namespace NyaProxy.API.Command
                 if (args.ToArray().Any(s => s == HELP_COMMAND))
                 {
                     helper.Logger.Unpreformat(Help);
-                    return false;
+                    helper.BlockRemainingCommands = true;
                 }
                 else
                 {
                     await ExecuteOptionAsync(args, helper);
-                    return true;
                 }
-                    
             }
+            return true;
         }
 
 
@@ -126,7 +127,7 @@ namespace NyaProxy.API.Command
 
         public virtual async Task ExecuteOptionAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
-            if (args.IsEmpty)
+            if (args.IsEmpty || helper.BlockRemainingCommands)
                 return;
 
             for (int i = 0; i < args.Length; i++)
@@ -149,6 +150,9 @@ namespace NyaProxy.API.Command
                         option.Handler(this, oea);
                     else if (option.AsyncHandler != null)
                         await option.AsyncHandler(this, oea);
+
+                    if (helper.BlockRemainingCommands)
+                        return;
                 }
                 else
                 {
@@ -170,10 +174,13 @@ namespace NyaProxy.API.Command
         }
 
 
-        public virtual async Task ExecuteChildrenAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
+        public virtual Task<bool> ExecuteChildrenAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
+            if (helper.BlockRemainingCommands)
+                return Task.FromResult(true);
             if (_children.Count == 0 || args.Length == 0)
-                return;
+                return Task.FromResult(false);
+           
 
             string commnad = args.Span[0];
             if (!_children.ContainsKey(commnad))
@@ -181,7 +188,7 @@ namespace NyaProxy.API.Command
             else if (_children[commnad].MinimumArgs > args.Length - 1)
                 throw new CommandLeastRequiredException(_children[commnad], _children[commnad].MinimumArgs);
             else
-                await _children[commnad].ExecuteAsync(args.Slice(1), helper);
+                return _children[commnad].ExecuteAsync(args.Slice(1), helper);
         }
 
 

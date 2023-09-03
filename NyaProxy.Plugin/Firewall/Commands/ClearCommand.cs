@@ -18,7 +18,7 @@ namespace NyaFirewall.Commands
         public override async Task<bool> ExecuteAsync(ReadOnlyMemory<string> args, ICommandHelper helper)
         {
             if (args.Length == 0)
-                return false;
+                throw new CommandLeastRequiredException(this);
 
             try
             {
@@ -32,8 +32,10 @@ namespace NyaFirewall.Commands
 
                 helper.Logger.Exception(e);
                 helper.Logger.Unpreformat("§cClear failed.");
+                return false;
             }
-            return false;
+
+            return true;
         }
 
     }
