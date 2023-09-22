@@ -6,7 +6,7 @@ namespace NyaProxy.API
 
     public interface INyaLogger
     {
-        LogFile LogFile { get; set; }
+        string Prefix { get; set; }
 
         INyaLogger Info(string message);
         INyaLogger Warn(string message);

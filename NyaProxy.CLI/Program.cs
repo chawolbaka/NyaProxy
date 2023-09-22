@@ -14,6 +14,7 @@ namespace NyaProxy.CLI
     partial class Program
     {
         public static NyaLogger Logger;
+
         private static async Task Main(string[] args)
         {
             ColorfullyConsole.Init();
@@ -85,20 +86,20 @@ namespace NyaProxy.CLI
         {
             FileStream fileStream = null!;
             DateTime time = DateTime.Now;
-            if (Logger.LogFile.Enable)
+            if (NyaProxy.Config.LogFile.Enable)
             {
-                if (!Directory.Exists(Logger.LogFile.Directory))
-                    Directory.CreateDirectory(Logger.LogFile.Directory);
+                if (!Directory.Exists(NyaProxy.Config.LogFile.Directory))
+                    Directory.CreateDirectory(NyaProxy.Config.LogFile.Directory);
                 fileStream = GetLogFileStream(Logger);
             }
             while (!NyaProxy.GlobalQueueToken.IsCancellationRequested)
             {
-                var log = Logger.LogQueues.Take();
+                var log = NyaLogger.LogQueues.Take();
                 DateTime now = DateTime.Now;
                 Thread thread = Thread.CurrentThread;
                 string threadName = string.IsNullOrWhiteSpace(thread.Name) ? "[Craft Thread#{thread.ManagedThreadId}]" : thread.Name;
 
-                if (Logger.LogFile.Enable)
+                if (NyaProxy.Config.LogFile.Enable)
                 {
                     if (now.Day != time.Day)
                     {
@@ -122,7 +123,7 @@ namespace NyaProxy.CLI
 
         private static FileStream GetLogFileStream(NyaLogger logger)
         {
-            string file = Path.Combine(logger.LogFile.Directory, DateTime.Now.ToString(logger.LogFile.Format) + ".log");
+            string file = Path.Combine(NyaProxy.Config.LogFile.Directory, DateTime.Now.ToString(NyaProxy.Config.LogFile.Format) + ".log");
             
             if(File.Exists(file))
             {

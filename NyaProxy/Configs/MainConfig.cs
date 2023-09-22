@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using MinecraftProtocol.IO.Pools;
 using NyaProxy.API;
 using NyaProxy.API.Config;
 using NyaProxy.API.Config.Nodes;
@@ -56,7 +55,7 @@ namespace NyaProxy.Configs
             if (reader.ContainsKey("log-file"))
             {
                 ObjectNode logFile = reader.ReadObjectProperty("log-file");
-                NyaProxy.Logger.LogFile = new LogFile() 
+                LogFile = new LogFile() 
                 {
                     Enable    = (bool)logFile["enable"],
                     Format    = (string)logFile["format"],
