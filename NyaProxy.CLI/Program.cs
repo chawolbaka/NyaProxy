@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.IO.Pipes;
 using System.Text;
 using ConsolePlus;
+using ConsolePlus.InteractiveMode;
 using NyaProxy.API.Command;
 using NyaProxy.CLI.Commands;
 using NyaProxy.Debug;
@@ -11,16 +13,18 @@ namespace NyaProxy.CLI
 {
     partial class Program
     {
+        public static NyaLogger Logger;
         private static async Task Main(string[] args)
         {
             ColorfullyConsole.Init();
-            NyaLogger logger = new NyaLogger();
-            await NyaProxy.Setup(logger);
+            Logger = new NyaLogger();
+            await NyaProxy.Setup(Logger);
 
             foreach (var server in NyaProxy.Hosts)
             {
                 NyaProxy.Logger.Info($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
             }
+
             NyaProxy.BindSockets();
             NyaProxy.CommandManager.Register(new ConfigCommand());
             NyaProxy.CommandManager.Register(new PluginCommand());
@@ -36,29 +40,71 @@ namespace NyaProxy.CLI
                     ExitAsync().Wait();
             };
 
+            new Thread(ListenLog) { IsBackground = true }.Start();
+
+            while (true)
+            {
+                string input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    string[] CommandArgs = TokenToCommandArguments(Token.Parse(input)).ToArray().Where(x => x != null).ToArray();
+                    try
+                    {
+                        if (CommandArgs.Length > 0)
+                            await NyaProxy.CommandManager.RunAsync(CommandArgs[0], CommandArgs.AsSpan().Slice(1).ToArray(), new CommandHelper(NyaProxy.Logger));
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Exception(e);
+                    }
+                }
+            }
+
+        }
+
+        public static List<string> TokenToCommandArguments(IList<Token> tokens)
+        {
+            List<string> arguments = new List<string>(tokens.Count);
+            StringBuilder CommandArgs = new StringBuilder();
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                switch (tokens[i].Kind)
+                {
+                    case SyntaxKind.StringToken: CommandArgs.Append(tokens[i].Value); break;
+                    case SyntaxKind.SplitToken: arguments.Add(CommandArgs.ToString()); CommandArgs.Clear(); break;
+                    case SyntaxKind.EndToken:
+                        if (CommandArgs.Length > 0)
+                            arguments.Add(CommandArgs.ToString());
+                        break;
+                }
+            }
+            return arguments;
+        }
+
+        private static void ListenLog()
+        {
             FileStream fileStream = null!;
             DateTime time = DateTime.Now;
-            if (logger.LogFile.Enable)
+            if (Logger.LogFile.Enable)
             {
-                if (!Directory.Exists(logger.LogFile.Directory))
-                    Directory.CreateDirectory(logger.LogFile.Directory);
-                fileStream = GetLogFileStream(logger);
+                if (!Directory.Exists(Logger.LogFile.Directory))
+                    Directory.CreateDirectory(Logger.LogFile.Directory);
+                fileStream = GetLogFileStream(Logger);
             }
             while (!NyaProxy.GlobalQueueToken.IsCancellationRequested)
             {
-
-                var log = logger.LogQueues.Take();
+                var log = Logger.LogQueues.Take();
                 DateTime now = DateTime.Now;
                 Thread thread = Thread.CurrentThread;
                 string threadName = string.IsNullOrWhiteSpace(thread.Name) ? "[Craft Thread#{thread.ManagedThreadId}]" : thread.Name;
 
-                if (logger.LogFile.Enable)
+                if (Logger.LogFile.Enable)
                 {
                     if (now.Day != time.Day)
                     {
                         fileStream.Flush();
                         fileStream.Close();
-                        fileStream = GetLogFileStream(logger);
+                        fileStream = GetLogFileStream(Logger);
                         time = DateTime.Now;
                     }
                     if (log.Type == LogType.Unpreformat)
@@ -74,13 +120,6 @@ namespace NyaProxy.CLI
             }
         }
 
-        public static async Task ExitAsync()
-        {
-            NyaProxy.Logger.Info("stoping...");
-            await NyaProxy.StopAsync();
-            Environment.Exit(0);
-        }
-
         private static FileStream GetLogFileStream(NyaLogger logger)
         {
             string file = Path.Combine(logger.LogFile.Directory, DateTime.Now.ToString(logger.LogFile.Format) + ".log");
@@ -93,6 +132,13 @@ namespace NyaProxy.CLI
             }
             FileStream fileStream = new FileStream(file, FileMode.OpenOrCreate);
             return fileStream;
+        }
+
+        public static async Task ExitAsync()
+        {
+            NyaProxy.Logger.Info("stoping...");
+            await NyaProxy.StopAsync();
+            Environment.Exit(0);
         }
     }
 }
