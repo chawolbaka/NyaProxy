@@ -22,7 +22,6 @@ namespace NyaProxy.Plugin
         private static MethodInfo SetupPlugin = typeof(NyaPlugin).GetMethod("Setup", BindingFlags.Instance | BindingFlags.NonPublic);
 
         internal Dictionary<string, PluginController> Plugins = new Dictionary<string, PluginController>();
-        internal INyaLogger Logger;
 
         public int Count => Plugins.Count;
 
@@ -32,9 +31,8 @@ namespace NyaProxy.Plugin
         IEnumerator IEnumerable.GetEnumerator() => Plugins.Values.GetEnumerator();
 
 
-        public PluginManager(INyaLogger logger)
+        public PluginManager()
         {
-            Logger = logger;
         }
 
         public async Task<bool> LoadAsync(string directory)
@@ -96,10 +94,13 @@ namespace NyaProxy.Plugin
                     {
                         NyaPlugin plugin = (NyaPlugin)Activator.CreateInstance(type);
                         pluginController = new PluginController(plugin, context, this, directory);
-                        SetupPlugin.Invoke(plugin, new object[] { new PluginHelper(directory, manifest), Logger, manifest });
+
+                        INyaLogger logger = NyaProxy.CreateLogger();
+                        logger.Prefix = $"[{manifest.Name}] ";
+                        SetupPlugin.Invoke(plugin, new object[] { new PluginHelper(directory, manifest), logger, manifest });
 
                         await plugin.OnEnable();
-                        Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
+                        NyaProxy.Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
                         Plugins.Add(manifest.UniqueId, pluginController);
                         return true;
                     }
@@ -107,14 +108,14 @@ namespace NyaProxy.Plugin
             }
             catch (PluginLoadException pe)
             {
-                Logger.Error(pe.Message);
+                NyaProxy.Logger.Error(pe.Message);
                 if (pluginController != null)
                     await pluginController.UnloadAsync();
             }
             catch (Exception e)
             {
-                Logger.Error(i18n.Plugin.Load_Error.Replace("{File}", manifest != null ? manifest.Name : new DirectoryInfo(directory).Name));
-                Logger.Exception(e);
+                NyaProxy.Logger.Error(i18n.Plugin.Load_Error.Replace("{File}", manifest != null ? manifest.Name : new DirectoryInfo(directory).Name));
+                NyaProxy.Logger.Exception(e);
 
                 if (pluginController != null)
                     await pluginController.UnloadAsync();

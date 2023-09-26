@@ -13,13 +13,12 @@ namespace NyaProxy.CLI
 {
     partial class Program
     {
-        public static NyaLogger Logger;
-
+        
         private static async Task Main(string[] args)
         {
-            ColorfullyConsole.Init();
-            Logger = new NyaLogger();
-            await NyaProxy.Setup(Logger);
+            ColorfullyConsole.Init();    
+            NyaProxy.AddLogger<NyaLogger>();
+            await NyaProxy.Setup();
 
             foreach (var server in NyaProxy.Hosts)
             {
@@ -56,7 +55,7 @@ namespace NyaProxy.CLI
                     }
                     catch (Exception e)
                     {
-                        Logger.Exception(e);
+                        NyaProxy.Logger.Exception(e);
                     }
                 }
             }
@@ -90,7 +89,7 @@ namespace NyaProxy.CLI
             {
                 if (!Directory.Exists(NyaProxy.Config.LogFile.Directory))
                     Directory.CreateDirectory(NyaProxy.Config.LogFile.Directory);
-                fileStream = GetLogFileStream(Logger);
+                fileStream = GetLogFileStream();
             }
             while (!NyaProxy.GlobalQueueToken.IsCancellationRequested)
             {
@@ -105,7 +104,7 @@ namespace NyaProxy.CLI
                     {
                         fileStream.Flush();
                         fileStream.Close();
-                        fileStream = GetLogFileStream(Logger);
+                        fileStream = GetLogFileStream();
                         time = DateTime.Now;
                     }
                     if (log.Type == LogType.Unpreformat)
@@ -121,7 +120,7 @@ namespace NyaProxy.CLI
             }
         }
 
-        private static FileStream GetLogFileStream(NyaLogger logger)
+        private static FileStream GetLogFileStream()
         {
             string file = Path.Combine(NyaProxy.Config.LogFile.Directory, DateTime.Now.ToString(NyaProxy.Config.LogFile.Format) + ".log");
             

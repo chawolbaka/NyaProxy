@@ -35,7 +35,7 @@ namespace NyaProxy
         public static ConcurrentDictionary<long, Bridge> Bridges { get; private set; }
         
         public static IReadOnlyList<Socket> ServerSockets { get; set; }
-        public static INyaLogger Logger { get; private set; }
+
         public static NetworkHelper Network;
         public static readonly CancellationTokenSource GlobalQueueToken = new CancellationTokenSource();
         public static readonly MainConfig Config = new MainConfig();
@@ -52,12 +52,11 @@ namespace NyaProxy
 
         private static bool _stoping;
 
-        public static async Task Setup(INyaLogger logger)
+        public static async Task Setup()
         {
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Hosts = new();
             Bridges = new();
-            Plugins = new(logger);
+            Plugins = new();
             Channles = new();
             CommandManager = new();
 
@@ -88,7 +87,7 @@ namespace NyaProxy
                     catch (Exception e)
                     {
 #if DEBUG
-                        logger.Exception(e);
+                        Logger.Exception(e);
 #else
                     //logger.Error(i18n.Plugin.Load_Error.Replace("{File}", file.Name));
 #endif

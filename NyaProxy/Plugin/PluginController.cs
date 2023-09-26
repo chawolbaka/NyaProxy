@@ -68,12 +68,12 @@ namespace NyaProxy.Plugin
                 Context.Unload();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                Manager.Logger.Info(i18n.Plugin.Unload_Success.Replace("{Name}", plugin.Manifest.Name));
+                NyaProxy.Logger.Info(i18n.Plugin.Unload_Success.Replace("{Name}", plugin.Manifest.Name));
             }
             catch (Exception e)
             {
-                Manager.Logger.Error(i18n.Plugin.Unload_Error.Replace("{Name}", plugin.Manifest.Name));
-                Manager.Logger.Exception(e);
+                NyaProxy.Logger.Error(i18n.Plugin.Unload_Error.Replace("{Name}", plugin.Manifest.Name));
+                NyaProxy.Logger.Exception(e);
             }
             finally
             {
