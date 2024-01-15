@@ -25,6 +25,12 @@ namespace NyaProxy.Bridges
 
         public Task KickAsync(string reason)
         {
+            if (Own.Host.CompatibilityMode)
+            {
+                NyaProxy.Logger.Warn($"当前处于兼容模式，无法将玩家{Name}从{Own.Host.Name}踢出。");
+                return Task.CompletedTask;
+            }
+
             TaskCompletionSource completionSource = new TaskCompletionSource();
             byte[] packet = Own.Stage == Stage.Play ? PacketCache.GetDisconnect(reason, Own.ProtocolVersion, Own.ServerCompressionThreshold) : PacketCache.GetDisconnectLogin(reason);
             NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet), () =>
@@ -37,6 +43,12 @@ namespace NyaProxy.Bridges
 
         public Task KickAsync(ChatComponent reason)
         {
+            if (Own.Host.CompatibilityMode)
+            {
+                NyaProxy.Logger.Warn($"当前处于兼容模式，无法将玩家{Name}从{Own.Host.Name}踢出。");
+                return Task.CompletedTask;
+            }
+
             Packet packet = Own.Stage == Stage.Play ? new DisconnectPacket(reason, Own.ProtocolVersion) : new DisconnectLoginPacket(reason, -1);
             TaskCompletionSource completionSource = new TaskCompletionSource();
             NyaProxy.Network.Enqueue(Own.Source, Own.CryptoHandler.TryEncrypt(packet.Pack(Own.ServerCompressionThreshold)), () =>
@@ -50,6 +62,13 @@ namespace NyaProxy.Bridges
 
         public Task SendMessageAsync(ChatComponent message, ChatPosition position = ChatPosition.ChatMessage)
         {
+
+            if (Own.Host.CompatibilityMode)
+            {
+                NyaProxy.Logger.Warn($"当前处于兼容模式，消息{message}发送无法被发送至玩家{Name}。");
+                return Task.CompletedTask;
+            }
+
             if (Own.Stage != Stage.Play)
                 throw new NotSupportedException();
 

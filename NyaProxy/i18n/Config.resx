@@ -123,6 +123,9 @@
   <data name="ClientTcpFastOpen" xml:space="preserve">
     <value>If set to true, NyaProxy will attempt to use TcpFastOpen when connecting to the server.</value>
   </data>
+  <data name="CompatibilityMode" xml:space="preserve">
+    <value />
+  </data>
   <data name="CompressionThreshold" xml:space="preserve">
     <value>If set to -1, the compression threshold will follow the server's setting. Otherwise, the compression threshold will be set between the client and NyaProxy.</value>
   </data>

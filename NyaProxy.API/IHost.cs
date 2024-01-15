@@ -11,7 +11,7 @@ namespace NyaProxy.API
         /// 主机名
         /// </summary>
         string Name { get; }
-        
+
         /// <summary>
         /// 服务端地址
         /// </summary>
@@ -21,12 +21,17 @@ namespace NyaProxy.API
         /// 如何选择服务端地址（如果有多个）
         /// </summary>
         ServerSelectMode SelectMode { get; }
-        
+
 
         /// <summary>
         /// 如何处理连入该Host的连接
         /// </summary>
         ForwardMode ForwardMode { get; }
+
+        /// <summary>
+        /// 兼容模式，如果该字段为True，请禁用所有可能因为Minecraft版本更新导致程序发生崩溃的功能
+        /// </summary>
+        bool CompatibilityMode { get; }
 
         ServerFlags Flags { get; }
 

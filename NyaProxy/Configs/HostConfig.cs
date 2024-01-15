@@ -25,6 +25,7 @@ namespace NyaProxy.Configs
         public int ProtocolVersion { get; set; }
         public ServerFlags Flags { get; set; }
         public bool TcpFastOpen { get; set; }
+        public bool CompatibilityMode { get; set; }
         public int ConnectionTimeout { get; set; }
         public int ConnectionThrottle { get; set; }
 
@@ -48,9 +49,10 @@ namespace NyaProxy.Configs
             ProtocolVersion      = reader.ContainsKey("server-version") ? ReadProtocolVersionByConfigNode(reader.ReadProperty("server-version")) : -1;
             CompressionThreshold = reader.ContainsKey("compression-threshold") ? (int)reader.ReadNumberProperty("compression-threshold") : -1;
             TcpFastOpen          = reader.ContainsKey("tcp-fast-open") ? reader.ReadBooleanProperty("tcp-fast-open") : false;
+            CompatibilityMode    = reader.ContainsKey("compatibility-mode") ? (bool)reader.ReadBooleanProperty("compatibility-mode") : false;
             ConnectionTimeout    = reader.ContainsKey("connection-timeout") ? (int)reader.ReadNumberProperty("connection-timeout")   : -1;
             ConnectionThrottle   = reader.ContainsKey("connection-throttle") ? (int)reader.ReadNumberProperty("connection-throttle") : -1;
-
+            
 
             List<EndPoint> serverEndPoints = new List<EndPoint>();
             foreach (StringNode server in reader.ReadArrayProperty("servers"))
@@ -118,6 +120,7 @@ namespace NyaProxy.Configs
                 writer.WriteProperty("compression-threshold",       new NumberNode(CompressionThreshold, i18n.Config.CompressionThreshold));
                 writer.WriteProperty("forwarding-mode",             new StringNode(ForwardMode.ToString(), i18n.Config.ForwardMode));
                 writer.WriteProperty("tcp-fast-open",               new BooleanNode(TcpFastOpen, i18n.Config.ClientTcpFastOpen));
+                writer.WriteProperty("compatibility-mode",          new BooleanNode(CompatibilityMode, i18n.Config.ClientTcpFastOpen));
                 writer.WriteProperty("connection-timeout",          new NumberNode(ConnectionTimeout, i18n.Config.ConnectionTimeout));
                 writer.WriteProperty("connection-throttle",         new NumberNode(ConnectionThrottle, i18n.Config.ConnectionThrottle));
 

@@ -123,6 +123,9 @@
   <data name="ClientTcpFastOpen" xml:space="preserve">
     <value>如果启用该选项，那么在连接到服务端时会尝试使用TcpFastOpen</value>
   </data>
+  <data name="CompatibilityMode" xml:space="preserve">
+    <value>禁用所有会因Minecraft的版本迭代而在未来可能导致程序无法正常运行的可选功能</value>
+  </data>
   <data name="CompressionThreshold" xml:space="preserve">
     <value>如果该选项的值不是-1，那么在客户端到NyaProxy之间会启用独立的数据包压缩（不推荐启用该选项，这会导致严重的性能问题）</value>
   </data>

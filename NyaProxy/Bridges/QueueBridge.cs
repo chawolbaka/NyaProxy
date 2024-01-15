@@ -301,16 +301,6 @@ namespace NyaProxy.Bridges
                 Setup(this, Source, Destination, Direction.ToServer, _loginStartPacket.AsCompatible(ProtocolVersion, ServerCompressionThreshold), DateTime.Now));
         }
 
-        private void WaitForGameJoin(object sender, PacketReceivedEventArgs e) 
-        {
-            if (JoinGamePacket.TryRead(e.Packet, out JoinGamePacket jgp))
-            {
-                _serverSocketListener.PacketReceived -= WaitForGameJoin;
-                jgp.TryGetChatTypes(out ChatType[] chatTypes);
-                ChatTypes = chatTypes;
-                jgp.Dispose();
-            }
-        }
 
         private void BeforeLoginSuccess(object sender, PacketReceivedEventArgs e)
         {
@@ -343,10 +333,17 @@ namespace NyaProxy.Bridges
                     {
                         Stage = Stage.Play;
                         _serverSocketListener.PacketReceived -= BeforeLoginSuccess;
-                        _serverSocketListener.PacketReceived += CheckForge;
                         _serverSocketListener.PacketReceived += ServerPacketReceived;
-                        if (ProtocolVersion >= ProtocolVersions.V1_19 && ProtocolVersion <= ProtocolVersions.V1_19_3)
-                            _serverSocketListener.PacketReceived += WaitForGameJoin;
+                        if (!Host.CompatibilityMode)
+                        {
+                            _serverSocketListener.PacketReceived += CheckForge;
+                            if (ProtocolVersion >= ProtocolVersions.V1_19 && ProtocolVersion <= ProtocolVersions.V1_19_3)
+                                _serverSocketListener.PacketReceived += WaitForGameJoin;
+                        }
+                        else
+                        {
+                            IsForge = Host.Flags.HasFlag(ServerFlags.Forge);
+                        }
                     }
                     else
                     {
@@ -361,6 +358,18 @@ namespace NyaProxy.Bridges
             {
                 NyaProxy.Logger.Exception(ex);
                 ListenToken.Cancel();
+            }
+        }
+
+
+        private void WaitForGameJoin(object sender, PacketReceivedEventArgs e)
+        {
+            if (JoinGamePacket.TryRead(e.Packet, out JoinGamePacket jgp))
+            {
+                _serverSocketListener.PacketReceived -= WaitForGameJoin;
+                jgp.TryGetChatTypes(out ChatType[] chatTypes);
+                ChatTypes = chatTypes;
+                jgp.Dispose();
             }
         }
 
@@ -402,9 +411,9 @@ namespace NyaProxy.Bridges
             if (OverCompression)
                 e.Packet.Get().CompressionThreshold = ServerCompressionThreshold;
 
-            if (Stage == Stage.Play && e.Packet == PacketType.Play.Client.ChatMessage)
+            if (!Host.CompatibilityMode && Stage == Stage.Play && e.Packet == PacketType.Play.Client.ChatMessage)
                 Enqueue(ChatEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
-            else if (Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Client.PluginChannel)
+            else if (!Host.CompatibilityMode && Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Client.PluginChannel)
                 Enqueue(PluginChannleEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
             else
                 Enqueue(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
@@ -415,13 +424,13 @@ namespace NyaProxy.Bridges
             if (OverCompression)
                 e.Packet.Get().CompressionThreshold = ClientCompressionThreshold;
 
-            if (Stage == Stage.Play
+            if (!Host.CompatibilityMode && Stage == Stage.Play
                 && e.Packet == PacketType.Play.Server.ChatMessage
                 || e.Packet == PacketType.Play.Server.SystemChatMessage
                 || e.Packet == PacketType.Play.Server.PlayerChatMessage
                 || e.Packet == PacketType.Play.Server.DisguisedChatMessage)
                 Enqueue(ChatEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
-            else if (Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Server.PluginChannel)
+            else if (!Host.CompatibilityMode && Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Server.PluginChannel)
                 Enqueue(PluginChannleEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
             else
                 Enqueue(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
