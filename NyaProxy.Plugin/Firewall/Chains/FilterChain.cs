@@ -4,6 +4,7 @@ using NyaFirewall.Rules;
 using System.Text;
 using NyaProxy.API.Command;
 using NyaFirewall.Commands;
+using Microsoft.Extensions.Logging;
 
 namespace NyaFirewall.Chains
 {
@@ -64,9 +65,9 @@ namespace NyaFirewall.Chains
                 {
                     string table = _filterChain.FilterTable.ToTable();
                     if (!string.IsNullOrWhiteSpace(table))
-                        helper.Logger.Unpreformat(table);
+                        helper.Logger.LogMultiLineInformation($"{_filterChain.FilterTable.Count()} rules.", table);
                     else
-                        helper.Logger.Unpreformat("Empty.");
+                        helper.Logger.LogInformation("Empty table.");
                 }));
             }
         }

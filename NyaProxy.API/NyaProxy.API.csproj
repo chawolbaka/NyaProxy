@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
+	  <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+      <PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
 	</ItemGroup>
-
 </Project>

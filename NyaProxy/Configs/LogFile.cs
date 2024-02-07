@@ -1,4 +1,4 @@
-﻿namespace NyaProxy.API
+﻿namespace NyaProxy
 {
     public class LogFile
     {

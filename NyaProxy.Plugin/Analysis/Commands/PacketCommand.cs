@@ -1,4 +1,5 @@
-﻿using NyaProxy.API.Command;
+﻿using Microsoft.Extensions.Logging;
+using NyaProxy.API.Command;
 using StringTable;
 using System;
 using System.Collections.Generic;
@@ -38,13 +39,13 @@ namespace Analysis.Commands
                 {
                     var record = AnalysisData.Sessions[id - AnalysisPlgin.StartIndex];
                     if (record.PacketAnalysis.Client.Count > 0)
-                        helper.Logger.Unpreformat(BuildTable(record.PacketAnalysis.Client).Export());
+                        helper.Logger.LogMultiLineInformation(BuildTable(record.PacketAnalysis.Client).Export());
                     else
-                        helper.Logger.Unpreformat("无可用数据");
+                        helper.Logger.LogInformation("无可用数据");
                 }
                 else
                 {
-                    helper.Logger.Unpreformat("该会话不存在");
+                    helper.Logger.LogInformation("该会话不存在");
                 }
 
                 return true;
@@ -71,13 +72,13 @@ namespace Analysis.Commands
                 {
                     var record = AnalysisData.Sessions[id - AnalysisPlgin.StartIndex];
                     if (record.PacketAnalysis.Client.Count > 0)
-                        helper.Logger.Unpreformat(BuildTable(record.PacketAnalysis.Server).Export());
+                        helper.Logger.LogMultiLineInformation(BuildTable(record.PacketAnalysis.Server).Export());
                     else
-                        helper.Logger.Unpreformat("无可用数据");
+                        helper.Logger.LogInformation("无可用数据");
                 }
                 else
                 {
-                    helper.Logger.Unpreformat("该会话不存在");
+                    helper.Logger.LogInformation("该会话不存在");
                 }
 
                 return true;

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using MinecraftProtocol.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.API.Event
 {
@@ -29,7 +30,7 @@ namespace NyaProxy.API.Event
             Events[(int)EventPriorityAttribute.GetPriority(eventHandler)].RemoveAll(x => x == eventHandler);
         }
 
-        public void Invoke(object sender, TEventArgs e, INyaLogger logger, bool ignoreException = true)
+        public void Invoke(object sender, TEventArgs e, ILogger logger, bool ignoreException = true)
         {
             for (int y = 0; y < Events.Count; y++)
             {
@@ -55,7 +56,7 @@ namespace NyaProxy.API.Event
                     catch (Exception ex)
                     {
                         if (ignoreException)
-                            logger.Exception(ex);
+                            logger.LogError(ex);
                         else
                             throw;
                     }

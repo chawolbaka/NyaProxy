@@ -1,4 +1,5 @@
-﻿using NyaFirewall.Chains;
+﻿using Microsoft.Extensions.Logging;
+using NyaFirewall.Chains;
 using NyaFirewall.Rules;
 using NyaFirewall.Tables;
 using NyaProxy.API.Command;
@@ -33,15 +34,14 @@ namespace NyaFirewall.Commands
             {
                 await _parser.ExecuteAsync(args, helper);
                 Table.Rules.AddLast(_parser.Rule);
-                helper.Logger.Unpreformat("§aAdd success.");
+                helper.Logger.LogInformation("§aAdd success.");
             }
             catch (Exception e)
             {
                 if (e is CommandException)
                     throw;
 
-                helper.Logger.Exception(e);
-                helper.Logger.Unpreformat("§cAdd failed.");
+                helper.Logger.LogMultiLineError("§cAdd failed.", e);
                 return false;
             }
             return true;

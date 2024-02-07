@@ -8,6 +8,7 @@ using NyaProxy.Extension;
 using NyaProxy.Debug;
 using MinecraftProtocol.IO;
 using MinecraftProtocol.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.Bridges
 {
@@ -95,7 +96,7 @@ namespace NyaProxy.Bridges
                     }
                 });
                 NyaProxy.Disconnected.Invoke(this, new DisconnectEventArgs(SessionId, Host), NyaProxy.Logger);
-                NyaProxy.Logger.Info(BreakMessage);
+                NyaProxy.Logger.LogInformation(BreakMessage);
             }
             catch (SocketException) { }
             catch (ObjectDisposedException) { }
@@ -111,7 +112,7 @@ namespace NyaProxy.Bridges
             e.Handled = true;
             if (e.Exception is OverflowException && NetworkUtils.CheckConnect(Source) && NetworkUtils.CheckConnect(Destination))
             {
-                NyaProxy.Logger.Exception(e.Exception);
+                NyaProxy.Logger.LogError(e.Exception);
                 return;
             }
             else if (e.Exception is not ObjectDisposedException && e.Exception is not SocketException && e.Exception is not OverflowException)

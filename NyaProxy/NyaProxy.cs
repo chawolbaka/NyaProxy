@@ -22,18 +22,20 @@ using NyaProxy.Bridges;
 using NyaProxy.Channles;
 using System.Linq;
 using MinecraftProtocol.IO.Pools;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy
 {
 
     public static partial class NyaProxy
     {
-        public static CommandManager CommandManager { get; private set; }
-        public static ChannleContainer Channles { get; private set; }
-        public static PluginManager Plugins { get; private set; }
-        public static Dictionary<string, Host> Hosts { get; private set; }
-        public static ConcurrentDictionary<long, Bridge> Bridges { get; private set; }
-        
+        public static ConcurrentDictionary<long, Bridge> Bridges => _bridges;
+        public static CommandManager CommandManager => _commandManager;
+        public static Dictionary<string, Host> Hosts => _hosts;
+        public static ChannleContainer Channles => _channles;
+        public static PluginManager Plugins => _plugins;
+        public static ILogger Logger => _logger;
+
         public static IReadOnlyList<Socket> ServerSockets { get; set; }
 
         public static NetworkHelper Network;
@@ -51,19 +53,22 @@ namespace NyaProxy
         public static EventContainer<IDisconnectEventArgs>   Disconnected            = new();
 
         private static bool _stoping;
+        private static ILogger _logger;
+        private static CommandManager _commandManager;
+        private static ChannleContainer _channles;
+        private static PluginManager _plugins;
+        private static Dictionary<string, Host> _hosts;
+        private static ConcurrentDictionary<long, Bridge> _bridges;
 
-        public static async Task Setup()
+        public static async Task SetupAsync(ILogger logger)
         {
-            Hosts = new();
-            Bridges = new();
-            Plugins = new();
-            Channles = new();
-            CommandManager = new();
-
-
             Thread.CurrentThread.Name = nameof(NyaProxy);
             TaskScheduler.UnobservedTaskException += (sender, e) => Crash.Report(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
+            GlobalQueueToken.Token.Register(() => logger.LogInformation("NyaProxy is stoped."));
+
+            _logger = logger; _hosts = new(); _bridges = new(); _plugins = new(); _channles = new(); _commandManager = new();
+
             ReloadConfig();
             ReloadHosts();
 
@@ -87,7 +92,7 @@ namespace NyaProxy
                     catch (Exception e)
                     {
 #if DEBUG
-                        Logger.Exception(e);
+                        Logger.LogError(e);
 #else
                     //logger.Error(i18n.Plugin.Load_Error.Replace("{File}", file.Name));
 #endif
@@ -169,8 +174,7 @@ namespace NyaProxy
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", file.Name));
-                    Logger.Exception(e);
+                    Logger.LogMultiLineError(i18n.Error.LoadConfigFailed.Replace("{File}", file.Name), e);
                 }
             }
             //移除已经不存在的服务器(Bridges不需要在这边移除，Hosts内已经不存在的情况下，在连接清空后会由Bridge.Break移除)
@@ -194,7 +198,7 @@ namespace NyaProxy
                     catch (Exception e)
                     {
                         if (e.CheckException<SocketException>(out string message))
-                            Logger.Error(message);
+                            Logger.LogError(message);
                         else
                             throw;
                     }
@@ -234,7 +238,7 @@ namespace NyaProxy
                 SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
                 eventArgs.UserToken = ServerSocket;
                 eventArgs.Completed += (sender, e) => AcceptCompleted(e);
-                Logger.Info(i18n.Message.ListenON.Replace("{Bind}", bind));
+                Logger.LogInformation(i18n.Message.ListenON.Replace("{Bind}", bind));
                 if (!ServerSocket.AcceptAsync(eventArgs))
                     AcceptCompleted(eventArgs);
                 return ServerSocket;
@@ -242,7 +246,7 @@ namespace NyaProxy
             catch (Exception e)
             {
                 if (e.CheckException<SocketException>(out string message))
-                    Logger.Error(message);
+                    Logger.LogError(message);
                 else
                     throw;
                 return null;
@@ -274,7 +278,7 @@ namespace NyaProxy
                     AcceptCompleted(e);
             }
             catch (ObjectDisposedException) { }
-            catch (Exception ex) { Logger.Exception(ex); }
+            catch (Exception ex) { Logger.LogError(ex); }
         }
 
         private static async Task SessionHanderAsync(long sessionId, Socket acceptSocket)
@@ -307,7 +311,7 @@ namespace NyaProxy
                         throw new DisconnectException(i18n.Disconnect.ConnectFailed);
 
                     if (hp.NextState == HandshakeState.GetStatus)
-                        Logger.Info($"{acceptSocket._remoteEndPoint()} Try to ping {destHost.Name}[{serverSocket._remoteEndPoint()}]");
+                        Logger.LogInformation($"{acceptSocket._remoteEndPoint()} Try to ping {destHost.Name}[{serverSocket._remoteEndPoint()}]");
 
                     
 
@@ -328,7 +332,7 @@ namespace NyaProxy
                 }
                 else
                 {
-                    Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringHandshake.Replace("{EndPoint}", acceptSocket._remoteEndPoint(), "{Packet}", FirstPacket));
+                    Logger.LogDebug(i18n.Debug.ReceivedEnexpectedPacketDuringHandshake.Replace("{EndPoint}", acceptSocket._remoteEndPoint(), "{Packet}", FirstPacket));
                     throw new DisconnectException(i18n.Disconnect.HandshakeFailed);
                 }
             }
@@ -341,17 +345,17 @@ namespace NyaProxy
                     else
                         acceptSocket.Close();
                     hea?.Packet?.Dispose();
-                    Logger.Debug(disconnectMessage);
+                    Logger.LogDebug(disconnectMessage);
                 }
                 else if(e.CheckException<SocketException>(out string message))
                 {
                     if (hea != null && hea.Packet.NextState == HandshakeState.Login)
                         acceptSocket.DisconnectOnLogin(i18n.Disconnect.ServerClosed);
-                    Logger.Debug($"SocketException {message}");
+                    Logger.LogDebug($"SocketException {message}");
                 }
                 else
                 {
-                    Logger.Exception(e);
+                    Logger.LogError(e);
                 }
             }
         }

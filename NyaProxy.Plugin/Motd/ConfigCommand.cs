@@ -2,6 +2,7 @@
 using System.Net;
 using NyaProxy.API.Command;
 using MinecraftProtocol.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Motd
 {
@@ -32,7 +33,7 @@ namespace Motd
 
                 string fileName = $"{config.Host}.{MotdPlugin.CurrentInstance.Helper.Config.DefaultFileType}";
                 await MotdPlugin.CurrentInstance.Helper.Config.SaveAsync(MotdPlugin.CurrentInstance.Helper.Config.Register(config, Path.Combine("Hosts", fileName)));
-                helper.Logger.Unpreformat("§aGenerate success.");
+                helper.Logger.LogInformation("§aGenerate success.");
             }
             return true;
         }

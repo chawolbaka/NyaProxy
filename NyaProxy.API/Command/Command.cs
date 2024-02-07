@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.API.Command
 {
@@ -93,7 +94,7 @@ namespace NyaProxy.API.Command
             {
                 if (args.Length == 1 && args.Span[0] == HELP_COMMAND)
                 {
-                    helper.Logger.Unpreformat(Help);
+                    helper.Logger.LogMultiLineInformation(Help);
                     helper.BlockRemainingCommands = true;
                 }
                 else
@@ -105,7 +106,7 @@ namespace NyaProxy.API.Command
             {
                 if (args.ToArray().Any(s => s == HELP_COMMAND))
                 {
-                    helper.Logger.Unpreformat(Help);
+                    helper.Logger.LogMultiLineInformation(Help);
                     helper.BlockRemainingCommands = true;
                 }
                 else

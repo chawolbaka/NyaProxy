@@ -8,7 +8,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
 	</ItemGroup>
 
 	<ItemGroup>

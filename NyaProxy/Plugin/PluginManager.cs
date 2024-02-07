@@ -13,6 +13,7 @@ using NyaProxy.Extension;
 using MinecraftProtocol.Crypto;
 using System.Text.Json;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.Plugin
 {
@@ -61,14 +62,14 @@ namespace NyaProxy.Plugin
                 //检查要求的版本号是否高于当前程序的版本号
                 if (manifest.MinimumApiVersion != null && NyaPlugin.ApiVersion < manifest.MinimumApiVersion)
                 {
-                    NyaProxy.Logger.Warn(i18n.Plugin.MinimumApiVersion_NotMatch.Replace("{CurrentApiVersion}", NyaPlugin.ApiVersion, "{UniqueId}", manifest.UniqueId, "{PluginName}", manifest.Name, "{MinimumApiVersion}", manifest.MinimumApiVersion));
+                    NyaProxy.Logger.LogWarning(i18n.Plugin.MinimumApiVersion_NotMatch.Replace("{CurrentApiVersion}", NyaPlugin.ApiVersion, "{UniqueId}", manifest.UniqueId, "{PluginName}", manifest.Name, "{MinimumApiVersion}", manifest.MinimumApiVersion));
                     return false;
                 }
 
                 //检查插件Id是否已存在
                 if (Plugins.ContainsKey(manifest.UniqueId))
                 {
-                    NyaProxy.Logger.Warn(i18n.Plugin.UniqueId_Duplicate.Replace("{UniqueId}", manifest.UniqueId));
+                    NyaProxy.Logger.LogWarning(i18n.Plugin.UniqueId_Duplicate.Replace("{UniqueId}", manifest.UniqueId));
                     return false;
                 }
 
@@ -95,12 +96,10 @@ namespace NyaProxy.Plugin
                         NyaPlugin plugin = (NyaPlugin)Activator.CreateInstance(type);
                         pluginController = new PluginController(plugin, context, this, directory);
 
-                        INyaLogger logger = NyaProxy.CreateLogger();
-                        logger.Prefix = $"[{manifest.Name}] ";
-                        SetupPlugin.Invoke(plugin, new object[] { new PluginHelper(directory, manifest), logger, manifest });
+                        SetupPlugin.Invoke(plugin, new object[] { new PluginHelper(directory, manifest), NyaProxy.Logger, manifest });
 
                         await plugin.OnEnable();
-                        NyaProxy.Logger.Info(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
+                        NyaProxy.Logger.LogInformation(i18n.Plugin.Load_Success.Replace("{Name}", manifest.Name));
                         Plugins.Add(manifest.UniqueId, pluginController);
                         return true;
                     }
@@ -108,15 +107,14 @@ namespace NyaProxy.Plugin
             }
             catch (PluginLoadException pe)
             {
-                NyaProxy.Logger.Error(pe.Message);
+                NyaProxy.Logger.LogError(pe.Message);
                 if (pluginController != null)
                     await pluginController.UnloadAsync();
             }
             catch (Exception e)
             {
-                NyaProxy.Logger.Error(i18n.Plugin.Load_Error.Replace("{File}", manifest != null ? manifest.Name : new DirectoryInfo(directory).Name));
-                NyaProxy.Logger.Exception(e);
-
+                NyaProxy.Logger.LogMultiLineError(i18n.Plugin.Load_Error.Replace("{File}", manifest != null ? manifest.Name : new DirectoryInfo(directory).Name), e);
+                
                 if (pluginController != null)
                     await pluginController.UnloadAsync();
                 return false;

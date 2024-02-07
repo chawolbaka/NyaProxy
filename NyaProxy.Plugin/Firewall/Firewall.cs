@@ -31,6 +31,8 @@ namespace NyaFirewall
                 });
             }
 
+            
+
             public static Task LoadAsync(string workDirectory)
             {
                 return Task.WhenAll(    
@@ -41,6 +43,7 @@ namespace NyaFirewall
                    Task.Run(() => Client     = Load(workDirectory, (reader) => new ClientChain().ReadFromXml<ClientChain>(reader))));
             }
 
+
             public static string ToStringTable()
             {
                 StringBuilder sb = new StringBuilder();
@@ -50,6 +53,11 @@ namespace NyaFirewall
                         sb.AppendLine(chain.ToString());
                 }
                 return sb.ToString();
+            }
+
+            public static int Count()
+            {
+                return Connect.FilterTable.Count() + Handshake.FilterTable.Count() + Login.FilterTable.Count() + Server.FilterTable.Count() + Client.FilterTable.Count();
             }
 
             internal static void RegisterCommand(ICommandContainer commandContainer)

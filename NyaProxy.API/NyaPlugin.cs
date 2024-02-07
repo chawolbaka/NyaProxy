@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NyaProxy.API.Config;
 
 namespace NyaProxy.API
@@ -17,14 +18,14 @@ namespace NyaProxy.API
         public IPluginHelper Helper => _helper;
         
 
-        public INyaLogger Logger => _logger;
+        public ILogger Logger => _logger;
 
         private IManifest _manifest;
         private IPluginHelper _helper;
-        private INyaLogger _logger;
+        private ILogger _logger;
 
         //该方法会被反射调用
-        private void Setup(IPluginHelper helper, INyaLogger logger, IManifest manifest)
+        private void Setup(IPluginHelper helper, ILogger logger, IManifest manifest)
         {
             _helper = helper;
             _logger = logger;

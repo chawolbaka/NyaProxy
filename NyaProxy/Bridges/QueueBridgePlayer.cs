@@ -7,6 +7,7 @@ using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.Compatible;
 using System.Threading.Tasks;
 using NyaProxy.API.Enum;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.Bridges
 {
@@ -27,7 +28,7 @@ namespace NyaProxy.Bridges
         {
             if (Own.Host.CompatibilityMode)
             {
-                NyaProxy.Logger.Warn($"当前处于兼容模式，无法将玩家{Name}从{Own.Host.Name}踢出。");
+                NyaProxy.Logger.LogWarning($"当前处于兼容模式，无法将玩家{Name}从{Own.Host.Name}踢出。");
                 return Task.CompletedTask;
             }
 
@@ -45,7 +46,7 @@ namespace NyaProxy.Bridges
         {
             if (Own.Host.CompatibilityMode)
             {
-                NyaProxy.Logger.Warn($"当前处于兼容模式，无法将玩家{Name}从{Own.Host.Name}踢出。");
+                NyaProxy.Logger.LogWarning($"当前处于兼容模式，无法将玩家{Name}从{Own.Host.Name}踢出。");
                 return Task.CompletedTask;
             }
 
@@ -65,7 +66,7 @@ namespace NyaProxy.Bridges
 
             if (Own.Host.CompatibilityMode)
             {
-                NyaProxy.Logger.Warn($"当前处于兼容模式，消息{message}发送无法被发送至玩家{Name}。");
+                NyaProxy.Logger.LogWarning($"当前处于兼容模式，消息{message}发送无法被发送至玩家{Name}。");
                 return Task.CompletedTask;
             }
 

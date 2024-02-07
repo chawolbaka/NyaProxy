@@ -1,4 +1,5 @@
-﻿using NyaProxy.API;
+﻿using Microsoft.Extensions.Logging;
+using NyaProxy.API;
 using NyaProxy.Configs;
 using System;
 using System.Collections.Generic;
@@ -68,12 +69,11 @@ namespace NyaProxy.Plugin
                 Context.Unload();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                NyaProxy.Logger.Info(i18n.Plugin.Unload_Success.Replace("{Name}", plugin.Manifest.Name));
+                NyaProxy.Logger.LogInformation(i18n.Plugin.Unload_Success.Replace("{Name}", plugin.Manifest.Name));
             }
             catch (Exception e)
             {
-                NyaProxy.Logger.Error(i18n.Plugin.Unload_Error.Replace("{Name}", plugin.Manifest.Name));
-                NyaProxy.Logger.Exception(e);
+                NyaProxy.Logger.LogMultiLineError(i18n.Plugin.Unload_Error.Replace("{Name}", plugin.Manifest.Name), e);
             }
             finally
             {

@@ -1,4 +1,5 @@
-﻿using NyaProxy.API.Command;
+﻿using Microsoft.Extensions.Logging;
+using NyaProxy.API.Command;
 using StringTable;
 
 namespace Analysis.Commands
@@ -27,11 +28,11 @@ namespace Analysis.Commands
                     table.AddRow(firstPA?.Source?.Address, $"{firstPA?.Host?.Name} [{firstPA?.Destination}]", Utils.SizeSuffix(transferred), count);
                 }
 
-                helper.Logger.Unpreformat(table.Export());
+                helper.Logger.LogMultiLineInformation(table.Export());
             }
             else
             {
-                helper.Logger.Unpreformat("当前无任何连接。");
+                helper.Logger.LogInformation("当前无任何连接。");
             }
 
             return true;

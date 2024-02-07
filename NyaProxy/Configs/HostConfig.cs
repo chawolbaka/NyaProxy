@@ -12,6 +12,7 @@ using NyaProxy.Extension;
 using MinecraftProtocol.Compatible;
 using MinecraftProtocol.Utils;
 using NyaProxy.API.Config.Nodes;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.Configs
 {
@@ -144,8 +145,7 @@ namespace NyaProxy.Configs
             }
             catch (Exception e)
             {
-                NyaProxy.Logger.Error(i18n.Error.SaveConfigFailed.Replace("{File}", $"{UniqueId}.{writer.FileType}"));
-                NyaProxy.Logger.Exception(e);
+                NyaProxy.Logger.LogMultiLineError(i18n.Error.SaveConfigFailed.Replace("{File}", $"{UniqueId}.{writer.FileType}"), e);
             }
         }
 

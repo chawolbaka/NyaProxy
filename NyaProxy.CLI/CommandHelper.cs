@@ -1,4 +1,5 @@
-﻿using NyaProxy.API;
+﻿using Microsoft.Extensions.Logging;
+using NyaProxy.API;
 using NyaProxy.API.Command;
 using System;
 using System.Collections.Generic;
@@ -11,13 +12,8 @@ namespace NyaProxy.CLI
 {
     public class CommandHelper : ICommandHelper
     {
-        public INyaLogger Logger { get; }
+        public ILogger Logger => NyaProxy.Logger;
         public bool BlockRemainingCommands { get; set; }
 
-        
-        public CommandHelper(INyaLogger logger)
-        {
-            Logger = logger;
-        }
     }
 }

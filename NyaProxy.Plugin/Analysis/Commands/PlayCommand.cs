@@ -1,4 +1,5 @@
-﻿using NyaProxy.API;
+﻿using Microsoft.Extensions.Logging;
+using NyaProxy.API;
 using NyaProxy.API.Command;
 using StringTable;
 
@@ -74,16 +75,16 @@ namespace Analysis.Commands
 
                     try
                     {
-                        helper.Logger.Unpreformat(table.Export(page, AnalysisPlgin.Config.SinglePageLength));
+                        helper.Logger.LogMultiLineInformation(table.Export(page, AnalysisPlgin.Config.SinglePageLength));
                     }
                     catch (ArgumentOutOfRangeException)
                     {
-                        helper.Logger.Unpreformat($"页面{page}不存在");
+                        helper.Logger.LogInformation($"页面{page}不存在");
                     }
                 }
                 else
                 {
-                    helper.Logger.Unpreformat("当前无任何统计数据");
+                    helper.Logger.LogInformation("当前无任何统计数据");
                 }
             }
             return true;

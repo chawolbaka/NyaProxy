@@ -1,4 +1,5 @@
-﻿using NyaFirewall.Rules;
+﻿using Microsoft.Extensions.Logging;
+using NyaFirewall.Rules;
 using NyaFirewall.Tables;
 using NyaProxy.API.Command;
 
@@ -23,15 +24,14 @@ namespace NyaFirewall.Commands
             try
             {
                 Table.Rules.Clear();
-                helper.Logger.Unpreformat("§aClear success.");
+                helper.Logger.LogInformation("§aClear success.");
             }
             catch (Exception e)
             {
                 if (e is CommandException)
                     throw;
 
-                helper.Logger.Exception(e);
-                helper.Logger.Unpreformat("§cClear failed.");
+                helper.Logger.LogMultiLineError("§cClear failed.", e);
                 return false;
             }
 

@@ -1,4 +1,5 @@
-﻿using MinecraftProtocol.IO;
+﻿using Microsoft.Extensions.Logging;
+using MinecraftProtocol.IO;
 using NyaProxy.API;
 using NyaProxy.API.Channle;
 using NyaProxy.API.Enum;
@@ -45,7 +46,7 @@ namespace NyaProxy.Channles
                     }
                     catch (Exception e)
                     {
-                        NyaProxy.Logger.Exception(e);
+                        NyaProxy.Logger.LogError(e);
                     }
                 }
             }

@@ -4,6 +4,7 @@ using System.IO.Pipes;
 using System.Text;
 using ConsolePlus;
 using ConsolePlus.InteractiveMode;
+using Microsoft.Extensions.Logging;
 using NyaProxy.API.Command;
 using NyaProxy.CLI.Commands;
 using NyaProxy.Debug;
@@ -16,23 +17,36 @@ namespace NyaProxy.CLI
         
         private static async Task Main(string[] args)
         {
-            ColorfullyConsole.Init();    
-            NyaProxy.AddLogger<NyaLogger>();
-            await NyaProxy.Setup();
+            NyaLogger logger = new NyaLogger();
+            logger.Listen();
+            await NyaProxy.SetupAsync(logger);
 
             foreach (var server in NyaProxy.Hosts)
             {
-                NyaProxy.Logger.Info($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
+                NyaProxy.Logger.LogInformation($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
             }
 
             NyaProxy.BindSockets();
             NyaProxy.CommandManager.Register(new ConfigCommand());
             NyaProxy.CommandManager.Register(new PluginCommand());
             NyaProxy.CommandManager.Register(new SimpleCommand("stop", async (args, helper) => await ExitAsync()));
-            NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) =>
-                helper.Logger.Unpreformat(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
+            NyaProxy.CommandManager.Register(new SimpleCommand("hosts", async (args, helper) => helper.Logger.LogInformation(string.Join(',', NyaProxy.Hosts.Values.Select(x => x.Name).ToArray()))));
             NyaProxy.CommandManager.Register(new SimpleCommand("plugins", async (args, helper) =>
-                helper.Logger.Unpreformat(NyaProxy.Plugins.Count > 0 ? DebugHelper.CreatePluginTable().Export() : "当前没有任何已加载的插件")));
+            {
+                if (NyaProxy.Plugins.Count > 0)
+
+                    NyaProxy.Logger.LogMultiLineInformation($"{NyaProxy.Plugins.Count} plugins loaded.", DebugHelper.CreatePluginTable().Export());
+                else
+                    NyaProxy.Logger.LogInformation("当前没有任何已加载的插件");
+            }));
+
+            NyaProxy.CommandManager.Register(new SimpleCommand("bridges", async (args, helper) => {
+                StringTableBuilder table = DebugHelper.CreateBridgeTable();
+                if (table.NumberOfRows > 0)
+                    NyaProxy.Logger.LogMultiLineInformation(table.Export().ToString());
+                else
+                    NyaProxy.Logger.LogInformation("当前没有建立任何连接。");
+            }));
 
             Console.CancelKeyPress += (sender, e) =>
             {
@@ -40,9 +54,7 @@ namespace NyaProxy.CLI
                     ExitAsync().Wait();
             };
 
-            new Thread(ListenLog) { IsBackground = true }.Start();
-
-            while (true)
+            while (!NyaProxy.GlobalQueueToken.IsCancellationRequested)
             {
                 string input = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(input))
@@ -51,11 +63,11 @@ namespace NyaProxy.CLI
                     try
                     {
                         if (CommandArgs.Length > 0)
-                            await NyaProxy.CommandManager.RunAsync(CommandArgs[0], CommandArgs.AsSpan().Slice(1).ToArray(), new CommandHelper(NyaProxy.Logger));
+                            await NyaProxy.CommandManager.RunAsync(CommandArgs[0], CommandArgs.AsSpan(1).ToArray(), new CommandHelper());
                     }
                     catch (Exception e)
                     {
-                        NyaProxy.Logger.Exception(e);
+                        NyaProxy.Logger.LogError(e);
                     }
                 }
             }
@@ -81,62 +93,10 @@ namespace NyaProxy.CLI
             return arguments;
         }
 
-        private static void ListenLog()
-        {
-            FileStream fileStream = null!;
-            DateTime time = DateTime.Now;
-            if (NyaProxy.Config.LogFile.Enable)
-            {
-                if (!Directory.Exists(NyaProxy.Config.LogFile.Directory))
-                    Directory.CreateDirectory(NyaProxy.Config.LogFile.Directory);
-                fileStream = GetLogFileStream();
-            }
-            while (!NyaProxy.GlobalQueueToken.IsCancellationRequested)
-            {
-                var log = NyaLogger.LogQueues.Take();
-                DateTime now = DateTime.Now;
-                Thread thread = Thread.CurrentThread;
-                string threadName = string.IsNullOrWhiteSpace(thread.Name) ? "[Craft Thread#{thread.ManagedThreadId}]" : thread.Name;
-
-                if (NyaProxy.Config.LogFile.Enable)
-                {
-                    if (now.Day != time.Day)
-                    {
-                        fileStream.Flush();
-                        fileStream.Close();
-                        fileStream = GetLogFileStream();
-                        time = DateTime.Now;
-                    }
-                    if (log.Type == LogType.Unpreformat)
-                        fileStream.Write(Encoding.UTF8.GetBytes(log.Message + Environment.NewLine));
-                    else
-                        fileStream.Write(Encoding.UTF8.GetBytes($"[{now:yyyy-MM-dd HH:mm:ss}] [{threadName}] [{log.Type}] : {log.Message}{Environment.NewLine}"));
-                    fileStream.Flush();
-                }
-                if (log.Type == LogType.Unpreformat)
-                    ColorfullyConsole.WriteLine(log.Message);
-                else
-                    ColorfullyConsole.WriteLine($"§{(int)log.Type:x1}[{now:HH:mm:ss}] [{threadName}] [{log.Type}] : {log.Message}");
-            }
-        }
-
-        private static FileStream GetLogFileStream()
-        {
-            string file = Path.Combine(NyaProxy.Config.LogFile.Directory, DateTime.Now.ToString(NyaProxy.Config.LogFile.Format) + ".log");
-            
-            if(File.Exists(file))
-            {
-                int count = -1;
-                while (File.Exists(file + $".{++count}")) { }
-                File.Move(file, file + $".{count}");
-            }
-            FileStream fileStream = new FileStream(file, FileMode.OpenOrCreate);
-            return fileStream;
-        }
 
         public static async Task ExitAsync()
         {
-            NyaProxy.Logger.Info("stoping...");
+            NyaProxy.Logger.LogInformation("stoping...");
             await NyaProxy.StopAsync();
             Environment.Exit(0);
         }

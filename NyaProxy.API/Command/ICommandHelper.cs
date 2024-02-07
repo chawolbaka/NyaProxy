@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace NyaProxy.API.Command
 {
     public interface ICommandHelper
     {
-        public INyaLogger Logger { get; }
+        public ILogger Logger { get; }
         public bool BlockRemainingCommands { get; set; }
     }
 }

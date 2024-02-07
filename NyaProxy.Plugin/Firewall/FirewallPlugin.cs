@@ -6,6 +6,7 @@ using NyaFirewall.Rules;
 using NyaFirewall.Tables;
 using MinecraftProtocol.DataType;
 using NyaProxy.API.Event;
+using Microsoft.Extensions.Logging;
 
 namespace NyaFirewall
 {
@@ -21,12 +22,13 @@ namespace NyaFirewall
             Helper.Config.Register(typeof(FirewallConfig));
 
             await Firewall.Chains.LoadAsync(Helper.WorkDirectory.FullName);
+            Logger.LogInformation($"{Firewall.Chains.Count()} rules loaded.");
             Helper.Events.Transport.Connecting  += OnConnecting;
             Helper.Events.Transport.Handshaking += OnHandshaking;
             Helper.Events.Transport.LoginStart  += OnLoginStart;
             Helper.Events.Transport.PacketSendToClient += OnPacketSendToClient;
             Helper.Events.Transport.PacketSendToServer += OnPacketSendToServer;
-            Helper.Command.Register(new SimpleCommand("print", async (args, helper) => helper.Logger.Unpreformat(Firewall.Chains.ToStringTable())));
+            Helper.Command.Register(new SimpleCommand("print", async (args, helper) => helper.Logger.LogInformation($"{Firewall.Chains.Count()} rules loaded.", Firewall.Chains.ToStringTable())));
             Firewall.Chains.RegisterCommand(Helper.Command);
         }
 

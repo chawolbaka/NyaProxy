@@ -20,6 +20,7 @@ using MinecraftProtocol.IO.Extensions;
 using MinecraftProtocol.Chat;
 using MinecraftProtocol.IO.Pools;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.Bridges
 {
@@ -176,7 +177,7 @@ namespace NyaProxy.Bridges
                         Break();
                         return;
                     }
-                    NyaProxy.Logger.Info($"{lsp.PlayerName}[{Source._remoteEndPoint()}] logged in with host {Host.Name}[{Destination._remoteEndPoint()}]");
+                    NyaProxy.Logger.LogInformation($"{lsp.PlayerName}[{Source._remoteEndPoint()}] logged in with host {Host.Name}[{Destination._remoteEndPoint()}]");
 
                     _loginStartPacket = lsea.PacketCheaged ? lsea.Packet.Get().AsLoginStart() : lsp;
 
@@ -222,13 +223,13 @@ namespace NyaProxy.Bridges
                 }
                 else
                 {
-                    NyaProxy.Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringLoginStart.Replace("{EndPoint}", Source._remoteEndPoint(), "{Packet}", e.Packet.Get()));
+                    NyaProxy.Logger.LogDebug(i18n.Debug.ReceivedEnexpectedPacketDuringLoginStart.Replace("{EndPoint}", Source._remoteEndPoint(), "{Packet}", e.Packet.Get()));
                     Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{EndPoint}", Source._remoteEndPoint(), "{PacketId}", e.Packet.Id));
                 }
             }
             catch (Exception ex)
             {
-                NyaProxy.Logger.Exception(ex);
+                NyaProxy.Logger.LogError(ex);
                 Break();
             }
             finally
@@ -248,7 +249,7 @@ namespace NyaProxy.Bridges
                 {
                     if (!CollectionUtils.Compare(_verifyToken, _rsaService.Decrypt(erp.VerifyToken, RSAEncryptionPadding.Pkcs1)))
                     {
-                        NyaProxy.Logger.Warn(i18n.Warning.VerifyTokenNotMatch.Replace("{EndPoint}", Source._remoteEndPoint(), "{PlayerName}", playerName, "{Packet}", erp));
+                        NyaProxy.Logger.LogWarning(i18n.Warning.VerifyTokenNotMatch.Replace("{EndPoint}", Source._remoteEndPoint(), "{PlayerName}", playerName, "{Packet}", erp));
                         Break(i18n.Disconnect.AuthenticationFailed);
                     }
 
@@ -260,19 +261,19 @@ namespace NyaProxy.Bridges
                     }
                     else
                     {
-                        NyaProxy.Logger.Debug(i18n.Debug.PlayerNotJoinedThroughYggdrasil.Replace("{PlayerName}", playerName));
+                        NyaProxy.Logger.LogDebug(i18n.Debug.PlayerNotJoinedThroughYggdrasil.Replace("{PlayerName}", playerName));
                         Break(i18n.Disconnect.AuthenticationFailed);
                     }
                 }
                 else
                 {
                     Break(i18n.Disconnect.ReceivedEnexpectedPacket.Replace("{PacketId}", e.Packet.Id));
-                    NyaProxy.Logger.Debug(i18n.Debug.ReceivedEnexpectedPacketDuringEncryption.Replace("{EndPoint}", Source._remoteEndPoint(), "{PlayerName}", playerName, "{Packet}", e.Packet));
+                    NyaProxy.Logger.LogDebug(i18n.Debug.ReceivedEnexpectedPacketDuringEncryption.Replace("{EndPoint}", Source._remoteEndPoint(), "{PlayerName}", playerName, "{Packet}", e.Packet));
                 }
             }
             catch (Exception ex)
             {
-                NyaProxy.Logger.Exception(ex);
+                NyaProxy.Logger.LogError(ex);
                 Break();
             }
             finally
@@ -308,7 +309,7 @@ namespace NyaProxy.Bridges
             {
                 if (e.Packet == PacketType.Login.Server.EncryptionRequest)
                 {
-                    NyaProxy.Logger.Error(i18n.Error.OnlineModeNotTurned.Replace("{Host}", Host.Name));
+                    NyaProxy.Logger.LogError(i18n.Error.OnlineModeNotTurned.Replace("{Host}", Host.Name));
                     e.Dispose(); 
                     Break(i18n.Disconnect.IncorrectServerConfiguration);
                     return;
@@ -356,7 +357,7 @@ namespace NyaProxy.Bridges
             }
             catch (Exception ex)
             {
-                NyaProxy.Logger.Exception(ex);
+                NyaProxy.Logger.LogError(ex);
                 ListenToken.Cancel();
             }
         }

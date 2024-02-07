@@ -10,6 +10,7 @@ using Tomlet.Models;
 using System.Text;
 using NyaProxy.API.Config;
 using NyaProxy.API.Command;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.Plugin
 {
@@ -78,8 +79,7 @@ namespace NyaProxy.Plugin
                 }
                 catch (Exception e)
                 {
-                    NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", fileName));
-                    NyaProxy.Logger.Exception(e);
+                    NyaProxy.Logger.LogMultiLineError(i18n.Error.LoadConfigFailed.Replace("{File}", fileName), e);                    
                     return -1;
                 }
             }
@@ -118,8 +118,7 @@ namespace NyaProxy.Plugin
                 }
                 catch (Exception e)
                 {
-                    NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", fileName));
-                    NyaProxy.Logger.Exception(e);
+                    NyaProxy.Logger.LogMultiLineError(i18n.Error.LoadConfigFailed.Replace("{File}", fileName), e);
                     return -1;
                 }
             }
@@ -183,8 +182,7 @@ namespace NyaProxy.Plugin
                 }
                 catch (Exception e)
                 {
-                    NyaProxy.Logger.Error(i18n.Error.LoadConfigFailed.Replace("{File}", $"{config.UniqueId}.toml"));
-                    NyaProxy.Logger.Exception(e);
+                    NyaProxy.Logger.LogMultiLineError(i18n.Error.LoadConfigFailed.Replace("{File}", $"{config.UniqueId}.toml"), e);
                 }
             }
 
@@ -284,20 +282,20 @@ namespace NyaProxy.Plugin
                         {
                             case "reload": _configContainer.ReloadAll(); break;
                             case "save": await _configContainer.SaveAllAsync(); break;
-                            default: helper.Logger.Unpreformat($"Unknow operate {args.Span[0]}"); break;
+                            default: helper.Logger.LogInformation($"Unknow operate {args.Span[0]}"); break;
                         }
                     }
                     else if(args.Length >= 2)
                     {
                         string uniqueId = args.Span[1];
                         if (!_configContainer.ConfigIdDictionary.ContainsKey(uniqueId))
-                            helper.Logger.Unpreformat($"{uniqueId} cannot be found.");
+                            helper.Logger.LogError($"{uniqueId} cannot be found.");
                         else
                             switch (args.Span[0])
                             {
                                 case "reload": _configContainer.Reload(uniqueId); break;
                                 case "save": await _configContainer.SaveAsync(uniqueId); break;
-                                default: helper.Logger.Unpreformat($"Unknow operate {args.Span[0]}"); break;
+                                default: helper.Logger.LogInformation($"Unknow operate {args.Span[0]}"); break;
                             }
                     }
                     return false;

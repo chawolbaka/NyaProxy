@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NyaProxy.API.Config;
 using NyaProxy.API;
 using NyaProxy.API.Command;
+using Microsoft.Extensions.Logging;
 
 namespace NyaProxy.Plugin
 {
@@ -40,7 +41,7 @@ namespace NyaProxy.Plugin
                         }
                         catch (CommandRegisteredException cre)
                         {
-                            NyaProxy.Logger.Error(i18n.Error.CommandRegistered.Replace("{CommandName}", cre.CommandName));
+                            NyaProxy.Logger.LogError(i18n.Error.CommandRegistered.Replace("{CommandName}", cre.CommandName));
                         }
                     }
                 }
@@ -79,7 +80,7 @@ namespace NyaProxy.Plugin
                         }
                         catch (Exception e)
                         {
-                            NyaProxy.Logger.Exception(e);
+                            NyaProxy.Logger.LogError(e);
                         }
                     }
                 }

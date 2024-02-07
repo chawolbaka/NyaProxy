@@ -1,4 +1,5 @@
-﻿using NyaFirewall.Rules;
+﻿using Microsoft.Extensions.Logging;
+using NyaFirewall.Rules;
 using NyaFirewall.Tables;
 using NyaProxy.API.Command;
 
@@ -27,17 +28,16 @@ namespace NyaFirewall.Commands
                 await _parser.ExecuteAsync(args, helper);
                 
                 if (Table.Rules.Remove(_parser.Rule))
-                    helper.Logger.Unpreformat("§aDelete success.");
+                    helper.Logger.LogInformation("§aDelete success.");
                 else
-                    helper.Logger.Unpreformat("§cDelete failed.");
+                    helper.Logger.LogError("§cDelete failed.");
             }
             catch (Exception e)
             {
                 if (e is CommandException)
                     throw;
 
-                helper.Logger.Exception(e);
-                helper.Logger.Unpreformat("§cDelete failed.");
+                helper.Logger.LogMultiLineError("§cDelete failed.", e);
                 return false;
             }
             return true;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,7 +34,7 @@ namespace NyaProxy.API.Command
             }
             catch (Exception e)
             {
-                helper.Logger.Exception(e);
+                helper.Logger.LogError(e);
                 return false;
             }
         }

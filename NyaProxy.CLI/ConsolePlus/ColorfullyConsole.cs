@@ -19,7 +19,7 @@ namespace ConsolePlus
         private static Dictionary<char, int> FormatCodes = new Dictionary<char, int>();
 
         public static bool UseCompatibilityMode { get; set; }
-        public const char DefaultColorCodeMark = '§';
+        public const char DefaultColorCodeSymbol = '§';
 
         //static ColorfullyConsole() => Init();
 
@@ -118,8 +118,8 @@ namespace ConsolePlus
 
         }
         public static void Write(object value, char colorCodeMark) => Write(value.ToString(), colorCodeMark);
-        public static void Write(string value) => Write(value, DefaultColorCodeMark);
-        public static void Write(object value) => Write(value.ToString(), DefaultColorCodeMark);
+        public static void Write(string value) => Write(value, DefaultColorCodeSymbol);
+        public static void Write(object value) => Write(value.ToString(), DefaultColorCodeSymbol);
   
 
         //???(不知道怎么描述)
@@ -201,7 +201,7 @@ namespace ConsolePlus
                 if (c!=' ')
                 {
                     NextColor = GetNextColor(NextColor);
-                    sb.Append(DefaultColorCodeMark);
+                    sb.Append(DefaultColorCodeSymbol);
                     sb.Append(NextColor.ToString("x"));
                 }
                 sb.Append(c);
@@ -245,8 +245,8 @@ namespace ConsolePlus
             Write(value + Environment.NewLine, fgColor, bgColor, resetColor);
         }
         //一堆为了让我写舒服点的重载(看着眼瞎)
-        public static void WriteLine(string value) => WriteLine(value, DefaultColorCodeMark);
-        public static void WriteLine(object value) => WriteLine(value.ToString(),DefaultColorCodeMark);
+        public static void WriteLine(string value) => WriteLine(value, DefaultColorCodeSymbol);
+        public static void WriteLine(object value) => WriteLine(value.ToString(),DefaultColorCodeSymbol);
         public static void WriteLine(object value, char colorCodeMark) => WriteLine(value.ToString(), colorCodeMark);
         public static void WriteLine(string value, ConsoleColor fgColor) => WriteLine(value, fgColor, true);
         public static void WriteLine(object value, ConsoleColor fgColor) => WriteLine(value.ToString(), fgColor, true);
@@ -287,7 +287,7 @@ namespace ConsolePlus
 
 
         /// <summary>获取当前平台下可用的样式代码数</summary>
-        public static (int ColorCodeCount, int FormatCodeCount) GetCodeCount(string value) => GetCodeCount(value, DefaultColorCodeMark);
+        public static (int ColorCodeCount, int FormatCodeCount) GetCodeCount(string value) => GetCodeCount(value, DefaultColorCodeSymbol);
         /// <summary>获取当前平台下可用的样式代码数</summary>
         public static (int ColorCodeCount, int FormatCodeCount) GetCodeCount(string value, char colorCodeMark)
         {
@@ -312,9 +312,9 @@ namespace ConsolePlus
         /// <param name="formatCode">带标识符的样式代码</param>
         public static bool IsFormatCodeSupport(string formatCode)
         {
-            if (formatCode.Length == 2 && formatCode[0] == DefaultColorCodeMark)
+            if (formatCode.Length == 2 && formatCode[0] == DefaultColorCodeSymbol)
                 return IsFormatCodeSupport(formatCode[1]);
-            else if (formatCode.Length == 1 && formatCode[0] != DefaultColorCodeMark)
+            else if (formatCode.Length == 1 && formatCode[0] != DefaultColorCodeSymbol)
                 return IsFormatCodeSupport(formatCode[0]);
             else if (formatCode.Length > 2)
                 throw new ArgumentOutOfRangeException(nameof(formatCode), 2, "FormatCode too big");

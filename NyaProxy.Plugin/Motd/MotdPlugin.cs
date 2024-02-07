@@ -11,6 +11,7 @@ using MinecraftProtocol.Packets.Server;
 using MinecraftProtocol.IO.Extensions;
 
 using MinecraftProtocol.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Motd
 {
@@ -45,7 +46,7 @@ namespace Motd
             Helper.Command.Register(new SimpleCommand("get", async (args, helper) => {
                 ServerListPing slp = new ServerListPing(await NetworkUtils.GetIPEndPointAsync(args.Span[0]));
                 PingReply result = await slp.SendAsync();
-                helper.Logger.Unpreformat(result.Json);
+                helper.Logger.LogMultiLineInformation($"json received success, elapsed {(result.Elapsed.HasValue ? result.Elapsed.Value.TotalSeconds : -1)}seconds.", result.Json);
             }));
         }
 
@@ -121,12 +122,11 @@ namespace Motd
                     int index = Helper.Config.Register(typeof(MotdConfig), file.FullName);
                     MotdConfig config = Helper.Config.Get<MotdConfig>(index);
                     HostIndex.Add(config.Host, index);
-                    Logger.Info($"{file.Name} load success.");
+                    Logger.LogInformation($"{file.Name} load success.");
                 }
                 catch (Exception e)
                 {
-                    Logger.Info($"{file.Name} load fail.");
-                    Logger.Exception(e);
+                    Logger.LogError($"{file.Name} load fail.", e);
                 }
             }
         }
