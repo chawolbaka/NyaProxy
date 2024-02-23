@@ -2,7 +2,6 @@
 using System.IO;
 using NyaProxy.API.Config;
 using NyaProxy.API.Command;
-using NyaProxy.API.Channle;
 using System.Collections.Generic;
 
 namespace NyaProxy.API
@@ -33,11 +32,6 @@ namespace NyaProxy.API
         /// 现有的Host
         /// </summary>
         IHostContainer Hosts { get; }
-
-        /// <summary>
-        /// 插件频道相关（这个插件频道是一种数据包，不是指NyaProxy的插件）
-        /// </summary>
-        IChannleContainer Channles { get; }
 
         /// <summary>
         /// 配置文件相关

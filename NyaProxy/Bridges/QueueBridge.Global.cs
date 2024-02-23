@@ -4,9 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using NyaProxy.API.Enum;
 using NyaProxy.EventArgs;
-using NyaProxy.Channles;
 using NyaProxy.Debug;
-using MinecraftProtocol.IO;
 using MinecraftProtocol.IO.Pools;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +18,6 @@ namespace NyaProxy.Bridges
         private static ConcurrentQueue<PacketSendEventArgs>[] ReceiveQueues;
         private static ObjectPool<PacketSendEventArgs> PacketEventArgsPool = new ();
         private static ObjectPool<ChatSendEventArgs> ChatEventArgsPool = new();
-        private static ObjectPool<PluginChannleSendEventArgs> PluginChannleEventArgsPool = new();
         
         private static SafeIndex QueueIndex;
         private static bool EnableBlockingQueue;
@@ -102,11 +99,6 @@ namespace NyaProxy.Bridges
                                 (psea.Direction == Direction.ToClient ? NyaProxy.PacketSendToClient : NyaProxy.PacketSendToServer).Invoke(psea.Bridge, psea, NyaProxy.Logger);
 
 
-                            if (!psea.IsBlock && psea is PluginChannleSendEventArgs pcsea && NyaProxy.Channles.ContainsKey(pcsea.ChannleName))
-                            {
-                                Channle channle = NyaProxy.Channles[pcsea.ChannleName] as Channle;
-                                channle?.Trigger(psea.Direction == Direction.ToServer ? Side.Client : Side.Server, new ByteReader(pcsea.Data), psea.Bridge);
-                            }
                         }
                         catch (Exception ex)
                         {
@@ -178,8 +170,6 @@ namespace NyaProxy.Bridges
                     {
                         if (psea is ChatSendEventArgs)
                             ChatEventArgsPool.Return(psea as ChatSendEventArgs);
-                        else if (psea is PluginChannleSendEventArgs)
-                            PluginChannleEventArgsPool.Return(psea as PluginChannleSendEventArgs);
                         else
                             PacketEventArgsPool.Return(psea);
                     }

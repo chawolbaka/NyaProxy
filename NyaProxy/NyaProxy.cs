@@ -19,7 +19,6 @@ using NyaProxy.Debug;
 using NyaProxy.Configs;
 using NyaProxy.Plugin;
 using NyaProxy.Bridges;
-using NyaProxy.Channles;
 using System.Linq;
 using MinecraftProtocol.IO.Pools;
 using Microsoft.Extensions.Logging;
@@ -32,7 +31,6 @@ namespace NyaProxy
         public static ConcurrentDictionary<long, Bridge> Bridges => _bridges;
         public static CommandManager CommandManager => _commandManager;
         public static Dictionary<string, Host> Hosts => _hosts;
-        public static ChannleContainer Channles => _channles;
         public static PluginManager Plugins => _plugins;
         public static ILogger Logger => _logger;
 
@@ -55,7 +53,6 @@ namespace NyaProxy
         private static bool _stoping;
         private static ILogger _logger;
         private static CommandManager _commandManager;
-        private static ChannleContainer _channles;
         private static PluginManager _plugins;
         private static Dictionary<string, Host> _hosts;
         private static ConcurrentDictionary<long, Bridge> _bridges;
@@ -67,7 +64,7 @@ namespace NyaProxy
 			AppDomain.CurrentDomain.UnhandledException += (sender, e) => Crash.Report(e.ExceptionObject as Exception);
             GlobalQueueToken.Token.Register(() => logger.LogInformation("NyaProxy is stoped."));
 
-            _logger = logger; _hosts = new(); _bridges = new(); _plugins = new(); _channles = new(); _commandManager = new();
+            _logger = logger; _hosts = new(); _bridges = new(); _plugins = new(); _commandManager = new();
 
             ReloadConfig();
             ReloadHosts();

@@ -414,8 +414,6 @@ namespace NyaProxy.Bridges
 
             if (!Host.CompatibilityMode && Stage == Stage.Play && e.Packet == PacketType.Play.Client.ChatMessage)
                 Enqueue(ChatEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
-            else if (!Host.CompatibilityMode && Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Client.PluginChannel)
-                Enqueue(PluginChannleEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
             else
                 Enqueue(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
         }
@@ -431,8 +429,6 @@ namespace NyaProxy.Bridges
                 || e.Packet == PacketType.Play.Server.PlayerChatMessage
                 || e.Packet == PacketType.Play.Server.DisguisedChatMessage)
                 Enqueue(ChatEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
-            else if (!Host.CompatibilityMode && Stage == Stage.Play && NyaProxy.Channles.Count > 0 && e.Packet == PacketType.Play.Server.PluginChannel)
-                Enqueue(PluginChannleEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
             else
                 Enqueue(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
         }
