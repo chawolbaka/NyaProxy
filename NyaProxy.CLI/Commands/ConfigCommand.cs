@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NyaProxy.API.Command;
 using NyaProxy.Configs;
 
@@ -26,7 +27,7 @@ namespace NyaProxy.CLI.Commands
                         NyaProxy.RebindSockets();
                         foreach (var server in NyaProxy.Hosts)
                         {
-                            helper.Logger.Info($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
+                            helper.Logger.LogInformation($"{server.Value.Name} -> [{string.Join(", ", server.Value.ServerEndPoints.Select(x => x.ToString()))}]");
                         } break;
                     case "save": var w = new TomlConfigWriter(); NyaProxy.Config.Write(w); w.Save("config.toml"); break;
                     default: throw new UnrecognizedArgumentException(this, args.Span[0]);

@@ -1,4 +1,5 @@
 ﻿using ConsolePlus;
+using Microsoft.Extensions.Logging;
 using NyaProxy.API.Command;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace NyaProxy.CLI.Commands
             bool IsIdExists(string id)
             {
                 if (!NyaProxy.Plugins.Contains(id))
-                    helper.Logger.Unpreformat($"§e插件{args.Span[1]}不存在");
+                    helper.Logger.LogError($"§e插件{args.Span[1]}不存在");
                 return true;
             }
         }
