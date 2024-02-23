@@ -451,16 +451,31 @@ namespace NyaProxy.Bridges
             public SocketSendBuffer Client { get; set; }
             public SocketSendBuffer Server { get; set; }
 
+            private static readonly object _lock = new object();
+
             public BufferManager(Socket clientSocket, Socket serverSocket, NetworkHelper network, MainConfig config)
             {
-                if (config.EnableStickyPool)
+                Bucket<byte> stickyPool;
+                Bucket<IDisposable> disposablePool;
+                lock (_lock)
                 {
-                    StickyPool ??= new Bucket<byte>(config.StickyPoolBufferLength, config.NumberOfStickyPoolBuffers, 233, true);
-                    DisposablePool ??= new Bucket<IDisposable>(16, 512, 2333, true);
+                    if (config.EnableStickyPool)
+                    {
+                        StickyPool ??= new Bucket<byte>(config.StickyPoolBufferLength, config.NumberOfStickyPoolBuffers, 233, true);
+                        DisposablePool ??= new Bucket<IDisposable>(16, 512, 2333, true);
+                    }
+                    else
+                    {
+                        StickyPool = null;
+                        DisposablePool = null;
+                    }
+
+                    stickyPool = StickyPool;
+                    disposablePool = DisposablePool;
                 }
 
-                Client = new SocketSendBuffer(clientSocket, network, config.EnableStickyPool);
-                Server = new SocketSendBuffer(serverSocket, network, config.EnableStickyPool);
+                Client = new SocketSendBuffer(clientSocket, network, stickyPool, disposablePool);
+                Server = new SocketSendBuffer(serverSocket, network, stickyPool, disposablePool);
             }
 
             public bool Push()
@@ -472,6 +487,9 @@ namespace NyaProxy.Bridges
 
             public class SocketSendBuffer
             {
+                private static Bucket<byte> _stickyPool;
+                private static Bucket<IDisposable> _disposablePool;
+
                 private Socket _socket;
                 private NetworkHelper _network;
 
@@ -479,12 +497,16 @@ namespace NyaProxy.Bridges
                 private IDisposable[] _disposableBlock;
                 private byte[] _buffer;
                 private bool _usePool;
+                
 
-                public SocketSendBuffer(Socket socket, NetworkHelper network, bool usePool)
+
+                public SocketSendBuffer(Socket socket, NetworkHelper network, Bucket<byte> stickyPool, Bucket<IDisposable> disposablePool)
                 {
                     _network = network;
                     _socket = socket;
-                    _usePool = usePool;
+                    _stickyPool = stickyPool;
+                    _disposablePool = disposablePool;
+                    _usePool = stickyPool is not null && disposablePool is not null;
                     Reset();
                 }
 
@@ -518,8 +540,8 @@ namespace NyaProxy.Bridges
                         {
                             disposableBlock[i]?.Dispose();
                         }
-                        DisposablePool.Return(disposableBlock);
-                        StickyPool.Return(buffer);
+                        _disposablePool.Return(disposableBlock);
+                        _stickyPool.Return(buffer);
                     } : null);
                     return true;
                 }
@@ -528,8 +550,8 @@ namespace NyaProxy.Bridges
                 {
                     _bufferOffset = 0;
                     _disposableOffset = 0;
-                    _buffer = (_usePool ? StickyPool.Rent() : new byte[25565]) ?? new byte[25565];
-                    _disposableBlock = (_usePool ? DisposablePool.Rent() : new IDisposable[16]) ?? new IDisposable[16];
+                    _buffer = (_usePool ? _stickyPool.Rent() : new byte[25565]) ?? new byte[25565];
+                    _disposableBlock = (_usePool ? _disposablePool.Rent() : new IDisposable[16]) ?? new IDisposable[16];
                 }
             }
         }
