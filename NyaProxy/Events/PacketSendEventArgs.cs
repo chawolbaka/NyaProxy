@@ -100,7 +100,7 @@ namespace NyaProxy
 
             Setup(bridge, source, destination, direction, e.Packet, e.ReceivedTime);
             EventArgs = e;
-            _bytesTransferred = VarInt.GetLength(e.PacketLength) + e.PacketLength;
+            _bytesTransferred = e.PacketLength;
             return this;
         }
     }

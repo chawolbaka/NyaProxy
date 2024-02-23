@@ -111,7 +111,7 @@ namespace NyaProxy.Bridges
                             //如果数据没有被修改过那么就直接发送接收到的原始数据，避免Pack造成的内存分配。
                             if (psea.EventArgs != null && !psea.Bridge.IsOnlineMode && !psea.Bridge.OverCompression && !psea.PacketCheaged)
                             {
-                                var rawDataBlock = psea.EventArgs.RawData.Span;
+                                var rawDataBlock = psea.EventArgs.RawData;
                                 if (sendBuffer!=null && !EnableBlockingQueue && !psea.DestinationCheaged && rawDataBlock.Length == 1 && rawDataBlock[0].Length < NyaProxy.Config.StickyPacketLimit)
                                 {
                                     /*
