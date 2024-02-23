@@ -12,12 +12,10 @@ namespace NyaProxy.Bridges
 {
     public partial class QueueBridge : Bridge
     {
-        internal static Bucket<byte> StickyPool;
 
         private static BlockingCollection<PacketSendEventArgs>[] ReceiveBlockingQueues;
         private static ConcurrentQueue<PacketSendEventArgs>[] ReceiveQueues;
         private static ObjectPool<PacketSendEventArgs> PacketEventArgsPool = new ();
-        private static ObjectPool<ChatSendEventArgs> ChatEventArgsPool = new();
         
         private static SafeIndex QueueIndex;
         private static bool EnableBlockingQueue;
@@ -82,7 +80,7 @@ namespace NyaProxy.Bridges
                                 sendBuffer = null;
 
                             lastBridgeId = psea.Bridge.SessionId;
-                            sendBuffer = psea.Bridge.Buffer;
+                            sendBuffer = psea.Bridge._buffer;
                         }
                     }
 
@@ -168,9 +166,7 @@ namespace NyaProxy.Bridges
                     }
                     finally
                     {
-                        if (psea is ChatSendEventArgs)
-                            ChatEventArgsPool.Return(psea as ChatSendEventArgs);
-                        else
+                        if (psea is PacketSendEventArgs)
                             PacketEventArgsPool.Return(psea);
                     }
                 }

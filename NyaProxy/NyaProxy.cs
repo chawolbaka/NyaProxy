@@ -72,8 +72,6 @@ namespace NyaProxy
             Network = new NetworkHelper(Config.EnableBlockingQueue, GlobalQueueToken.Token);
             if (Config.EnableReceivePool)
                 NetworkListener.SetPoolSize(Config.ReceivePoolBufferLength, Config.NumberOfReceivePoolBuffers);
-            if (Config.EnableStickyPool)
-                QueueBridge.StickyPool = new Bucket<byte>(Config.StickyPoolBufferLength, Config.NumberOfStickyPoolBuffers, 233, true);
 
             QueueBridge.Setup(Config.NetworkThread);
 

@@ -21,6 +21,7 @@ using MinecraftProtocol.Chat;
 using MinecraftProtocol.IO.Pools;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using NyaProxy.Configs;
 
 namespace NyaProxy.Bridges
 {
@@ -70,11 +71,12 @@ namespace NyaProxy.Bridges
 
         public virtual Stage Stage { get; private set; }
 
-        protected virtual BufferManager Buffer { get; init; }
+    
 
         protected override string BreakMessage => Player != null ? $"§e{Player.Name} left the game" : base.BreakMessage;
 
-        
+        private BufferManager _buffer;
+
         private IHostTargetRule _targetRule;
         private IPacketListener _serverSocketListener;
         private IPacketListener _clientSocketListener;
@@ -93,7 +95,7 @@ namespace NyaProxy.Bridges
         internal QueueBridge(long sessionId, Host host, HandshakePacket handshakePacket, Socket source, Socket destination) : base(sessionId, host, handshakePacket.ServerAddress, source, destination)
         {
             if (NyaProxy.Config.EnableStickyPool)
-                Buffer = new BufferManager(source, destination, NyaProxy.Network, NyaProxy.Config.EnableStickyPool);
+                _buffer = new BufferManager(source, destination, NyaProxy.Network, NyaProxy.Config);
 
             ProtocolVersion = handshakePacket.ProtocolVersion;
             ClientCompressionThreshold = -1;
@@ -413,7 +415,7 @@ namespace NyaProxy.Bridges
                 e.Packet.Get().CompressionThreshold = ServerCompressionThreshold;
 
             if (!Host.CompatibilityMode && Stage == Stage.Play && e.Packet == PacketType.Play.Client.ChatMessage)
-                Enqueue(ChatEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
+                Enqueue(new ChatSendEventArgs(this, Source, Destination, Direction.ToServer, e));
             else
                 Enqueue(PacketEventArgsPool.Rent().Setup(this, Source, Destination, Direction.ToServer, e));
         }
@@ -428,7 +430,7 @@ namespace NyaProxy.Bridges
                 || e.Packet == PacketType.Play.Server.SystemChatMessage
                 || e.Packet == PacketType.Play.Server.PlayerChatMessage
                 || e.Packet == PacketType.Play.Server.DisguisedChatMessage)
-                Enqueue(ChatEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
+                Enqueue(new ChatSendEventArgs(this, Destination, Source, Direction.ToClient, e));
             else
                 Enqueue(PacketEventArgsPool.Rent().Setup(this, Destination, Source, Direction.ToClient, e));
         }
@@ -441,15 +443,24 @@ namespace NyaProxy.Bridges
                 ReceiveQueues[_queueIndex].Enqueue(psea);
         }
 
-        protected class BufferManager
+        private class BufferManager
         {
+            private static Bucket<byte> StickyPool;
+            private static Bucket<IDisposable> DisposablePool;
+
             public SocketSendBuffer Client { get; set; }
             public SocketSendBuffer Server { get; set; }
 
-            public BufferManager(Socket clientSocket, Socket serverSocket, NetworkHelper network, bool usePool)
+            public BufferManager(Socket clientSocket, Socket serverSocket, NetworkHelper network, MainConfig config)
             {
-                Client = new SocketSendBuffer(clientSocket, network, usePool);
-                Server = new SocketSendBuffer(serverSocket, network, usePool);
+                if (config.EnableStickyPool)
+                {
+                    StickyPool ??= new Bucket<byte>(config.StickyPoolBufferLength, config.NumberOfStickyPoolBuffers, 233, true);
+                    DisposablePool ??= new Bucket<IDisposable>(16, 512, 2333, true);
+                }
+
+                Client = new SocketSendBuffer(clientSocket, network, config.EnableStickyPool);
+                Server = new SocketSendBuffer(serverSocket, network, config.EnableStickyPool);
             }
 
             public bool Push()
@@ -461,8 +472,6 @@ namespace NyaProxy.Bridges
 
             public class SocketSendBuffer
             {
-
-                private static Bucket<IDisposable> DisposablePool = new Bucket<IDisposable>(64, 2048, 2333, false);
                 private Socket _socket;
                 private NetworkHelper _network;
 
@@ -484,6 +493,7 @@ namespace NyaProxy.Bridges
                     if (memory.Length > _buffer.Length)
                         throw new ArgumentOutOfRangeException(nameof(memory));
 
+                    //如果已经积累了16个以上的PacketReceivedEventArgs就Push数据包 || 如果积累的数据即将大于最大缓存量取就Push数据 (memory = 数据 ；disposable = PacketReceivedEventArgs)
                     if ((_disposableOffset + 1 >= _disposableBlock.Length) || (_bufferOffset + memory.Length >= _buffer.Length))
                         Push();
 
@@ -519,7 +529,7 @@ namespace NyaProxy.Bridges
                     _bufferOffset = 0;
                     _disposableOffset = 0;
                     _buffer = (_usePool ? StickyPool.Rent() : new byte[25565]) ?? new byte[25565];
-                    _disposableBlock = (_usePool ? DisposablePool.Rent() : new IDisposable[64]) ?? new IDisposable[64];
+                    _disposableBlock = (_usePool ? DisposablePool.Rent() : new IDisposable[16]) ?? new IDisposable[16];
                 }
             }
         }
