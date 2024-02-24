@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
@@ -9,7 +9,6 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
 		<PackageReference Include="Chawol.MinecraftProtocol" Version="1.0.1-alpha" />
 	</ItemGroup>
-
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\NyaProxy.API\NyaProxy.API.csproj" />
